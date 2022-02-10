@@ -1,5 +1,5 @@
 // 配置文件
-function configInfo() {
+function NeigeItemsConfig() {
     
 	// 配置文件名
 	scriptName = "NeigeItems"
@@ -7,52 +7,53 @@ function configInfo() {
     getDir(scriptName + "/Items")
     getDir(scriptName + "/Scripts")
     getDir(scriptName + "/GlobalSections")
-    var file = getFile(getDir(scriptName), "config.yml")
+    let file = getFile(getDir(scriptName), "config.yml")
+    NIConfig = {}
 	// 物品管理指令
-	NeigeItemManagerCommand = getConfigValue(file, "Main.NeigeItemManagerCommand", "ni")
+	NIConfig["NeigeItemManagerCommand"] = getConfigValue(file, "Main.NeigeItemManagerCommand", "ni")
 	// MM物品默认保存路径
-	MMItemsPath = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
+	NIConfig["MMItemsPath"] = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
 	// 不进行保存的NBT键
-	ignoreKeys = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA"]))
+	NIConfig["ignoreKeys"] = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA"]))
 
 	// 玩家不在线提示
-	invalidPlayer = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
+	NIConfig["invalidPlayer"] = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
 	// 给予成功提示
-	successInfo = getConfigValue(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
+	NIConfig["successInfo"] = getConfigValue(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
 	// 被给予成功提示(设置为""则不进行提示)
-	givenInfo = getConfigValue(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
+	NIConfig["givenInfo"] = getConfigValue(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
 	// 给予成功提示
-	dropSuccessInfo = getConfigValue(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
+	NIConfig["dropSuccessInfo"] = getConfigValue(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
 	// 未知物品提示
-	unknownItem = getConfigValue(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
+	NIConfig["unknownItem"] = getConfigValue(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
 	// 对应ID物品已存在提示
-	existedKey = getConfigValue(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
+	NIConfig["existedKey"] = getConfigValue(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
 	// 未知解析对象提示
-	invalidPaser = getConfigValue(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
+	NIConfig["invalidPaser"] = getConfigValue(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
 	// 保存成功提示
-	successSaveInfo = getConfigValue(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
+	NIConfig["successSaveInfo"] = getConfigValue(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
 	// MM物品转换完毕提示
-	mMImportSuccessInfo = getConfigValue(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
+	NIConfig["mMImportSuccessInfo"] = getConfigValue(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
 	// 不要保存空气提示
-	airItem = getConfigValue(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
+	NIConfig["airItem"] = getConfigValue(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
 	// 输入无效数字提示
-	invalidAmount = getConfigValue(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
+	NIConfig["invalidAmount"] = getConfigValue(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
 	// 输入无效世界提示
-	invalidWorld = getConfigValue(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
+	NIConfig["invalidWorld"] = getConfigValue(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
 	// 输入无效坐标提示
-	invalidLocation = getConfigValue(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
+	NIConfig["invalidLocation"] = getConfigValue(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
 	// 权限不足提示
-	insufficientPermissions = getConfigValue(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
+	NIConfig["insufficientPermissions"] = getConfigValue(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
 	// 重载完毕提示
-	reloadedMessage = getConfigValue(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
+	NIConfig["reloadedMessage"] = getConfigValue(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
 
 	// 无效NBT提示
-	invalidNBT = getConfigValue(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
+	NIConfig["invalidNBT"] = getConfigValue(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
 	// 错误物品提示
-	invalidItem = getConfigValue(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
+	NIConfig["invalidItem"] = getConfigValue(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
 
 	// 帮助信息
-	helpMessages = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
+	NIConfig["helpMessages"] = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
         "§6====================§eNeigeItems§6====================",
         "§6==================[]为必填, ()为选填==================",
         "§e/ni §fget [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID获取NI物品",
@@ -107,7 +108,7 @@ var sections = {}
 //@Awake(enable)
 //@Awake(reload)
 function NeigeItems() {
-    configInfo()
+    NeigeItemsConfig()
     GlobalSectionsGet()
     ItemsGet()
     MMItemLoad()
@@ -115,16 +116,34 @@ function NeigeItems() {
 }
 
 function CommandRegister() {
+    var NeigeItemManagerCommand = NIConfig["NeigeItemManagerCommand"]
+    var MMItemsPath = NIConfig["MMItemsPath"]
+    var invalidPlayer = NIConfig["invalidPlayer"]
+    var successInfo = NIConfig["successInfo"]
+    var givenInfo = NIConfig["givenInfo"]
+    var dropSuccessInfo = NIConfig["dropSuccessInfo"]
+    var unknownItem = NIConfig["unknownItem"]
+    var existedKey = NIConfig["existedKey"]
+    var invalidPaser = NIConfig["invalidPaser"]
+    var successSaveInfo = NIConfig["successSaveInfo"]
+    var mMImportSuccessInfo = NIConfig["mMImportSuccessInfo"]
+    var airItem = NIConfig["airItem"]
+    var invalidAmount = NIConfig["invalidAmount"]
+    var invalidWorld = NIConfig["invalidWorld"]
+    var invalidLocation = NIConfig["invalidLocation"]
+    var insufficientPermissions = NIConfig["insufficientPermissions"]
+    var reloadedMessage = NIConfig["reloadedMessage"]
+    var helpMessages = NIConfig["helpMessages"]
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
     // 新建指令
     let command = Tool.command(NeigeItemManagerCommand)
     // 指令执行动作
-    let commandExecutor = Tool.commandExec((sender, command, label, args) => {
+    command.setExecutor((sender, command, label, args) => {
         // 若未输入参数
         if (args.length < 1) {
             // 发送帮助信息
-            helpMessage(sender, helpMessages)
+            sendMessages(sender, helpMessages)
             return true
         }
         // 检测指令内容
@@ -202,7 +221,7 @@ function CommandRegister() {
                                         }
                                     } else {
                                         // 发送帮助信息
-                                        helpMessage(sender, helpMessages)
+                                        sendMessages(sender, helpMessages)
                                     }
                                 } else {
                                     // 后台无法执行提示
@@ -294,11 +313,11 @@ function CommandRegister() {
                                         }
                                     } else {
                                         // 玩家不存在/不在线提示
-                                        sender.sendMessage(playerOffLine)
+                                        sender.sendMessage(invalidPlayer)
                                     }
                                 } else {
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                                 }
                             }
                         })
@@ -390,7 +409,7 @@ function CommandRegister() {
                                     }
                                 } else {
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                                 }
                             }
                         })
@@ -502,7 +521,7 @@ function CommandRegister() {
                                     }
                                 } else {
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                                 }
                             }
                         })
@@ -539,7 +558,7 @@ function CommandRegister() {
                                     }
                                 } else {
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                                 }
                             }
                         })
@@ -572,7 +591,7 @@ function CommandRegister() {
                                     }
                                 } else {
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                                 }
                             }
                         })
@@ -623,7 +642,7 @@ function CommandRegister() {
                                                 }
                                             } else {
                                                 // 发送帮助信息
-                                                helpMessage(sender, helpMessages)
+                                                sendMessages(sender, helpMessages)
                                             }
                                         }
                                     })
@@ -665,7 +684,7 @@ function CommandRegister() {
                                                 }
                                             } else {
                                                 // 发送帮助信息
-                                                helpMessage(sender, helpMessages)
+                                                sendMessages(sender, helpMessages)
                                             }
                                         }
                                     })
@@ -734,7 +753,7 @@ function CommandRegister() {
                                                     }
                                                 } else {
                                                     // 发送帮助信息
-                                                    helpMessage(sender, helpMessages)
+                                                    sendMessages(sender, helpMessages)
                                                 }
                                             } else {
                                                 // 后台无法执行提示
@@ -750,6 +769,7 @@ function CommandRegister() {
                                         run: () => {
                                             if (args.length > 3) {
                                                 let player
+                                                // 获取对应在线玩家
                                                 if (player = Bukkit.getPlayer(args[2])) {
                                                     // 获取MM物品
                                                     let mmItem = itemManager.getItem(args[3])
@@ -780,10 +800,13 @@ function CommandRegister() {
                                                         // 未知物品提示
                                                         sender.sendMessage(unknownItemMessage)
                                                     }
+                                                } else {
+                                                    // 玩家不存在/不在线提示
+                                                    sender.sendMessage(invalidPlayer)
                                                 }
                                             } else {
                                                 // 发送帮助信息
-                                                helpMessage(sender, helpMessages)
+                                                sendMessages(sender, helpMessages)
                                             }
                                         }
                                     })
@@ -829,7 +852,7 @@ function CommandRegister() {
                                                 }
                                             } else {
                                                 // 发送帮助信息
-                                                helpMessage(sender, helpMessages)
+                                                sendMessages(sender, helpMessages)
                                             }
                                         }
                                     })
@@ -837,11 +860,11 @@ function CommandRegister() {
                                     break
                                 default:
                                     // 发送帮助信息
-                                    helpMessage(sender, helpMessages)
+                                    sendMessages(sender, helpMessages)
                             }
                         } else {
                             // 发送帮助信息
-                            helpMessage(sender, helpMessages)
+                            sendMessages(sender, helpMessages)
                         }
                         return true
                     // nim reload > 重新加载NIM物品
@@ -849,7 +872,7 @@ function CommandRegister() {
                         var AsyncTask = Java.extend(BukkitRunnable, {
                             run: () => {
                                 // 重载配置文件
-                                configInfo()
+                                NeigeItemsConfig()
                                 // 重载全局节点列表
                                 GlobalSectionsGet()
                                 // 重载NIM物品列表
@@ -864,7 +887,7 @@ function CommandRegister() {
                         return true
                     default:
                         // 发送帮助信息
-                        helpMessage(sender, helpMessages)
+                        sendMessages(sender, helpMessages)
                         return true
                 }
             } else {
@@ -876,7 +899,7 @@ function CommandRegister() {
         return false
     })
     // 指令补全列表
-    let tabExecutor = Tool.commandTab((sender, command, alias, args) => {
+    command.setTabCompleter((sender, command, alias, args) => {
         // 仅限后台/OP使用
         if (!sender instanceof Player || sender.isOp()) {
             let emptyList = Arrays.asList([])
@@ -965,8 +988,6 @@ function CommandRegister() {
         }
     })
     // 注册指令
-    command.setExecutor(commandExecutor)
-    command.setTabCompleter(tabExecutor)
     Tool.regCommand(command)
 }
 
@@ -1070,6 +1091,8 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
  * @return ItemStack
  */
 function ItemGet(itemKeySection, player, sender, data) {
+    var invalidNBT = NIConfig["invalidNBT"]
+    var invalidItem = NIConfig["invalidItem"]
     if (!(itemKeySection instanceof MemorySection)) return null
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
@@ -1293,6 +1316,7 @@ function getFile(dir, fileName){
  * @return HashMap
  */
 function getHashMapNBT(itemTag) {
+    let ignoreKeys = NIConfig[ignoreKeys]
     /**
      * 获取HashMap形式物品NBT
      * @param ItemTag ItemTag 物品NBT数据
@@ -1677,12 +1701,12 @@ function loadSection(Sections, string, random) {
 }
 
 /**
- * 发送帮助信息
+ * 发送信息
  * @param player OnlinePlayer
- * @param helpMessages Array
+ * @param messages Array
  */
-function helpMessage(player, helpMessages) {
-    helpMessages.forEach((message) => {
+function sendMessages(player, messages) {
+    messages.forEach((message) => {
         player.sendMessage(message)
     })
 }
