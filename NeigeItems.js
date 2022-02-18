@@ -96,7 +96,6 @@ var ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
 var ItemTagType = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagType
 var MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
 var NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
-var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
 var BukkitScheduler = Bukkit.getScheduler()
 var BukkitServer = Bukkit.getServer()
 var PluginManager = Bukkit.getPluginManager()
@@ -1024,12 +1023,12 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
                 itemNBT.remove("display")
                 // 设置CustomModelData
                 if (itemNBT.containsKey("CustomModelData")) {
-                    itemKeySection.set("CustomModelData", itemNBT["CustomModelData"])
+                    itemKeySection.set("CustomModelData", parseInt(itemNBT["CustomModelData"].slice(6)))
                     itemNBT.remove("CustomModelData")
                 }
                 // 设置子ID/损伤值
                 if (itemNBT.containsKey("Damage")) {
-                    itemKeySection.set("Data", itemNBT["Damage"])
+                    itemKeySection.set("Data", parseInt(itemNBT["Damage"].slice(6)))
                     itemNBT.remove("Damage")
                 }
                 // 设置物品名
@@ -1102,7 +1101,8 @@ function ItemGet(itemKeySection, player, sender, data) {
     // 对文本化配置进行全局PAPI解析
     let tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set("ID", itemKeySection)
-    let stringSection = PlaceholderAPI.setPlaceholders(player, tempItemKeySection.saveToString())
+    let stringSection = tempItemKeySection.saveToString()
+    stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection("ID")
@@ -1136,7 +1136,7 @@ function ItemGet(itemKeySection, player, sender, data) {
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set("ID", itemKeySection)
     stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random)
-    stringSection = PlaceholderAPI.setPlaceholders(player, stringSection)
+    stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection("ID")
@@ -1338,22 +1338,22 @@ function getHashMapNBT(itemTag) {
     NBTValueParse = (value) => {
         switch(value.type) {
             case ItemTagType.BYTE:
-                value = value.asByte()
+                value = "(Byte) " + value.asString()
                 break
             case ItemTagType.SHORT:
-                value = value.asShort()
+                value = "(Short) " + value.asString()
                 break
             case ItemTagType.INT:
-                value = value.asInt()
+                value = "(Int) " + value.asString()
                 break
             case ItemTagType.LONG:
-                value = value.asLong()
+                value = "(Long) " + value.asString()
                 break
             case ItemTagType.FLOAT:
-                value = value.asFloat()
+                value = "(Float) " + value.asString()
                 break
             case ItemTagType.DOUBLE:
-                value = value.asDouble()
+                value = "(Double) " + value.asString()
                 break
             case ItemTagType.STRING:
                 value = value.asString()
@@ -1410,15 +1410,34 @@ function getItemTagNBT(itemNBT) {
      * NBT值解析
      */
     HashMapValueParse = (value) => {
-        let Integer = Packages.java.lang.Integer
         let Byte = Packages.java.lang.Byte
+        let Short = Packages.java.lang.Short
+        let Integer = Packages.java.lang.Integer
+        let Long = Packages.java.lang.Long
+        let Float = Packages.java.lang.Float
+        let Double = Packages.java.lang.Double
+        let String = Packages.java.lang.String
         if (value instanceof LinkedHashMap || value instanceof HashMap) {
             return new ItemTagData(toItemTag(value))
         } else if (value instanceof ArrayList) {
             if (value[0] instanceof Integer) {
                 return new ItemTagData(Java.to(Java.from(value), "int[]"))
+            } else if (value[0] instanceof String && value[0].startsWith("(Int) ")){
+                for (let index = 0; index < value.length; index++) {
+                    if (value[index] instanceof String && value[index].startsWith("(Int) ")) {
+                        value[index] = parseInt(value[index].slice(6))
+                    }
+                }
+                return new ItemTagData(Java.to(Java.from(value), "int[]"))
             } else if (value[0] instanceof Byte) {
                 return new ItemTagData(Java.to(Java.from(value), "byte[]"))
+            } else if (value[0] instanceof String && value[0].startsWith("(Byte) ")){
+                for (let index = 0; index < value.length; index++) {
+                    if (value[index] instanceof String && value[index].startsWith("(Byte) ")) {
+                        value[index] = parseInt(value[index].slice(7))
+                    }
+                }
+                return new ItemTagData(Java.to(Java.from(value), "int[]"))
             } else {
                 let itemTagList = new ItemTagList()
                 value.forEach((it) => {
@@ -1427,6 +1446,21 @@ function getItemTagNBT(itemNBT) {
                 return new ItemTagData(itemTagList)
             }
         } else {
+            if (value instanceof String) {
+                if (value.startsWith("(Byte) ")) {
+                    return new ItemTagData(new Byte(value.slice(7)))
+                } else if (value.startsWith("(Short) ")) {
+                    return new ItemTagData(new Short(value.slice(8)))
+                } else if (value.startsWith("(Int) ")) {
+                    return new ItemTagData(new Integer(value.slice(6)))
+                } else if (value.startsWith("(Long) ")) {
+                    return new ItemTagData(new Long(value.slice(7)))
+                } else if (value.startsWith("(Float) ")) {
+                    return new ItemTagData(new Float(value.slice(8)))
+                } else if (value.startsWith("(Double) ")) {
+                    return new ItemTagData(new Double(value.slice(9)))
+                }
+            }
             return new ItemTagData(value)
         }
     }
@@ -1804,7 +1838,7 @@ function ItemDropAsyn(world, location, itemStack){
 }
 
 /**
- * 给予玩家物品, 可用于异步
+ * 获取config键值
  * @param config ConfigurationSection
  * @param key String 待获取键
  * @param defaultValue any 默认值
@@ -1934,4 +1968,77 @@ function globalSectionParse(Sections, section, random) {
     } else {
         return false
     }
+}
+
+/**
+ * 解析PAPI变量, 但不解析颜色字符
+ * @author clip
+ * @param player OfflinePlayer
+ * @param text String 待解析文本
+ * @return String 是否包含相应节点
+ */
+function setPapiWithNoColor(player, text) {
+    let StringBuilder = Packages.java.lang.StringBuilder
+    let builder = new StringBuilder(text.length)
+
+    let identifier = new StringBuilder()
+    let parameters = new StringBuilder()
+
+    for (let i = 0; i < text.length; i++) {
+        let l = text[i]
+        if (l != "%" || i + 1 >= text.length) {
+          builder.append(l)
+          continue
+        }
+        let identified = false
+        let oopsitsbad = true
+        let hadSpace = false
+        while (++i < text.length) {
+            let p = text[i]
+            if (p == ' ' && !identified) {
+                hadSpace = true
+                break
+            }
+            if (p == "%") {
+                oopsitsbad = false
+                break
+            }
+            if (p == '_' && !identified) {
+                identified = true
+                continue
+            }
+            if (identified) {
+                parameters.append(p)
+            } else {
+                identifier.append(p)
+            }
+        }
+        let identifierString = identifier.toString()
+        let lowercaseIdentifierString = identifierString.toLowerCase()
+        let parametersString = parameters.toString()
+        identifier.setLength(0)
+        parameters.setLength(0)
+        if (oopsitsbad) {
+            builder.append("%").append(identifierString)
+            if (identified) builder.append('_').append(parametersString)
+            if (hadSpace) builder.append(' ')
+            continue
+        }
+        let placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+        if (placeholder == null) {
+            builder.append("%").append(lowercaseIdentifierString)
+            if (identified) builder.append('_')
+            builder.append(parametersString).append("%")
+            continue
+        }
+        let replacement = placeholder.onRequest(player, parametersString)
+        if (replacement == null) {
+            builder.append("%").append(lowercaseIdentifierString)
+            if (identified) builder.append('_')
+            builder.append(parametersString).append("%")
+            continue
+        }
+        builder.append(replacement)
+    }
+    return builder.toString()
 }
