@@ -158,25 +158,18 @@ function CommandRegister() {
                                 if (sender instanceof Player) {
                                     // 检测指令长度
                                     if (args.length > 1) {
-                                        let itemStack
-                                        let itemConfig
+                                        let itemConfig = ItemKeySectionGet(args[1])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (items.some((itemIDs) => {
-                                            let index = itemIDs[1].indexOf(args[1])
-                                            if (index != -1) {
-                                                var data = null
-                                                if (args.length > 4) data = Java.from(args).slice(4).join(" ")
-                                                itemConfig = getConfigSection(itemIDs[0])[index]
-                                                itemStack = ItemGet(itemConfig, sender, sender, data)
-                                                return true
-                                            }
-                                        })) {
+                                        if (itemConfig) {
+                                            let data = null
+                                            if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                             let itemAmt
                                             // 获取数量
                                             if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
                                                 if (!(args.length > 3 && (args[3] == "false" || args[3] == "0"))) {
+                                                    let itemStack = ItemGet(itemConfig, sender, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
@@ -189,7 +182,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        itemStack = ItemGet(itemConfig, sender, sender, data)
+                                                        let itemStack = ItemGet(itemConfig, sender, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = Tool.getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -239,25 +232,18 @@ function CommandRegister() {
                                     let player
                                     // 获取对应在线玩家
                                     if (player = Bukkit.getPlayer(args[1])) {
-                                        let itemStack
-                                        let itemConfig
+                                        let itemConfig = ItemKeySectionGet(args[2])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (items.some((itemIDs) => {
-                                            let index = itemIDs[1].indexOf(args[2])
-                                            if (index != -1) {
-                                                var data = null
-                                                if (args.length > 5) data = Java.from(args).slice(5).join(" ")
-                                                itemConfig = getConfigSection(itemIDs[0])[index]
-                                                itemStack = ItemGet(itemConfig, player, sender, data)
-                                                return true
-                                            }
-                                        })) {
+                                        if (itemConfig) {
+                                            let data = null
+                                            if (args.length > 5) data = Java.from(args).slice(5).join(" ")
                                             let itemAmt
                                             // 获取数量
                                             if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
                                                 if (!(args.length > 4 && (args[4] == "false" || args[4] == "0"))) {
+                                                    let itemStack = ItemGet(itemConfig, player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
@@ -276,7 +262,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        itemStack = ItemGet(itemConfig, player, sender, data)
+                                                        let itemStack = ItemGet(itemConfig, player, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = Tool.getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -328,18 +314,11 @@ function CommandRegister() {
                             run: () => {
                                 // 检测指令长度
                                 if (args.length > 1) {
-                                    let itemStack
-                                    let itemConfig
+                                    let itemConfig = ItemKeySectionGet(args[1])
                                     // 检测是否存在对应ID的NIM物品
-                                    if (items.some((itemIDs) => {
-                                        let index = itemIDs[1].indexOf(args[1])
-                                        if (index != -1) {
-                                            var data = null
-                                            if (args.length > 4) data = Java.from(args).slice(4).join(" ")
-                                            itemConfig = getConfigSection(itemIDs[0])[index]
-                                            return true
-                                        }
-                                    })) {
+                                    if (itemConfig) {
+                                        let data = null
+                                        if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                         let itemAmt
                                         // 获取数量
                                         if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
@@ -348,7 +327,7 @@ function CommandRegister() {
                                             if (!(args.length > 3 && (args[3] == "false" || args[3] == "0"))) {
                                                 // 对于每个在线玩家
                                                 Bukkit.getOnlinePlayers().forEach((player) => {
-                                                    itemStack = ItemGet(itemConfig, player, sender, data)
+                                                    let itemStack = ItemGet(itemConfig, player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
@@ -428,19 +407,11 @@ function CommandRegister() {
                                         } else {
                                             player = sender
                                         }
-                                        let itemStack
-                                        let itemConfig
+                                        let itemConfig = ItemKeySectionGet(args[1])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (items.some((itemIDs) => {
-                                            let index = itemIDs[1].indexOf(args[1])
-                                            if (index != -1) {
-                                                var data = null
-                                                if (args.length > 9) data = Java.from(args).slice(9).join(" ")
-                                                itemConfig = getConfigSection(itemIDs[0])[index]
-                                                itemStack = ItemGet(itemConfig, player, sender, data)
-                                                return true
-                                            }
-                                        })) {
+                                        if (itemConfig) {
+                                            let data = null
+                                            if (args.length > 9) data = Java.from(args).slice(9).join(" ")
                                             let itemAmt
                                             // 获取数量
                                             if ((itemAmt = parseInt(args[2])) && itemAmt > 0) {
@@ -455,6 +426,7 @@ function CommandRegister() {
                                                     if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
                                                         // 如果仅需一样的物品
                                                         if (!(args.length > 7 && (args[7] == "false" || args[7] == "0"))) {
+                                                            let itemStack = ItemGet(itemConfig, player, sender, data)
                                                             // 掉落物品
                                                             NeigeDrop(world, x, y, z, itemStack, itemAmt)
                                                             // 替换提示信息中的占位符
@@ -473,7 +445,7 @@ function CommandRegister() {
                                                             // 循环构建物品
                                                             for (let index = 0; index < itemAmt; index++) {
                                                                 // 构建物品
-                                                                itemStack = ItemGet(itemConfig, player, sender, data)
+                                                                let itemStack = ItemGet(itemConfig, player, sender, data)
                                                                 // 记录物品名及次数
                                                                 var itemName = Tool.getItemName(itemStack)
                                                                 if (amtMap[itemName] == null) {
@@ -1081,6 +1053,22 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
     }
 }
 
+/**
+ * 根据ID获取物品配置
+ * @param itemID String 物品ID
+ * @return MemorySection
+ */
+function ItemKeySectionGet(itemID) {
+    let itemConfig = null
+    items.some((itemIDs) => {
+        let index = itemIDs[1].indexOf(itemID)
+        if (index != -1) {
+            itemConfig = getConfigSection(itemIDs[0])[index]
+            return true
+        }
+    })
+    return itemConfig
+}
 /**
  * 根据ID获取物品
  * @param itemKeySection MemorySection 物品配置
@@ -2044,4 +2032,22 @@ function setPapiWithNoColor(player, text) {
         builder.append(replacement)
     }
     return builder.toString()
+}
+
+/**
+ * 获取TellrawJson形式物品
+ * @param itemStack ItemStack
+ * @return TellrawJson
+ */
+function itemToTellrawJson(itemStack) {
+    let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
+    let Bukkit = Packages.org.bukkit.Bukkit
+    let CraftItemStack = Java.type("org.bukkit.craftbukkit." + Bukkit.getServer().class.name.split('.')[3] + ".inventory.CraftItemStack")
+    let itemName = Tool.getItemName(itemStack)
+    let nmsItemStack = CraftItemStack.asNMSCopy(itemStack)
+    let itemKey = itemStack.type.key.key
+    let itemTag = nmsItemStack.getTag() || "{}"
+    let tellrawJson = new TellrawJson()
+    tellrawJson.append(itemName)
+    return tellrawJson.hoverItem(itemKey, itemTag)
 }
