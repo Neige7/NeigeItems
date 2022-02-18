@@ -14,7 +14,7 @@ function NeigeItemsConfig() {
 	// MM物品默认保存路径
 	NIConfig["MMItemsPath"] = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
 	// 不进行保存的NBT键
-	NIConfig["ignoreKeys"] = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA"]))
+	NIConfig["ignoreKeys"] = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA","ench"]))
 
 	// 玩家不在线提示
 	NIConfig["invalidPlayer"] = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
