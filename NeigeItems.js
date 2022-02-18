@@ -1090,8 +1090,9 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
  * @return ItemStack
  */
 function ItemGet(itemKeySection, player, sender, data) {
-    var invalidNBT = NIConfig["invalidNBT"]
-    var invalidItem = NIConfig["invalidItem"]
+    let ChatColor = Packages.org.bukkit.ChatColor
+    let invalidNBT = NIConfig["invalidNBT"]
+    let invalidItem = NIConfig["invalidItem"]
     if (!(itemKeySection instanceof MemorySection)) return null
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
@@ -1168,11 +1169,13 @@ function ItemGet(itemKeySection, player, sender, data) {
         }
         // 设置物品名
         if (itemKeySection.contains("Name")) {
-            itemMeta.setDisplayName(itemKeySection.getString("Name"))
+            itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemKeySection.getString("Name")))
         }
         // 设置Lore
         if (itemKeySection.contains("Lore")) {
-            itemMeta.setLore(itemKeySection.getStringList("Lore"))
+            let lores = itemKeySection.getStringList("Lore")
+            lores.replaceAll(lore => ChatColor.translateAlternateColorCodes('&', lore))
+            itemMeta.setLore(lores)
         }
         // 设置是否无法破坏
         if (itemKeySection.contains("Unbreakable")) {
