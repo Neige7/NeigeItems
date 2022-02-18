@@ -1316,7 +1316,7 @@ function getFile(dir, fileName){
  * @return HashMap
  */
 function getHashMapNBT(itemTag) {
-    let ignoreKeys = NIConfig[ignoreKeys]
+    let ignoreKeys = NIConfig["ignoreKeys"]
     /**
      * 获取HashMap形式物品NBT
      * @param ItemTag ItemTag 物品NBT数据
