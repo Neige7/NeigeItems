@@ -10,50 +10,50 @@ function NeigeItemsConfig() {
     let file = getFile(getDir(scriptName), "config.yml")
     NIConfig = {}
 	// 物品管理指令
-	NIConfig["NeigeItemManagerCommand"] = getConfigValue(file, "Main.NeigeItemManagerCommand", "ni")
+	NIConfig.NeigeItemManagerCommand = getConfigValue(file, "Main.NeigeItemManagerCommand", "ni")
 	// MM物品默认保存路径
-	NIConfig["MMItemsPath"] = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
+	NIConfig.MMItemsPath = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
 	// 不进行保存的NBT键
-	NIConfig["ignoreKeys"] = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA","ench"]))
+	NIConfig.ignoreKeys = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA","ench"]))
 
 	// 玩家不在线提示
-	NIConfig["invalidPlayer"] = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
+	NIConfig.invalidPlayer = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
 	// 给予成功提示
-	NIConfig["successInfo"] = getConfigValue(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
+	NIConfig.successInfo = getConfigValue(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
 	// 被给予成功提示(设置为""则不进行提示)
-	NIConfig["givenInfo"] = getConfigValue(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
+	NIConfig.givenInfo = getConfigValue(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
 	// 给予成功提示
-	NIConfig["dropSuccessInfo"] = getConfigValue(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
+	NIConfig.dropSuccessInfo = getConfigValue(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
 	// 未知物品提示
-	NIConfig["unknownItem"] = getConfigValue(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
+	NIConfig.unknownItem = getConfigValue(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
 	// 对应ID物品已存在提示
-	NIConfig["existedKey"] = getConfigValue(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
+	NIConfig.existedKey = getConfigValue(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
 	// 未知解析对象提示
-	NIConfig["invalidPaser"] = getConfigValue(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
+	NIConfig.invalidPaser = getConfigValue(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
 	// 保存成功提示
-	NIConfig["successSaveInfo"] = getConfigValue(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
+	NIConfig.successSaveInfo = getConfigValue(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
 	// MM物品转换完毕提示
-	NIConfig["mMImportSuccessInfo"] = getConfigValue(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
+	NIConfig.mMImportSuccessInfo = getConfigValue(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
 	// 不要保存空气提示
-	NIConfig["airItem"] = getConfigValue(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
+	NIConfig.airItem = getConfigValue(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
 	// 输入无效数字提示
-	NIConfig["invalidAmount"] = getConfigValue(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
+	NIConfig.invalidAmount = getConfigValue(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
 	// 输入无效世界提示
-	NIConfig["invalidWorld"] = getConfigValue(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
+	NIConfig.invalidWorld = getConfigValue(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
 	// 输入无效坐标提示
-	NIConfig["invalidLocation"] = getConfigValue(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
+	NIConfig.invalidLocation = getConfigValue(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
 	// 权限不足提示
-	NIConfig["insufficientPermissions"] = getConfigValue(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
+	NIConfig.insufficientPermissions = getConfigValue(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
 	// 重载完毕提示
-	NIConfig["reloadedMessage"] = getConfigValue(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
+	NIConfig.reloadedMessage = getConfigValue(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
 
 	// 无效NBT提示
-	NIConfig["invalidNBT"] = getConfigValue(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
+	NIConfig.invalidNBT = getConfigValue(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
 	// 错误物品提示
-	NIConfig["invalidItem"] = getConfigValue(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
+	NIConfig.invalidItem = getConfigValue(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
 
 	// 帮助信息
-	NIConfig["helpMessages"] = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
+	NIConfig.helpMessages = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
         "§6====================§eNeigeItems§6====================",
         "§6==================[]为必填, ()为选填==================",
         "§e/ni §flist (页码) §7> 查看所有NI物品",
@@ -74,12 +74,12 @@ function NeigeItemsConfig() {
         "§6================================================="]))
 
     // 物品列表格式
-    NIConfig["listPrefix"] = getConfigValue(file, "ItemList.Prefix", "§6===========§eNeigeItems§6===========")
-    NIConfig["listSuffix"] = getConfigValue(file, "ItemList.Suffix", "§6======<< §e{prev} §f{current}§e/§f{total} §e{next} §6>>======")
-    NIConfig["listItemAmount"] = getConfigValue(file, "ItemList.ItemAmount", 10)
-    NIConfig["listItemFormat"] = getConfigValue(file, "ItemList.ItemFormat", "§6{index}. §a{ID} §6- §f{name}")
-    NIConfig["listPrev"] = getConfigValue(file, "ItemList.Prev", "上一页")
-    NIConfig["listNext"] = getConfigValue(file, "ItemList.Next", "下一页")
+    NIConfig.listPrefix = getConfigValue(file, "ItemList.Prefix", "§6===========§eNeigeItems§6===========")
+    NIConfig.listSuffix = getConfigValue(file, "ItemList.Suffix", "§6======<< §e{prev} §f{current}§e/§f{total} §e{next} §6>>======")
+    NIConfig.listItemAmount = getConfigValue(file, "ItemList.ItemAmount", 10)
+    NIConfig.listItemFormat = getConfigValue(file, "ItemList.ItemFormat", "§6{index}. §a{ID} §6- §f{name}")
+    NIConfig.listPrev = getConfigValue(file, "ItemList.Prev", "上一页")
+    NIConfig.listNext = getConfigValue(file, "ItemList.Next", "下一页")
         
 }
 
@@ -126,30 +126,30 @@ function NeigeItems() {
 }
 
 function CommandRegister() {
-    let NeigeItemManagerCommand = NIConfig["NeigeItemManagerCommand"]
-    let MMItemsPath = NIConfig["MMItemsPath"]
-    let invalidPlayer = NIConfig["invalidPlayer"]
-    let successInfo = NIConfig["successInfo"]
-    let givenInfo = NIConfig["givenInfo"]
-    let dropSuccessInfo = NIConfig["dropSuccessInfo"]
-    let unknownItem = NIConfig["unknownItem"]
-    let existedKey = NIConfig["existedKey"]
-    let invalidPaser = NIConfig["invalidPaser"]
-    let successSaveInfo = NIConfig["successSaveInfo"]
-    let mMImportSuccessInfo = NIConfig["mMImportSuccessInfo"]
-    let airItem = NIConfig["airItem"]
-    let invalidAmount = NIConfig["invalidAmount"]
-    let invalidWorld = NIConfig["invalidWorld"]
-    let invalidLocation = NIConfig["invalidLocation"]
-    let insufficientPermissions = NIConfig["insufficientPermissions"]
-    let reloadedMessage = NIConfig["reloadedMessage"]
-    let helpMessages = NIConfig["helpMessages"]
-    let listPrefix = NIConfig["listPrefix"]
-    let listSuffix = NIConfig["listSuffix"]
-    let listItemAmount = NIConfig["listItemAmount"]
-    let listItemFormat = NIConfig["listItemFormat"]
-    let listPrev = NIConfig["listPrev"]
-    let listNext = NIConfig["listNext"]
+    let NeigeItemManagerCommand = NIConfig.NeigeItemManagerCommand
+    let MMItemsPath = NIConfig.MMItemsPath
+    let invalidPlayer = NIConfig.invalidPlayer
+    let successInfo = NIConfig.successInfo
+    let givenInfo = NIConfig.givenInfo
+    let dropSuccessInfo = NIConfig.dropSuccessInfo
+    let unknownItem = NIConfig.unknownItem
+    let existedKey = NIConfig.existedKey
+    let invalidPaser = NIConfig.invalidPaser
+    let successSaveInfo = NIConfig.successSaveInfo
+    let mMImportSuccessInfo = NIConfig.mMImportSuccessInfo
+    let airItem = NIConfig.airItem
+    let invalidAmount = NIConfig.invalidAmount
+    let invalidWorld = NIConfig.invalidWorld
+    let invalidLocation = NIConfig.invalidLocation
+    let insufficientPermissions = NIConfig.insufficientPermissions
+    let reloadedMessage = NIConfig.reloadedMessage
+    let helpMessages = NIConfig.helpMessages
+    let listPrefix = NIConfig.listPrefix
+    let listSuffix = NIConfig.listSuffix
+    let listItemAmount = NIConfig.listItemAmount
+    let listItemFormat = NIConfig.listItemFormat
+    let listPrev = NIConfig.listPrev
+    let listNext = NIConfig.listNext
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
     // 新建指令
@@ -186,14 +186,14 @@ function CommandRegister() {
                                     for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
                                         // 替换信息内变量
                                         let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
-                                        listItemMessage = listItemMessage.replace(/{ID}/g, itemIDList[index])
+                                        listItemMessage = listItemMessage.replace(/{ID}/g, NIConfig.itemIDList[index])
                                         listItemMessage = listItemMessage.split("{name}")
                                         // 构建信息及物品
                                         let listItemRaw = new TellrawJson()
-                                        let itemStack = ItemGet(ItemKeySectionGet(itemIDList[index]), sender, sender)
+                                        let itemStack = ItemGet(NIConfig.itemIDList[index], sender, sender)
                                         for (let i = 0; i < listItemMessage.length; i++) {
                                             listItemRaw.append(listItemMessage[i])
-                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + itemIDList[index]))
+                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + NIConfig.itemIDList[index]))
                                         }
                                         // 合并信息
                                         listMessage.append(listItemRaw)
@@ -242,9 +242,8 @@ function CommandRegister() {
                                 if (sender instanceof Player) {
                                     // 检测指令长度
                                     if (args.length > 1) {
-                                        let itemConfig = ItemKeySectionGet(args[1])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (itemConfig) {
+                                        if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                             let data = null
                                             if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                             let itemAmt
@@ -252,8 +251,8 @@ function CommandRegister() {
                                             if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
-                                                if (!(args.length > 3 && (args[3] == "false" || args[3] == "0"))) {
-                                                    let itemStack = ItemGet(itemConfig, sender, sender, data)
+                                                if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
+                                                    let itemStack = ItemGet(args[1], sender, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
@@ -266,7 +265,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        let itemStack = ItemGet(itemConfig, sender, sender, data)
+                                                        let itemStack = ItemGet(args[1], sender, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -316,9 +315,8 @@ function CommandRegister() {
                                     let player
                                     // 获取对应在线玩家
                                     if (player = Bukkit.getPlayer(args[1])) {
-                                        let itemConfig = ItemKeySectionGet(args[2])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (itemConfig) {
+                                        if (NIConfig.itemIDList.indexOf(args[2]) != -1) {
                                             let data = null
                                             if (args.length > 5) data = Java.from(args).slice(5).join(" ")
                                             let itemAmt
@@ -326,8 +324,8 @@ function CommandRegister() {
                                             if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
-                                                if (!(args.length > 4 && (args[4] == "false" || args[4] == "0"))) {
-                                                    let itemStack = ItemGet(itemConfig, player, sender, data)
+                                                if (args.length > 4 && (args[4] == "false" || args[4] == "0")) {
+                                                    let itemStack = ItemGet(args[2], player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
@@ -346,7 +344,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        let itemStack = ItemGet(itemConfig, player, sender, data)
+                                                        let itemStack = ItemGet(args[2], player, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -398,9 +396,8 @@ function CommandRegister() {
                             run: () => {
                                 // 检测指令长度
                                 if (args.length > 1) {
-                                    let itemConfig = ItemKeySectionGet(args[1])
                                     // 检测是否存在对应ID的NIM物品
-                                    if (itemConfig) {
+                                    if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                         let data = null
                                         if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                         let itemAmt
@@ -408,10 +405,10 @@ function CommandRegister() {
                                         if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
                                             itemAmt = itemAmt || 1
                                             // 如果仅需一样的物品
-                                            if (!(args.length > 3 && (args[3] == "false" || args[3] == "0"))) {
+                                            if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
                                                 // 对于每个在线玩家
                                                 Bukkit.getOnlinePlayers().forEach((player) => {
-                                                    let itemStack = ItemGet(itemConfig, player, sender, data)
+                                                    let itemStack = ItemGet(args[1], player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
@@ -433,7 +430,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        itemStack = ItemGet(itemConfig, player, sender, data)
+                                                        itemStack = ItemGet(args[1], player, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -491,9 +488,8 @@ function CommandRegister() {
                                         } else {
                                             player = sender
                                         }
-                                        let itemConfig = ItemKeySectionGet(args[1])
                                         // 检测是否存在对应ID的NIM物品
-                                        if (itemConfig) {
+                                        if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                             let data = null
                                             if (args.length > 9) data = Java.from(args).slice(9).join(" ")
                                             let itemAmt
@@ -509,8 +505,8 @@ function CommandRegister() {
                                                     // 如果坐标合法
                                                     if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
                                                         // 如果仅需一样的物品
-                                                        if (!(args.length > 7 && (args[7] == "false" || args[7] == "0"))) {
-                                                            let itemStack = ItemGet(itemConfig, player, sender, data)
+                                                        if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
+                                                            let itemStack = ItemGet(args[1], player, sender, data)
                                                             // 掉落物品
                                                             NeigeDrop(world, x, y, z, itemStack, itemAmt)
                                                             // 替换提示信息中的占位符
@@ -529,7 +525,7 @@ function CommandRegister() {
                                                             // 循环构建物品
                                                             for (let index = 0; index < itemAmt; index++) {
                                                                 // 构建物品
-                                                                let itemStack = ItemGet(itemConfig, player, sender, data)
+                                                                let itemStack = ItemGet(args[1], player, sender, data)
                                                                 // 记录物品名及次数
                                                                 var itemName = getItemName(itemStack)
                                                                 if (amtMap[itemName] == null) {
@@ -966,13 +962,13 @@ function CommandRegister() {
                         case "list":
                             return incrementingArray(pageAmount)
                         case "get":
-                            return itemIDList
+                            return NIConfig.itemIDList
                         case "give":
                             return onlinePlayers()
                         case "giveall":
-                            return itemIDList
+                            return NIConfig.itemIDList
                         case "drop":
-                            return itemIDList
+                            return NIConfig.itemIDList
                         case "mm":
                             return Arrays.asList(["load", "cover", "loadAll", "get", "give"])
                         default:
@@ -981,7 +977,7 @@ function CommandRegister() {
                 case 3:
                     switch(args[0].toLowerCase()) {
                         case "give":
-                            return itemIDList
+                            return NIConfig.itemIDList
                         case "mm":
                             switch(args[1].toLowerCase()) {
                                 case "load":
@@ -1065,7 +1061,7 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
         file = getFile(dir, path)
         let config = YamlConfiguration.loadConfiguration(file)
         // 检测节点是否存在
-        if ((itemIDList.indexOf(itemKey) == -1) || cover) {
+        if ((NIConfig.itemIDList.indexOf(itemKey) == -1) || cover) {
             // 创建物品节点
             config.createSection(itemKey)
             let itemKeySection = config.getConfigurationSection(itemKey)
@@ -1078,16 +1074,16 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
                 // 获取物品NBT
                 let itemNBT = getHashMapNBT(NMSKt.getItemTag(itemStack))
                 // 获取显示信息
-                let display = itemNBT["display"]
+                let display = itemNBT.display
                 itemNBT.remove("display")
                 // 设置CustomModelData
                 if (itemNBT.containsKey("CustomModelData")) {
-                    itemKeySection.set("CustomModelData", parseInt(itemNBT["CustomModelData"].slice(6)))
+                    itemKeySection.set("CustomModelData", parseInt(itemNBT.CustomModelData.slice(6)))
                     itemNBT.remove("CustomModelData")
                 }
                 // 设置子ID/损伤值
                 if (itemNBT.containsKey("Damage")) {
-                    itemKeySection.set("Data", parseInt(itemNBT["Damage"].slice(6)))
+                    itemKeySection.set("Data", parseInt(itemNBT.Damage.slice(6)))
                     itemNBT.remove("Damage")
                 }
                 // 设置物品名
@@ -1122,7 +1118,7 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
                 }
                 // 设置物品颜色
                 if (display && display.containsKey("color")) {
-                    itemKeySection.set("Color", display["color"])
+                    itemKeySection.set("Color", display.color)
                 }
                 // 设置物品NBT
                 if (!itemNBT.isEmpty()) {
@@ -1130,7 +1126,7 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
                 }
             }
             config.save(file)
-            if (itemIDList.indexOf(itemKey) == -1) return 1
+            if (NIConfig.itemIDList.indexOf(itemKey) == -1) return 1
             return 0
         } else {
             return 0
@@ -1147,7 +1143,7 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
  */
 function ItemKeySectionGet(itemID) {
     let itemConfig = null
-    items.some((itemIDs) => {
+    NIConfig.items.some((itemIDs) => {
         let index = itemIDs[1].indexOf(itemID)
         if (index != -1) {
             itemConfig = getConfigSection(itemIDs[0])[index]
@@ -1156,19 +1152,21 @@ function ItemKeySectionGet(itemID) {
     })
     return itemConfig
 }
+
 /**
  * 根据ID获取物品
- * @param itemKeySection MemorySection 物品配置
+ * @param itemID String 物品ID
  * @param player Player 用于解析PAPI变量
  * @param sender 用于发送错误信息
  * @param data String 指向数据
  * @return ItemStack
  */
-function ItemGet(itemKeySection, player, sender, data) {
+function ItemGet(itemID, player, sender, data) {
+    let itemKeySection = ItemKeySectionGet(itemID)
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let ChatColor = Packages.org.bukkit.ChatColor
-    let invalidNBT = NIConfig["invalidNBT"]
-    let invalidItem = NIConfig["invalidItem"]
+    let invalidNBT = NIConfig.invalidNBT
+    let invalidItem = NIConfig.invalidItem
     if (!(itemKeySection instanceof MemorySection)) return null
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
@@ -1190,7 +1188,7 @@ function ItemGet(itemKeySection, player, sender, data) {
         // 针对每个试图调用的全局节点
         gSectionIDList.forEach((gSectionID) => {
             // 在每个全局节点文件进行查找
-            globalSections.forEach((gSectionIDs) => {
+            NIConfig.globalSections.forEach((gSectionIDs) => {
                 // 如果当前文件中存在相应节点
                 let index = gSectionIDs[1].indexOf(gSectionID)
                 if (index != -1) {
@@ -1270,30 +1268,30 @@ function ItemGet(itemKeySection, player, sender, data) {
         if (itemKeySection.contains("Color")) {
             try { itemMeta.setColor(Color.fromRGB(itemKeySection.getInt("Color"))) } catch (e) {}
         }
+        itemStack.setItemMeta(itemMeta)
+        // 获取物品NBT
+        let itemTag = NMSKt.getItemTag(itemStack)
+        itemTag.NeigeItems = new ItemTag()
+        // itemTag.NeigeItems.ID = new ItemTagData()
         // 设置物品NBT
         if (itemKeySection.contains("NBT")) {
-            itemStack.setItemMeta(itemMeta)
-            // 获取物品NBT
-            let itemTag = NMSKt.getItemTag(itemStack)
             // 获取配置NBT
             var itemNBT = getItemTagNBT(toHashMap(itemKeySection.get("NBT")))
             for (let key in itemNBT) {
                 itemTag[key] = itemNBT[key]
             }
-            try {
-                itemTag.saveTo(itemStack)
-            } catch (e) {
-                let invalidItemMessage = invalidItem.replace(/{itemID}/, itemKeySection.getName())
-                if (sender) {
-                    sender.sendMessage(invalidNBT)
-                    sender.sendMessage(invalidItemMessage)
-                } else {
-                    Bukkit.getServer().getConsoleSender().sendMessage(invalidNBT)
-                    Bukkit.getServer().getConsoleSender().sendMessage(invalidItemMessage)
-                }
+        }
+        try {
+            itemTag.saveTo(itemStack)
+        } catch (e) {
+            let invalidItemMessage = invalidItem.replace(/{itemID}/, itemKeySection.getName())
+            if (sender) {
+                sender.sendMessage(invalidNBT)
+                sender.sendMessage(invalidItemMessage)
+            } else {
+                Bukkit.getServer().getConsoleSender().sendMessage(invalidNBT)
+                Bukkit.getServer().getConsoleSender().sendMessage(invalidItemMessage)
             }
-        } else {
-            itemStack.setItemMeta(itemMeta)
         }
         // 删除节点缓存
         delete sections[random]
@@ -1310,19 +1308,19 @@ function ItemGet(itemKeySection, player, sender, data) {
 function ItemsGet() {
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/Items")))
     // [[config, [id]]]
-    items = []
+    NIConfig.items = []
     // [id]
-    itemIDList = new ArrayList()
+    NIConfig.itemIDList = new ArrayList()
     configs.forEach((config) => {
         let list = new ArrayList()
         let sections = getConfigSection(config)
         sections.forEach((section) => {
             list.add(section.getName())
-            itemIDList.add(section.getName())
+            NIConfig.itemIDList.add(section.getName())
         })
-        items.push(new ArrayList(Arrays.asList([config, list])))
+        NIConfig.items.push(new ArrayList(Arrays.asList([config, list])))
     })
-    pageAmount = Math.ceil(itemIDList.length/NIConfig["listItemAmount"])
+    pageAmount = Math.ceil(NIConfig.itemIDList.length/NIConfig.listItemAmount)
 }
 
 /**
@@ -1331,7 +1329,7 @@ function ItemsGet() {
 function GlobalSectionsGet() {
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/GlobalSections")))
     // [[config, [id]]]
-    globalSections = []
+    NIConfig.globalSections = []
     // [id]
     globalSectionIDList = new ArrayList()
     configs.forEach((config) => {
@@ -1341,7 +1339,7 @@ function GlobalSectionsGet() {
             list.add(section.getName())
             globalSectionIDList.add(section.getName())
         })
-        globalSections.push(new ArrayList(Arrays.asList([config, list])))
+        NIConfig.globalSections.push(new ArrayList(Arrays.asList([config, list])))
     })
 }
 
@@ -1396,7 +1394,7 @@ function getFile(dir, fileName){
  * @return HashMap
  */
 function getHashMapNBT(itemTag) {
-    let ignoreKeys = NIConfig["ignoreKeys"]
+    let ignoreKeys = NIConfig.ignoreKeys
     /**
      * 获取HashMap形式物品NBT
      * @param ItemTag ItemTag 物品NBT数据
