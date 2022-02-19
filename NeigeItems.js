@@ -56,6 +56,7 @@ function NeigeItemsConfig() {
 	NIConfig["helpMessages"] = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
         "§6====================§eNeigeItems§6====================",
         "§6==================[]为必填, ()为选填==================",
+        "§e/ni §flist (页码) §7> 查看所有NI物品",
         "§e/ni §fget [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID获取NI物品",
         "§e/ni §fgive [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予NI物品",
         "§e/ni §fgiveAll [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予所有人NI物品",
@@ -72,6 +73,14 @@ function NeigeItemsConfig() {
         "§e/ni §fhelp §7> 查看帮助信息",
         "§6================================================="]))
 
+    // 物品列表格式
+    NIConfig["listPrefix"] = getConfigValue(file, "ItemList.Prefix", "§6===========§eNeigeItems§6===========")
+    NIConfig["listSuffix"] = getConfigValue(file, "ItemList.Suffix", "§6======<< §e{prev} §f{current}§e/§f{total} §e{next} §6>>======")
+    NIConfig["listItemAmount"] = getConfigValue(file, "ItemList.ItemAmount", 10)
+    NIConfig["listItemFormat"] = getConfigValue(file, "ItemList.ItemFormat", "§6{index}. §a{ID} §6- §f{name}")
+    NIConfig["listPrev"] = getConfigValue(file, "ItemList.Prev", "上一页")
+    NIConfig["listNext"] = getConfigValue(file, "ItemList.Next", "下一页")
+        
 }
 
 var Bukkit = Packages.org.bukkit.Bukkit
@@ -90,12 +99,14 @@ var ArrayList = Packages.java.util.ArrayList
 var HashMap = Packages.java.util.HashMap
 var LinkedHashMap = Packages.java.util.LinkedHashMap
 var BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
+var BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
+var TLibBukkitAdapter = new BukkitAdapterClass()
 var ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
 var ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
 var ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
 var ItemTagType = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagType
+var TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
 var MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
-var NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
 var BukkitScheduler = Bukkit.getScheduler()
 var BukkitServer = Bukkit.getServer()
 var PluginManager = Bukkit.getPluginManager()
@@ -115,24 +126,30 @@ function NeigeItems() {
 }
 
 function CommandRegister() {
-    var NeigeItemManagerCommand = NIConfig["NeigeItemManagerCommand"]
-    var MMItemsPath = NIConfig["MMItemsPath"]
-    var invalidPlayer = NIConfig["invalidPlayer"]
-    var successInfo = NIConfig["successInfo"]
-    var givenInfo = NIConfig["givenInfo"]
-    var dropSuccessInfo = NIConfig["dropSuccessInfo"]
-    var unknownItem = NIConfig["unknownItem"]
-    var existedKey = NIConfig["existedKey"]
-    var invalidPaser = NIConfig["invalidPaser"]
-    var successSaveInfo = NIConfig["successSaveInfo"]
-    var mMImportSuccessInfo = NIConfig["mMImportSuccessInfo"]
-    var airItem = NIConfig["airItem"]
-    var invalidAmount = NIConfig["invalidAmount"]
-    var invalidWorld = NIConfig["invalidWorld"]
-    var invalidLocation = NIConfig["invalidLocation"]
-    var insufficientPermissions = NIConfig["insufficientPermissions"]
-    var reloadedMessage = NIConfig["reloadedMessage"]
-    var helpMessages = NIConfig["helpMessages"]
+    let NeigeItemManagerCommand = NIConfig["NeigeItemManagerCommand"]
+    let MMItemsPath = NIConfig["MMItemsPath"]
+    let invalidPlayer = NIConfig["invalidPlayer"]
+    let successInfo = NIConfig["successInfo"]
+    let givenInfo = NIConfig["givenInfo"]
+    let dropSuccessInfo = NIConfig["dropSuccessInfo"]
+    let unknownItem = NIConfig["unknownItem"]
+    let existedKey = NIConfig["existedKey"]
+    let invalidPaser = NIConfig["invalidPaser"]
+    let successSaveInfo = NIConfig["successSaveInfo"]
+    let mMImportSuccessInfo = NIConfig["mMImportSuccessInfo"]
+    let airItem = NIConfig["airItem"]
+    let invalidAmount = NIConfig["invalidAmount"]
+    let invalidWorld = NIConfig["invalidWorld"]
+    let invalidLocation = NIConfig["invalidLocation"]
+    let insufficientPermissions = NIConfig["insufficientPermissions"]
+    let reloadedMessage = NIConfig["reloadedMessage"]
+    let helpMessages = NIConfig["helpMessages"]
+    let listPrefix = NIConfig["listPrefix"]
+    let listSuffix = NIConfig["listSuffix"]
+    let listItemAmount = NIConfig["listItemAmount"]
+    let listItemFormat = NIConfig["listItemFormat"]
+    let listPrev = NIConfig["listPrev"]
+    let listNext = NIConfig["listNext"]
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
     // 新建指令
@@ -150,6 +167,73 @@ function CommandRegister() {
             // 仅限后台/OP执行
             if (!sender instanceof Player || sender.isOp()) {
                 switch(args[0].toLowerCase()) {
+                    // nim list (页码) > 查看所有NI物品
+                    case "list":
+                        var AsyncTask = Java.extend(BukkitRunnable, {
+                            run: () => {
+                                // 检测指令长度
+                                if (args.length == 1 || incrementingArray(pageAmount).indexOf(args[1]) != -1) {
+                                    // 获取当前页码
+                                    let page = 0
+                                    if (args.length > 1) page = parseInt(args[1]) - 1
+                                    // 预构建待发送信息
+                                    let listMessage = new TellrawJson()
+                                    // 添加信息前缀
+                                    listMessage.append(listPrefix + "\n")
+                                    // 获取当前序号
+                                    let prevItemAmount = page*listItemAmount
+                                    // 逐个获取物品
+                                    for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
+                                        // 替换信息内变量
+                                        let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
+                                        listItemMessage = listItemMessage.replace(/{ID}/g, itemIDList[index])
+                                        listItemMessage = listItemMessage.split("{name}")
+                                        // 构建信息及物品
+                                        let listItemRaw = new TellrawJson()
+                                        let itemStack = ItemGet(ItemKeySectionGet(itemIDList[index]), sender, sender)
+                                        for (let i = 0; i < listItemMessage.length; i++) {
+                                            listItemRaw.append(listItemMessage[i])
+                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + itemIDList[index]))
+                                        }
+                                        // 合并信息
+                                        listMessage.append(listItemRaw)
+                                        listMessage.append("\n")
+                                    }
+                                    let prevRaw = new TellrawJson()
+                                    prevRaw.append(listPrev)
+                                    if (page != 0) {
+                                        prevRaw.hoverText(listPrev + ": " + page)
+                                        prevRaw.runCommand("/ni list " + page)
+                                    }
+                                    let nextRaw = new TellrawJson()
+                                    nextRaw.append(listNext)
+                                    if (page != pageAmount-1) {
+                                        nextRaw.hoverText(listNext + ": " + (page+2))
+                                        nextRaw.runCommand("/ni list " + (page+2))
+                                    }
+                                    let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
+                                    listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
+                                    listSuffixMessage = listSuffixMessage.split("!@#$%")
+                                    listSuffixMessage.forEach(value => {
+                                        if (value == "{prev}") {
+                                            listMessage.append(prevRaw)
+                                        }else if (value == "{next}") {
+                                            listMessage.append(nextRaw)
+                                        } else {
+                                            listMessage.append(value)
+                                        }
+                                    })
+                                    // 向玩家发送信息
+                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                                } else {
+                                    // 非法数量提示
+                                    sender.sendMessage(invalidAmount)
+                                    return
+                                }
+                            }
+                        })
+                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        return true
                     // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NIM物品
                     case "get":
                         var AsyncTask = Java.extend(BukkitRunnable, {
@@ -172,7 +256,7 @@ function CommandRegister() {
                                                     let itemStack = ItemGet(itemConfig, sender, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
                                                     NeigeGive(sender, itemStack, itemAmt, givenInfoMessage)
                                                 // 如果需要反复构建
@@ -184,7 +268,7 @@ function CommandRegister() {
                                                         // 构建物品
                                                         let itemStack = ItemGet(itemConfig, sender, sender, data)
                                                         // 记录物品名及次数
-                                                        var itemName = Tool.getItemName(itemStack)
+                                                        var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
                                                             amtMap[itemName] = 1
                                                         } else {
@@ -246,13 +330,13 @@ function CommandRegister() {
                                                     let itemStack = ItemGet(itemConfig, player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
                                                     NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, args[1])
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予成功提示
                                                     sender.sendMessage(successInfoMessage)
                                                 // 如果需要反复构建
@@ -264,7 +348,7 @@ function CommandRegister() {
                                                         // 构建物品
                                                         let itemStack = ItemGet(itemConfig, player, sender, data)
                                                         // 记录物品名及次数
-                                                        var itemName = Tool.getItemName(itemStack)
+                                                        var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
                                                             amtMap[itemName] = 1
                                                         } else {
@@ -330,13 +414,13 @@ function CommandRegister() {
                                                     let itemStack = ItemGet(itemConfig, player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
                                                     NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, player.getDisplayName())
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予成功提示
                                                     sender.sendMessage(successInfoMessage)
                                                 })
@@ -351,7 +435,7 @@ function CommandRegister() {
                                                         // 构建物品
                                                         itemStack = ItemGet(itemConfig, player, sender, data)
                                                         // 记录物品名及次数
-                                                        var itemName = Tool.getItemName(itemStack)
+                                                        var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
                                                             amtMap[itemName] = 1
                                                         } else {
@@ -435,7 +519,7 @@ function CommandRegister() {
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, itemAmt)
-                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予成功提示
                                                             sender.sendMessage(dropSuccessInfoMessage)
                                                         // 如果需要反复构建
@@ -447,7 +531,7 @@ function CommandRegister() {
                                                                 // 构建物品
                                                                 let itemStack = ItemGet(itemConfig, player, sender, data)
                                                                 // 记录物品名及次数
-                                                                var itemName = Tool.getItemName(itemStack)
+                                                                var itemName = getItemName(itemStack)
                                                                 if (amtMap[itemName] == null) {
                                                                     amtMap[itemName] = 1
                                                                 } else {
@@ -514,7 +598,7 @@ function CommandRegister() {
                                         // 重载物品列表
                                         ItemsGet()
                                         // 替换提示信息中的占位符
-                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, Tool.getItemName(itemStack))
+                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
                                         // 保存成功提示
@@ -551,7 +635,7 @@ function CommandRegister() {
                                         // 重载物品列表
                                         ItemsGet()
                                         // 替换提示信息中的占位符
-                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, Tool.getItemName(itemStack))
+                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
                                         // 保存成功提示
@@ -590,7 +674,7 @@ function CommandRegister() {
                                                         // 重载物品列表
                                                         ItemsGet()
                                                         // 替换提示信息中的占位符
-                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
                                                         // 保存成功提示
@@ -637,7 +721,7 @@ function CommandRegister() {
                                                         // 重载物品列表
                                                         ItemsGet()
                                                         // 替换提示信息中的占位符
-                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
                                                         // 保存成功提示
@@ -709,7 +793,7 @@ function CommandRegister() {
                                                             itemAmt = itemAmt || 1
                                                             // 替换给予信息中的占位符
                                                             let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予物品
                                                             NeigeGive(sender, itemStack, itemAmt, givenInfoMessage)
                                                         } else {
@@ -752,13 +836,13 @@ function CommandRegister() {
                                                             itemAmt = itemAmt || 1
                                                             // 替换给予信息中的占位符
                                                             let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予物品
                                                             NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
                                                             // 替换给予信息中的占位符
                                                             let successInfoMessage = successInfo.replace(/{player}/g, args[2])
                                                             successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                            successInfoMessage = successInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                            successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予成功提示
                                                             sender.sendMessage(successInfoMessage)
                                                         } else {
@@ -799,7 +883,7 @@ function CommandRegister() {
                                                         itemAmt = itemAmt || 1
                                                         // 替换给予信息中的占位符
                                                         let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                         // 对于每个在线玩家
                                                         Bukkit.getOnlinePlayers().forEach((player) => {
                                                             // 给予物品
@@ -808,7 +892,7 @@ function CommandRegister() {
                                                         // 替换提示信息中的占位符
                                                         let successInfoMessage = successInfo.replace(/{player}/g, "所有玩家")
                                                         successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, Tool.getItemName(itemStack))
+                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                         // 给予成功提示
                                                         sender.sendMessage(successInfoMessage)
                                                     } else {
@@ -876,9 +960,11 @@ function CommandRegister() {
             let emptyList = Arrays.asList([])
             switch(args.length) {
                 case 1:
-                    return Arrays.asList(["get", "give", "giveAll", "drop", "save", "cover", "mm", "help", "reload"])
+                    return Arrays.asList(["list", "get", "give", "giveAll", "drop", "save", "cover", "mm", "help", "reload"])
                 case 2:
                     switch(args[0].toLowerCase()) {
+                        case "list":
+                            return incrementingArray(pageAmount)
                         case "get":
                             return itemIDList
                         case "give":
@@ -971,6 +1057,7 @@ function CommandRegister() {
  * @return Boolean 是否保存成功
  */
 function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     // 检测是否为空气
     if (itemStack != null && itemStack.getType() != Material.AIR) {
         // 获取路径文件
@@ -1078,6 +1165,7 @@ function ItemKeySectionGet(itemID) {
  * @return ItemStack
  */
 function ItemGet(itemKeySection, player, sender, data) {
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let ChatColor = Packages.org.bukkit.ChatColor
     let invalidNBT = NIConfig["invalidNBT"]
     let invalidItem = NIConfig["invalidItem"]
@@ -1234,6 +1322,7 @@ function ItemsGet() {
         })
         items.push(new ArrayList(Arrays.asList([config, list])))
     })
+    pageAmount = Math.ceil(itemIDList.length/NIConfig["listItemAmount"])
 }
 
 /**
@@ -2037,17 +2126,45 @@ function setPapiWithNoColor(player, text) {
 /**
  * 获取TellrawJson形式物品
  * @param itemStack ItemStack
+ * @param name String|null 显示文本, 默认为物品名
  * @return TellrawJson
  */
-function itemToTellrawJson(itemStack) {
+function itemToTellrawJson(itemStack, name = getItemName(itemStack)) {
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
-    let Bukkit = Packages.org.bukkit.Bukkit
-    let CraftItemStack = Java.type("org.bukkit.craftbukkit." + Bukkit.getServer().class.name.split('.')[3] + ".inventory.CraftItemStack")
-    let itemName = Tool.getItemName(itemStack)
-    let nmsItemStack = CraftItemStack.asNMSCopy(itemStack)
     let itemKey = itemStack.type.key.key
-    let itemTag = nmsItemStack.getTag() || "{}"
+    let itemTag = NMSKt.getItemTag(itemStack)
     let tellrawJson = new TellrawJson()
-    tellrawJson.append(itemName)
+    tellrawJson.append(name)
     return tellrawJson.hoverItem(itemKey, itemTag)
+}
+
+/**
+ * 获取物品名
+ * @param itemStack ItemStack
+ * @param name String|null 显示文本, 默认为物品名
+ * @return TellrawJson
+ */
+function getItemName(itemStack) {
+    let name = Tool.getItemName(itemStack)
+    if (name == "") {
+        let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
+        if (itemStack.getItemMeta() instanceof SkullMeta) {
+            name = "§e" + itemStack.getItemMeta().getOwner() + "的头"
+        }
+    }
+    return name
+}
+
+/**
+ * 生成递增数组
+ * @param length Int 数组长度
+ */
+function incrementingArray(length) {
+    length = parseInt(length)
+    var arr = []
+    for (var i = 1; i <= length; i++) {
+        arr.push(i)
+    }
+    return arr
 }
