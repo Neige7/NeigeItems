@@ -51,6 +51,8 @@ function NeigeItemsConfig() {
 	NIConfig.invalidNBT = getConfigValue(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
 	// 错误物品提示
 	NIConfig.invalidItem = getConfigValue(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
+	// 给予失败提示
+	NIConfig.failureInfo = getConfigValue(file, "Messages.failureInfo", "§e[NI] §6物品给予失败, 可能原因: 物品未配置材质/玩家已下线")
 
 	// 帮助信息
 	NIConfig.helpMessages = getConfigValue(file, "Messages.helpMessages", Arrays.asList([
@@ -112,16 +114,16 @@ var BukkitServer = Bukkit.getServer()
 var PluginManager = Bukkit.getPluginManager()
 var PouvoirPlugin = PluginManager.getPlugin("Pouvoir")
 var itemManager = MythicMobs.inst().getItemManager()
-var sections = {}
 
 // 数据预载
 //@Awake(enable)
 //@Awake(reload)
 function NeigeItems() {
     NeigeItemsConfig()
-    GlobalSectionsGet()
-    ItemsGet()
-    MMItemLoad()
+    NIConfig.sections = {}
+    getGlobalSections()
+    getNiItems()
+    mmItemLoad()
     CommandRegister()
 }
 
@@ -143,6 +145,7 @@ function CommandRegister() {
     let invalidLocation = NIConfig.invalidLocation
     let insufficientPermissions = NIConfig.insufficientPermissions
     let reloadedMessage = NIConfig.reloadedMessage
+    let failureInfo = NIConfig.failureInfo
     let helpMessages = NIConfig.helpMessages
     let listPrefix = NIConfig.listPrefix
     let listSuffix = NIConfig.listSuffix
@@ -190,7 +193,7 @@ function CommandRegister() {
                                         listItemMessage = listItemMessage.split("{name}")
                                         // 构建信息及物品
                                         let listItemRaw = new TellrawJson()
-                                        let itemStack = ItemGet(NIConfig.itemIDList[index], sender, sender)
+                                        let itemStack = getNiItem(NIConfig.itemIDList[index], sender, sender)
                                         for (let i = 0; i < listItemMessage.length; i++) {
                                             listItemRaw.append(listItemMessage[i])
                                             if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + NIConfig.itemIDList[index]))
@@ -252,12 +255,15 @@ function CommandRegister() {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
                                                 if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
-                                                    let itemStack = ItemGet(args[1], sender, sender, data)
+                                                    let itemStack = getNiItem(args[1], sender, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
-                                                    NeigeGive(sender, itemStack, itemAmt, givenInfoMessage)
+                                                    if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                    }
                                                 // 如果需要反复构建
                                                 } else {
                                                     // {物品名: 产出次数}
@@ -265,7 +271,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        let itemStack = ItemGet(args[1], sender, sender, data)
+                                                        let itemStack = getNiItem(args[1], sender, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -274,7 +280,11 @@ function CommandRegister() {
                                                             amtMap[itemName] ++
                                                         }
                                                         // 给予物品
-                                                        ItemGiverAsyn(sender, itemStack)
+                                                        if (!giveItem(sender, itemStack)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                            return
+                                                        }
                                                     }
                                                     for (let key in amtMap) {
                                                         // 替换提示信息中的占位符
@@ -325,12 +335,15 @@ function CommandRegister() {
                                                 itemAmt = itemAmt || 1
                                                 // 如果仅需一样的物品
                                                 if (args.length > 4 && (args[4] == "false" || args[4] == "0")) {
-                                                    let itemStack = ItemGet(args[2], player, sender, data)
+                                                    let itemStack = getNiItem(args[2], player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
-                                                    NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
+                                                    if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                    }
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, args[1])
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
@@ -344,7 +357,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        let itemStack = ItemGet(args[2], player, sender, data)
+                                                        let itemStack = getNiItem(args[2], player, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -353,7 +366,11 @@ function CommandRegister() {
                                                             amtMap[itemName] ++
                                                         }
                                                         // 给予物品
-                                                        ItemGiverAsyn(player, itemStack)
+                                                        if (!giveItem(player, itemStack)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                            return
+                                                        }
                                                     }
                                                     for (let key in amtMap) {
                                                         // 替换提示信息中的占位符
@@ -408,12 +425,15 @@ function CommandRegister() {
                                             if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
                                                 // 对于每个在线玩家
                                                 Bukkit.getOnlinePlayers().forEach((player) => {
-                                                    let itemStack = ItemGet(args[1], player, sender, data)
+                                                    let itemStack = getNiItem(args[1], player, sender, data)
                                                     // 替换提示信息中的占位符
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                     // 给予物品
-                                                    NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
+                                                    if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                    }
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, player.getDisplayName())
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
@@ -430,7 +450,7 @@ function CommandRegister() {
                                                     // 循环构建物品
                                                     for (let index = 0; index < itemAmt; index++) {
                                                         // 构建物品
-                                                        itemStack = ItemGet(args[1], player, sender, data)
+                                                        itemStack = getNiItem(args[1], player, sender, data)
                                                         // 记录物品名及次数
                                                         var itemName = getItemName(itemStack)
                                                         if (amtMap[itemName] == null) {
@@ -439,7 +459,11 @@ function CommandRegister() {
                                                             amtMap[itemName] ++
                                                         }
                                                         // 给予物品
-                                                        ItemGiverAsyn(player, itemStack)
+                                                        if (!giveItem(player, itemStack)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                            return
+                                                        }
                                                     }
                                                     for (let key in amtMap) {
                                                         // 替换提示信息中的占位符
@@ -506,9 +530,9 @@ function CommandRegister() {
                                                     if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
                                                         // 如果仅需一样的物品
                                                         if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
-                                                            let itemStack = ItemGet(args[1], player, sender, data)
+                                                            let itemStack = getNiItem(args[1], player, sender, data)
                                                             // 掉落物品
-                                                            NeigeDrop(world, x, y, z, itemStack, itemAmt)
+                                                            dropItems(world, x, y, z, itemStack, itemAmt)
                                                             // 替换提示信息中的占位符
                                                             let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
@@ -525,7 +549,7 @@ function CommandRegister() {
                                                             // 循环构建物品
                                                             for (let index = 0; index < itemAmt; index++) {
                                                                 // 构建物品
-                                                                let itemStack = ItemGet(args[1], player, sender, data)
+                                                                let itemStack = getNiItem(args[1], player, sender, data)
                                                                 // 记录物品名及次数
                                                                 var itemName = getItemName(itemStack)
                                                                 if (amtMap[itemName] == null) {
@@ -534,7 +558,7 @@ function CommandRegister() {
                                                                     amtMap[itemName] ++
                                                                 }
                                                                 // 掉落物品
-                                                                NeigeDrop(world, x, y, z, itemStack, itemAmt)
+                                                                dropItems(world, x, y, z, itemStack, itemAmt)
                                                             }
                                                             for (let key in amtMap) {
                                                                 // 替换提示信息中的占位符
@@ -590,9 +614,9 @@ function CommandRegister() {
                                     let path = args[2] || args[1] + ".yml"
                                     let saveResult
                                     // 保存物品
-                                    if (saveResult = ItemSave(itemStack, args[1], args[2], false)) {
+                                    if (saveResult = saveNiItem(itemStack, args[1], args[2], false)) {
                                         // 重载物品列表
-                                        ItemsGet()
+                                        getNiItems()
                                         // 替换提示信息中的占位符
                                         let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
@@ -626,10 +650,10 @@ function CommandRegister() {
                                     // 获取保存路径
                                     let path = args[2] || args[1] + ".yml"
                                     // 保存物品
-                                    let saveResult = ItemSave(itemStack, args[1], args[2], true)
+                                    let saveResult = saveNiItem(itemStack, args[1], args[2], true)
                                     if (saveResult != 2) {
                                         // 重载物品列表
-                                        ItemsGet()
+                                        getNiItems()
                                         // 替换提示信息中的占位符
                                         let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
@@ -666,9 +690,9 @@ function CommandRegister() {
                                                     let path = args[3] || MMItemsPath
                                                     let saveResult
                                                     // 保存物品
-                                                    if (saveResult = ItemSave(itemStack, args[2], path, false)) {
+                                                    if (saveResult = saveNiItem(itemStack, args[2], path, false)) {
                                                         // 重载物品列表
-                                                        ItemsGet()
+                                                        getNiItems()
                                                         // 替换提示信息中的占位符
                                                         let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
@@ -711,11 +735,11 @@ function CommandRegister() {
                                                     let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
                                                     // 获取保存路径
                                                     let path = args[3] || MMItemsPath
-                                                    let saveResult = ItemSave(itemStack, args[2], path, true)
+                                                    let saveResult = saveNiItem(itemStack, args[2], path, true)
                                                     // 保存物品
                                                     if (saveResult != 2) {
                                                         // 重载物品列表
-                                                        ItemsGet()
+                                                        getNiItems()
                                                         // 替换提示信息中的占位符
                                                         let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
                                                         successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
@@ -751,7 +775,7 @@ function CommandRegister() {
                                             itemManager.getItems().stream().forEach((item) => {
                                                 let saveResult
                                                 // 保存物品
-                                                if (!(saveResult = ItemSave(BukkitAdapter.adapt(item.generateItemStack(1)), item.getInternalName(), path, false))) {
+                                                if (!(saveResult = saveNiItem(BukkitAdapter.adapt(item.generateItemStack(1)), item.getInternalName(), path, false))) {
                                                     // 替换提示信息中的占位符
                                                     let existedKeyMessage = existedKey.replace(/{itemID}/g, item.getInternalName())
                                                     // 物品ID已存在提示
@@ -762,7 +786,7 @@ function CommandRegister() {
                                                 }
                                             })
                                             // 重载物品列表
-                                            ItemsGet()
+                                            getNiItems()
                                             // 替换提示信息中的占位符
                                             let mMImportSuccessInfoMessage = mMImportSuccessInfo.replace(/{path}/g, path)
                                             // 保存成功提示
@@ -791,7 +815,10 @@ function CommandRegister() {
                                                             let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                             givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予物品
-                                                            NeigeGive(sender, itemStack, itemAmt, givenInfoMessage)
+                                                            if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
+                                                                // 给予失败提示
+                                                                sender.sendMessage(failureInfo)
+                                                            }
                                                         } else {
                                                             // 非法数量提示
                                                             sender.sendMessage(invalidAmount)
@@ -834,7 +861,10 @@ function CommandRegister() {
                                                             let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                             givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
                                                             // 给予物品
-                                                            NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
+                                                            if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                                // 给予失败提示
+                                                                sender.sendMessage(failureInfo)
+                                                            }
                                                             // 替换给予信息中的占位符
                                                             let successInfoMessage = successInfo.replace(/{player}/g, args[2])
                                                             successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
@@ -883,7 +913,10 @@ function CommandRegister() {
                                                         // 对于每个在线玩家
                                                         Bukkit.getOnlinePlayers().forEach((player) => {
                                                             // 给予物品
-                                                            NeigeGive(player, itemStack, itemAmt, givenInfoMessage)
+                                                            if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                                // 给予失败提示
+                                                                sender.sendMessage(failureInfo)
+                                                            }
                                                         })
                                                         // 替换提示信息中的占位符
                                                         let successInfoMessage = successInfo.replace(/{player}/g, "所有玩家")
@@ -924,12 +957,14 @@ function CommandRegister() {
                             run: () => {
                                 // 重载配置文件
                                 NeigeItemsConfig()
+                                // 创建节点缓存文件
+                                NIConfig.sections = {}
                                 // 重载全局节点列表
-                                GlobalSectionsGet()
+                                getGlobalSections()
                                 // 重载NIM物品列表
-                                ItemsGet()
+                                getNiItems()
                                 // 重载MM物品列表
-                                MMItemLoad()
+                                mmItemLoad()
                                 // 重载成功提示
                                 sender.sendMessage(reloadedMessage)
                             }
@@ -1010,7 +1045,7 @@ function CommandRegister() {
                                     return emptyList
                             }
                         case "drop":
-                            return WorldsGet()
+                            return getWorlds()
                         default:
                             return emptyList
                     }
@@ -1052,7 +1087,7 @@ function CommandRegister() {
  * @param cover Boolean 是否覆盖
  * @return Boolean 是否保存成功
  */
-function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
+function saveNiItem(itemStack, itemKey, path = itemKey + ".yml", cover) {
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     // 检测是否为空气
     if (itemStack != null && itemStack.getType() != Material.AIR) {
@@ -1141,7 +1176,7 @@ function ItemSave(itemStack, itemKey, path = itemKey + ".yml", cover) {
  * @param itemID String 物品ID
  * @return MemorySection
  */
-function ItemKeySectionGet(itemID) {
+function getItemKeySection(itemID) {
     let itemConfig = null
     NIConfig.items.some((itemIDs) => {
         let index = itemIDs[1].indexOf(itemID)
@@ -1161,26 +1196,26 @@ function ItemKeySectionGet(itemID) {
  * @param data String 指向数据
  * @return ItemStack
  */
-function ItemGet(itemID, player, sender, data) {
-    let itemKeySection = ItemKeySectionGet(itemID)
+function getNiItem(itemID, player, sender, data) {
+    let itemKeySection = getItemKeySection(itemID)
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let ChatColor = Packages.org.bukkit.ChatColor
     let invalidNBT = NIConfig.invalidNBT
     let invalidItem = NIConfig.invalidItem
-    if (!(itemKeySection instanceof MemorySection)) return null
+    if (itemKeySection == null) return null
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
-    sections[random] = {}
+    NIConfig.sections[random] = {}
     // 加载指向数据
     if (data) dataParse(data, random)
     // 对文本化配置进行全局PAPI解析
     let tempItemKeySection = new YamlConfiguration()
-    tempItemKeySection.set("ID", itemKeySection)
+    tempItemKeySection.set(itemID, itemKeySection)
     let stringSection = tempItemKeySection.saveToString()
     stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
-    itemKeySection = tempItemKeySection.getConfigurationSection("ID")
+    itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
     // 如果调用了全局节点
     if (itemKeySection.contains("GlobalSections")) {
         // 获取全局节点ID
@@ -1209,12 +1244,12 @@ function ItemGet(itemID, player, sender, data) {
     }
     // 对文本化配置进行全局节点解析
     tempItemKeySection = new YamlConfiguration()
-    tempItemKeySection.set("ID", itemKeySection)
+    tempItemKeySection.set(itemID, itemKeySection)
     stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random)
     stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
-    itemKeySection = tempItemKeySection.getConfigurationSection("ID")
+    itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
     // 构建物品
     let material
     if (itemKeySection.contains("Material") && itemKeySection.getString("Material") && (material = Material.matchMaterial(itemKeySection.getString("Material").toUpperCase()))) {
@@ -1272,13 +1307,14 @@ function ItemGet(itemID, player, sender, data) {
         // 获取物品NBT
         let itemTag = NMSKt.getItemTag(itemStack)
         itemTag.NeigeItems = new ItemTag()
-        // itemTag.NeigeItems.ID = new ItemTagData()
+        itemTag.NeigeItems.id = new ItemTagData(itemID)
+        itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NIConfig.sections[random]))
         // 设置物品NBT
         if (itemKeySection.contains("NBT")) {
             // 获取配置NBT
             var itemNBT = getItemTagNBT(toHashMap(itemKeySection.get("NBT")))
             for (let key in itemNBT) {
-                itemTag[key] = itemNBT[key]
+                if (key != "NeigeItems") itemTag[key] = itemNBT[key]
             }
         }
         try {
@@ -1294,10 +1330,10 @@ function ItemGet(itemID, player, sender, data) {
             }
         }
         // 删除节点缓存
-        delete sections[random]
+        delete NIConfig.sections[random]
         return itemStack
     } else {
-        delete sections[random]
+        delete NIConfig.sections[random]
         return null
     }
 }
@@ -1305,7 +1341,7 @@ function ItemGet(itemID, player, sender, data) {
 /**
  * 加载NIM物品列表
  */
-function ItemsGet() {
+function getNiItems() {
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/Items")))
     // [[config, [id]]]
     NIConfig.items = []
@@ -1313,8 +1349,8 @@ function ItemsGet() {
     NIConfig.itemIDList = new ArrayList()
     configs.forEach((config) => {
         let list = new ArrayList()
-        let sections = getConfigSection(config)
-        sections.forEach((section) => {
+        let configSections = getConfigSection(config)
+        configSections.forEach((section) => {
             list.add(section.getName())
             NIConfig.itemIDList.add(section.getName())
         })
@@ -1326,7 +1362,7 @@ function ItemsGet() {
 /**
  * 加载全局节点列表
  */
-function GlobalSectionsGet() {
+function getGlobalSections() {
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/GlobalSections")))
     // [[config, [id]]]
     NIConfig.globalSections = []
@@ -1334,8 +1370,8 @@ function GlobalSectionsGet() {
     globalSectionIDList = new ArrayList()
     configs.forEach((config) => {
         let list = new ArrayList()
-        let sections = getConfigSection(config)
-        sections.forEach((section) => {
+        let configSections = getConfigSection(config)
+        configSections.forEach((section) => {
             list.add(section.getName())
             globalSectionIDList.add(section.getName())
         })
@@ -1346,7 +1382,7 @@ function GlobalSectionsGet() {
 /**
  * 加载MM物品列表
  */
-function MMItemLoad(){
+function mmItemLoad(){
     MMIDs = new ArrayList()
     itemManager.getItems().stream().forEach((item) => {
         MMIDs.add(item.getInternalName())
@@ -1688,13 +1724,13 @@ function parseSection(Sections, string, random) {
         var name = string
     }
     // 如果已解析对应ID节点
-    if (sections[random][name] != undefined) {
+    if (NIConfig.sections[random][name] != undefined) {
         // 直接返回对应节点值
-        return sections[random][name]
+        return NIConfig.sections[random][name]
     // 如果尚未解析对应ID节点
     } else {
         // 尝试解析并返回对应节点值
-        if (globalSectionParse(Sections, name, random)) return sections[random][name]
+        if (globalSectionParse(Sections, name, random)) return NIConfig.sections[random][name]
     }
     switch (type) {
         case "strings":
@@ -1703,7 +1739,7 @@ function parseSection(Sections, string, random) {
             } else {
                 var result = getSection(Sections, args[0], random)
             }
-            if (name) sections[random][name] = result
+            if (name) NIConfig.sections[random][name] = result
             return result
         case "number":
             if (args.length > 1) var result = Math.random()*(parseFloat(getSection(Sections, args[1], random))-parseFloat(getSection(Sections, args[0], random)))+parseFloat(getSection(Sections, args[0], random))
@@ -1714,7 +1750,7 @@ function parseSection(Sections, string, random) {
             }
             if (!isNaN(result)) {
                 // 已指定ID
-                if (name) sections[random][name] = result
+                if (name) NIConfig.sections[random][name] = result
                 return result
             }
             return "未知数字节点参数"
@@ -1742,11 +1778,11 @@ function parseSection(Sections, string, random) {
                     if (!isNaN(result)) {
                         result = result.toFixed(fixed)
                         // 已指定ID
-                        if (name) sections[random][name] = result
+                        if (name) NIConfig.sections[random][name] = result
                         return result
                     }
                 } catch (error) {
-                    if (name) sections[random][name] = "公式节点计算错误"
+                    if (name) NIConfig.sections[random][name] = "公式节点计算错误"
                     return "公式节点计算错误"
                 }
             }
@@ -1754,7 +1790,7 @@ function parseSection(Sections, string, random) {
         case "weight":
             if (args.length = 1) {
                 var result = getSection(Sections, args[0].slice(args[0].indexOf("::")+2), random)
-                if (name) sections[random][name] = result
+                if (name) NIConfig.sections[random][name] = result
                 return result
             }
             var strings = []
@@ -1765,7 +1801,7 @@ function parseSection(Sections, string, random) {
                 for (let index = 0; index < weight; index++) strings.push(string)
             })
             var result = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
-            if (name) sections[random][name] = result
+            if (name) NIConfig.sections[random][name] = result
             return result
         case "js":
             try {
@@ -1773,24 +1809,24 @@ function parseSection(Sections, string, random) {
                 var path = info[0]
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
-                var result = getSection(Sections, global[func](sections[random]), random)
-                if (name) sections[random][name] = result
+                var result = getSection(Sections, global[func](NIConfig.sections[random]), random)
+                if (name) NIConfig.sections[random][name] = result
                 return result
             } catch (error) {
-                if (name) sections[random][name] = "js函数获取失败"
+                if (name) NIConfig.sections[random][name] = "js函数获取失败"
                 return "js函数获取失败"
             }
         default:
             // 将类型视作ID尝试解析
             var name  = type
             // 如果已解析对应ID节点
-            if (sections[random][name] != undefined) {
+            if (NIConfig.sections[random][name] != undefined) {
                 // 直接返回对应节点值
-                return sections[random][name]
+                return NIConfig.sections[random][name]
             // 如果尚未解析对应ID节点
             } else {
                 // 尝试解析并返回对应节点值
-                if (globalSectionParse(Sections, name, random)) return sections[random][name]
+                if (globalSectionParse(Sections, name, random)) return NIConfig.sections[random][name]
             }
             return "未知节点"
     }
@@ -1805,8 +1841,8 @@ function parseSection(Sections, string, random) {
 function loadSection(Sections, string, random) {
     let result
     let length
-    while (length != Object.keys(sections[random]).length) {
-        length = Object.keys(sections[random]).length
+    while (length != Object.keys(NIConfig.sections[random]).length) {
+        length = Object.keys(NIConfig.sections[random]).length
         result = getSection(Sections, string, random)
     }
     return result
@@ -1838,7 +1874,7 @@ function onlinePlayers() {
 /**
  * 加载世界列表
  */
- function WorldsGet() {
+ function getWorlds() {
     let worlds = new ArrayList()
     Bukkit.getWorlds().forEach((world) => {
         worlds.add(world.getName())
@@ -1852,16 +1888,22 @@ function onlinePlayers() {
  * @param itemStack ItemStack
  * @param amount Int
  * @param message String || ""
+ * @return Boolean 是否成功
  */
-function NeigeGive(player, itemStack, amount, message) {
-    let stackSize = itemStack.getMaxStackSize()
-    itemStack.setAmount(stackSize)
-    for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { ItemGiverAsyn(player, itemStack) }
-    if (givenAmt < amount) {
-        itemStack.setAmount(amount - givenAmt)
-        ItemGiverAsyn(player, itemStack)
+function giveItems(player, itemStack, amount, message) {
+    if (itemStack instanceof ItemStack && player.isOnline()) {
+        let stackSize = itemStack.getMaxStackSize()
+        itemStack.setAmount(stackSize)
+        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { giveItem(player, itemStack) }
+        if (givenAmt < amount) {
+            itemStack.setAmount(amount - givenAmt)
+            giveItem(player, itemStack)
+        }
+        if (message != "") player.sendMessage(message)
+        return true
+    } else {
+        return false
     }
-    if (message != "") player.sendMessage(message)
 }
 
 
@@ -1870,14 +1912,19 @@ function NeigeGive(player, itemStack, amount, message) {
  * @param player OnlinePlayer
  * @param itemStack ItemStack
  */
-function ItemGiverAsyn(player, itemStack){
-    let inv = player.getInventory()
-    let loc = player.getLocation()
-    let dropList = inv.addItem(itemStack)
-    if (!dropList.isEmpty()) {
-        BukkitScheduler.callSyncMethod(PouvoirPlugin, () => {
-            loc.getWorld().dropItem(loc, dropList[0])
-        })
+function giveItem(player, itemStack){
+    if (itemStack instanceof ItemStack && player.isOnline()) {
+        let inv = player.getInventory()
+        let loc = player.getLocation()
+        let dropList = inv.addItem(itemStack)
+        if (!dropList.isEmpty()) {
+            BukkitScheduler.callSyncMethod(PouvoirPlugin, () => {
+                loc.getWorld().dropItem(loc, dropList[0])
+            })
+        }
+        return true
+    } else {
+        return false
     }
 }
 
@@ -1890,16 +1937,16 @@ function ItemGiverAsyn(player, itemStack){
  * @param itemStack ItemStack
  * @param amount Int
  */
-function NeigeDrop(world, x, y, z, itemStack, amount) {
+function dropItems(world, x, y, z, itemStack, amount) {
     var Location = org.bukkit.Location
 
     let stackSize = itemStack.getMaxStackSize()
     let location = new Location(world, x, y, z)
     itemStack.setAmount(stackSize)
-    for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { ItemDropAsyn(world, location, itemStack) }
+    for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { dropItem(world, location, itemStack) }
     if (givenAmt < amount) {
         itemStack.setAmount(amount - givenAmt)
-        ItemDropAsyn(world, location, itemStack)
+        dropItem(world, location, itemStack)
     }
 }
 
@@ -1909,7 +1956,7 @@ function NeigeDrop(world, x, y, z, itemStack, amount) {
  * @param location Location 位置
  * @param itemStack ItemStack
  */
-function ItemDropAsyn(world, location, itemStack){
+function dropItem(world, location, itemStack){
     BukkitScheduler.callSyncMethod(PouvoirPlugin, () => {
         world.dropItem(location, itemStack)
     })
@@ -1941,7 +1988,7 @@ function getConfigValue(file, key, defaultValue) {
         try { let obj=JSON.parse(string)
             if (typeof obj == 'object' && obj ){
                 for (let key in obj) {
-                    sections[random][key] = obj[key]
+                    NIConfig.sections[random][key] = obj[key]
                 }
             }
         } catch(e) {}
@@ -1966,7 +2013,7 @@ function globalSectionParse(Sections, section, random) {
                 if (currentSection.contains("values")) {
                     // 加载字符串组
                     var strings = currentSection.get("values")
-                    sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
+                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
                 }
                 break
             case "number":
@@ -1982,7 +2029,7 @@ function globalSectionParse(Sections, section, random) {
                     }
                     if (isNaN(fixed)) fixed = 0
                     // 加载随机数
-                    sections[random][section] = ((Math.random()*(max-min))+min).toFixed(fixed)
+                    NIConfig.sections[random][section] = ((Math.random()*(max-min))+min).toFixed(fixed)
                 }
                 break
             case "calculation":
@@ -2006,9 +2053,9 @@ function globalSectionParse(Sections, section, random) {
                         }
                         if (isNaN(fixed)) fixed = 0
                         // 加载公式结果
-                        sections[random][section] = result.toFixed(fixed)
+                        NIConfig.sections[random][section] = result.toFixed(fixed)
                     } catch (error) {
-                        sections[random][section] = "公式节点计算错误"
+                        NIConfig.sections[random][section] = "公式节点计算错误"
                         print("公式节点: " + section + " 出现计算错误, 请检查配置")
                     }
                 }
@@ -2024,7 +2071,7 @@ function globalSectionParse(Sections, section, random) {
                         let string = value.slice(index+2)
                         for (let index = 0; index < weight; index++) strings.push(string)
                     })
-                    sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
+                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
                 }
                 break
             case "js":
@@ -2034,10 +2081,10 @@ function globalSectionParse(Sections, section, random) {
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
-                        sections[random][section] = getSection(Sections, global[func](sections[random]), random)
+                        NIConfig.sections[random][section] = getSection(Sections, global[func](NIConfig.sections[random]), random)
                     }
                 } catch (error) {
-                    sections[random][section] = "公式节点计算错误"
+                    NIConfig.sections[random][section] = "公式节点计算错误"
                 }
                 break
             default:
@@ -2144,6 +2191,7 @@ function itemToTellrawJson(itemStack, name = getItemName(itemStack)) {
  * @return TellrawJson
  */
 function getItemName(itemStack) {
+    if (!(itemStack instanceof ItemStack)) return null
     let name = Tool.getItemName(itemStack)
     if (name == "") {
         let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
