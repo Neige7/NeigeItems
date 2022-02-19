@@ -2150,7 +2150,7 @@ function getItemName(itemStack) {
     if (name == "") {
         let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
         if (itemStack.getItemMeta() instanceof SkullMeta) {
-            name = "§e" + itemStack.getItemMeta().getOwner() + "的头"
+            name = itemStack.getItemMeta().getOwner() + "的头"
         }
     }
     return name
