@@ -85,36 +85,6 @@ function NeigeItemsConfig() {
         
 }
 
-var Bukkit = Packages.org.bukkit.Bukkit
-var BukkitRunnable = Packages.org.bukkit.scheduler.BukkitRunnable
-var Color = Packages.org.bukkit.Color
-var ConfigurationSection = org.org.bukkit.configuration.ConfigurationSection
-var Enchantment = Packages.org.bukkit.enchantments.Enchantment
-var ItemFlag = Packages.org.bukkit.inventory.ItemFlag
-var ItemStack = Packages.org.bukkit.inventory.ItemStack
-var LeatherArmorMeta = org.org.bukkit.inventory.meta.LeatherArmorMeta
-var Material = Packages.org.bukkit.Material
-var MemorySection = Packages.org.bukkit.configuration.MemorySection
-var Player = Packages.org.bukkit.entity.Player
-var YamlConfiguration = org.bukkit.configuration.file.YamlConfiguration
-var ArrayList = Packages.java.util.ArrayList
-var HashMap = Packages.java.util.HashMap
-var LinkedHashMap = Packages.java.util.LinkedHashMap
-var BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
-var BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
-var TLibBukkitAdapter = new BukkitAdapterClass()
-var ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
-var ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
-var ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
-var ItemTagType = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagType
-var TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
-var MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
-var BukkitScheduler = Bukkit.getScheduler()
-var BukkitServer = Bukkit.getServer()
-var PluginManager = Bukkit.getPluginManager()
-var PouvoirPlugin = PluginManager.getPlugin("Pouvoir")
-var itemManager = MythicMobs.inst().getItemManager()
-
 // 数据预载
 //@Awake(enable)
 //@Awake(reload)
@@ -128,6 +98,16 @@ function NeigeItems() {
 }
 
 function CommandRegister() {
+    let Bukkit = Packages.org.bukkit.Bukkit
+    let BukkitRunnable = Packages.org.bukkit.scheduler.BukkitRunnable
+    let Player = Packages.org.bukkit.entity.Player
+    let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
+    let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
+    let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
+    let TLibBukkitAdapter = new BukkitAdapterClass()
+    let MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
+    let itemManager = MythicMobs.inst().getItemManager()
+
     let NeigeItemManagerCommand = NIConfig.NeigeItemManagerCommand
     let MMItemsPath = NIConfig.MMItemsPath
     let invalidPlayer = NIConfig.invalidPlayer
@@ -153,6 +133,7 @@ function CommandRegister() {
     let listItemFormat = NIConfig.listItemFormat
     let listPrev = NIConfig.listPrev
     let listNext = NIConfig.listNext
+
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
     // 新建指令
@@ -235,7 +216,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NIM物品
                     case "get":
@@ -314,7 +295,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NIM物品
                     case "give":
@@ -405,7 +386,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NIM物品
                     case "giveall":
@@ -496,7 +477,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] (是否反复随机) (物品解析对象) (指向数据) > 于指定位置掉落NIM物品
                     case "drop":
@@ -600,7 +581,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim save [物品ID] (保存路径) > 将手中物品以对应ID保存至对应路径
                     case "save":
@@ -637,7 +618,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     // nim cover [物品ID] (保存路径) > 将手中物品以对应ID覆盖至对应路径
                     case "cover":
@@ -670,7 +651,7 @@ function CommandRegister() {
                                 }
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     case "mm":
                         // 检测指令长度
@@ -721,7 +702,7 @@ function CommandRegister() {
                                             }
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NIM物品
                                 case "cover":
@@ -763,7 +744,7 @@ function CommandRegister() {
                                             }
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 // nim mm loadAll > 将全部MM物品转化为NIM物品
                                 case "loadall":
@@ -793,7 +774,7 @@ function CommandRegister() {
                                             sender.sendMessage(mMImportSuccessInfoMessage)
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 // nim mm get [物品ID] (数量) > 根据ID获取MM物品
                                 case "get":
@@ -839,7 +820,7 @@ function CommandRegister() {
                                             }
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 // nim mm give [玩家ID] [物品ID] (数量) > 根据ID给予MM物品
                                 case "give":
@@ -891,7 +872,7 @@ function CommandRegister() {
                                             }
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 // nim mm giveAll [物品ID] (数量) > 根据ID给予所有人MM物品
                                 case "giveall":
@@ -940,7 +921,7 @@ function CommandRegister() {
                                             }
                                         }
                                     })
-                                    new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                                     break
                                 default:
                                     // 发送帮助信息
@@ -969,7 +950,7 @@ function CommandRegister() {
                                 sender.sendMessage(reloadedMessage)
                             }
                         })
-                        new AsyncTask().runTaskAsynchronously(PouvoirPlugin)
+                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
                         return true
                     default:
                         // 发送帮助信息
@@ -1089,6 +1070,9 @@ function CommandRegister() {
  */
 function saveNiItem(itemStack, itemKey, path = itemKey + ".yml", cover) {
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+    let Material = Packages.org.bukkit.Material
+
     // 检测是否为空气
     if (itemStack != null && itemStack.getType() != Material.AIR) {
         // 获取路径文件
@@ -1197,11 +1181,24 @@ function getItemKeySection(itemID) {
  * @return ItemStack
  */
 function getNiItem(itemID, player, sender, data) {
-    let itemKeySection = getItemKeySection(itemID)
+    let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
+    let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+    let Bukkit = Packages.org.bukkit.Bukkit
     let ChatColor = Packages.org.bukkit.ChatColor
+    let Color = Packages.org.bukkit.Color
+    let Enchantment = Packages.org.bukkit.enchantments.Enchantment
+    let ItemFlag = Packages.org.bukkit.inventory.ItemFlag
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+    let Material = Packages.org.bukkit.Material
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+    let BukkitServer = Bukkit.getServer()
+
     let invalidNBT = NIConfig.invalidNBT
     let invalidItem = NIConfig.invalidItem
+
+    // 获取对应物品配置
+    let itemKeySection = getItemKeySection(itemID)
     if (itemKeySection == null) return null
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
@@ -1325,8 +1322,8 @@ function getNiItem(itemID, player, sender, data) {
                 sender.sendMessage(invalidNBT)
                 sender.sendMessage(invalidItemMessage)
             } else {
-                Bukkit.getServer().getConsoleSender().sendMessage(invalidNBT)
-                Bukkit.getServer().getConsoleSender().sendMessage(invalidItemMessage)
+                BukkitServer.getConsoleSender().sendMessage(invalidNBT)
+                BukkitServer.getConsoleSender().sendMessage(invalidItemMessage)
             }
         }
         // 删除节点缓存
@@ -1342,6 +1339,8 @@ function getNiItem(itemID, player, sender, data) {
  * 加载NIM物品列表
  */
 function getNiItems() {
+    let ArrayList = Packages.java.util.ArrayList
+    
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/Items")))
     // [[config, [id]]]
     NIConfig.items = []
@@ -1363,6 +1362,8 @@ function getNiItems() {
  * 加载全局节点列表
  */
 function getGlobalSections() {
+    let ArrayList = Packages.java.util.ArrayList
+
     let configs = getAllConfig(getAllFile(getDir(scriptName + "/GlobalSections")))
     // [[config, [id]]]
     NIConfig.globalSections = []
@@ -1383,6 +1384,10 @@ function getGlobalSections() {
  * 加载MM物品列表
  */
 function mmItemLoad(){
+    let ArrayList = Packages.java.util.ArrayList
+    let MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
+    let itemManager = MythicMobs.inst().getItemManager()
+
     MMIDs = new ArrayList()
     itemManager.getItems().stream().forEach((item) => {
         MMIDs.add(item.getInternalName())
@@ -1397,7 +1402,7 @@ function mmItemLoad(){
 function getDir(scriptName){
     let File = Packages.java.io.File
 
-    let dir = new File(PouvoirPlugin.getDataFolder().getParent(),"/" + scriptName)
+    let dir = new File(Tool.getPlugin("Pouvoir").getDataFolder().getParent(),"/" + scriptName)
     if (!dir.exists()) dir.mkdirs()
     return dir
 }
@@ -1430,7 +1435,13 @@ function getFile(dir, fileName){
  * @return HashMap
  */
 function getHashMapNBT(itemTag) {
+    let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
+    let ItemTagType = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagType
+    let ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
+    let ArrayList = Packages.java.util.ArrayList
+    let HashMap = Packages.java.util.HashMap
     let ignoreKeys = NIConfig.ignoreKeys
+
     /**
      * 获取HashMap形式物品NBT
      * @param ItemTag ItemTag 物品NBT数据
@@ -1440,7 +1451,7 @@ function getHashMapNBT(itemTag) {
         let map = new HashMap()
         for (let key in itemTag) {
             if (ignoreKeys.contains(key)) continue
-            map[key] = NBTValueParse(itemTag[key])
+            map[key] = parseNBTValue(itemTag[key])
         }
         return map
     }
@@ -1449,7 +1460,7 @@ function getHashMapNBT(itemTag) {
      * @param value ItemTagData 物品NBT值
      * @return 物品NBT值
      */
-    NBTValueParse = (value) => {
+    parseNBTValue = (value) => {
         switch(value.type) {
             case ItemTagType.BYTE:
                 value = "(Byte) " + value.asString()
@@ -1492,7 +1503,7 @@ function getHashMapNBT(itemTag) {
         } else if (value instanceof ItemTagList) {
             let list = new ArrayList()
             value.forEach((it) => {
-                list.add(NBTValueParse(it))
+                list.add(parseNBTValue(it))
             })
             return list
         } else {
@@ -1508,6 +1519,20 @@ function getHashMapNBT(itemTag) {
  * @return ItemTag
  */
 function getItemTagNBT(itemNBT) {
+    let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
+    let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
+    let ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
+    let ArrayList = Packages.java.util.ArrayList
+    let Byte = Packages.java.lang.Byte
+    let Double = Packages.java.lang.Double
+    let Float = Packages.java.lang.Float
+    let HashMap = Packages.java.util.HashMap
+    let Integer = Packages.java.lang.Integer
+    let LinkedHashMap = Packages.java.util.LinkedHashMap
+    let Long = Packages.java.lang.Long
+    let Short = Packages.java.lang.Short
+    let String = Packages.java.lang.String
+
     /**
      * 获取HashMap形式物品NBT
      * @param itemNBT HashMap 物品NBT数据
@@ -1524,13 +1549,6 @@ function getItemTagNBT(itemNBT) {
      * NBT值解析
      */
     HashMapValueParse = (value) => {
-        let Byte = Packages.java.lang.Byte
-        let Short = Packages.java.lang.Short
-        let Integer = Packages.java.lang.Integer
-        let Long = Packages.java.lang.Long
-        let Float = Packages.java.lang.Float
-        let Double = Packages.java.lang.Double
-        let String = Packages.java.lang.String
         if (value instanceof LinkedHashMap || value instanceof HashMap) {
             return new ItemTagData(toItemTag(value))
         } else if (value instanceof ArrayList) {
@@ -1585,6 +1603,8 @@ function getItemTagNBT(itemNBT) {
  * 获取所有文件
  */
 function getAllFile(baseFile) {
+    let ArrayList = Packages.java.util.ArrayList
+
     let list = new ArrayList()
     if (baseFile.isFile() || !baseFile.exists()) {
         return list
@@ -1604,6 +1624,9 @@ function getAllFile(baseFile) {
  * 获取所有配置
  */
 function getAllConfig(files) {
+    let ArrayList = Packages.java.util.ArrayList
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+
     let list = new ArrayList()
     files.forEach((file) => {
         list.add(YamlConfiguration.loadConfiguration(file))
@@ -1615,6 +1638,8 @@ function getAllConfig(files) {
  * 获取所有配置的所有节点
  */
 function getConfigSection(configs) {
+    let ArrayList = Packages.java.util.ArrayList
+
     let list = new ArrayList()
     if (configs instanceof ArrayList) {
         configs.forEach((config) => {
@@ -1636,6 +1661,9 @@ function getConfigSection(configs) {
  * @return HashMap
  */
 function toHashMap(configSection){
+    let HashMap = Packages.java.util.HashMap
+    let MemorySection = Packages.org.bukkit.configuration.MemorySection
+
     let hashMapNBT = new HashMap()
     configSection.getKeys(false).forEach((key) => {
         if (configSection.get(key) instanceof MemorySection) {
@@ -1654,7 +1682,9 @@ function toHashMap(configSection){
  * @param random number 随机数
  */
 function getSection(Sections, string, random) {
-    var LinkedList = Packages.java.util.LinkedList
+    let ArrayList = Packages.java.util.ArrayList
+    let LinkedList = Packages.java.util.LinkedList
+
     string = string + ""
 
     let stack = new LinkedList()
@@ -1839,8 +1869,7 @@ function parseSection(Sections, string, random) {
  * @param random number 随机数
  */
 function loadSection(Sections, string, random) {
-    let result
-    let length
+    let result, length
     while (length != Object.keys(NIConfig.sections[random]).length) {
         length = Object.keys(NIConfig.sections[random]).length
         result = getSection(Sections, string, random)
@@ -1863,6 +1892,9 @@ function sendMessages(player, messages) {
  * 获取在线玩家ID列表
  */
 function onlinePlayers() {
+    let ArrayList = Packages.java.util.ArrayList
+    let Bukkit = Packages.org.bukkit.Bukkit
+
     let onlinePlayers = new ArrayList()
     Bukkit.getOnlinePlayers().forEach((player) => {
         onlinePlayers.add(player.getDisplayName())
@@ -1875,6 +1907,9 @@ function onlinePlayers() {
  * 加载世界列表
  */
  function getWorlds() {
+    let ArrayList = Packages.java.util.ArrayList
+    let Bukkit = Packages.org.bukkit.Bukkit
+
     let worlds = new ArrayList()
     Bukkit.getWorlds().forEach((world) => {
         worlds.add(world.getName())
@@ -1891,6 +1926,8 @@ function onlinePlayers() {
  * @return Boolean 是否成功
  */
 function giveItems(player, itemStack, amount, message) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
     if (itemStack instanceof ItemStack && player.isOnline()) {
         let stackSize = itemStack.getMaxStackSize()
         itemStack.setAmount(stackSize)
@@ -1901,9 +1938,8 @@ function giveItems(player, itemStack, amount, message) {
         }
         if (message != "") player.sendMessage(message)
         return true
-    } else {
-        return false
     }
+    return false
 }
 
 
@@ -1913,19 +1949,22 @@ function giveItems(player, itemStack, amount, message) {
  * @param itemStack ItemStack
  */
 function giveItem(player, itemStack){
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
     if (itemStack instanceof ItemStack && player.isOnline()) {
         let inv = player.getInventory()
         let loc = player.getLocation()
         let dropList = inv.addItem(itemStack)
         if (!dropList.isEmpty()) {
-            BukkitScheduler.callSyncMethod(PouvoirPlugin, () => {
+            let Bukkit = Packages.org.bukkit.Bukkit
+            let BukkitScheduler = Bukkit.getScheduler()
+            BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), () => {
                 loc.getWorld().dropItem(loc, dropList[0])
             })
         }
         return true
-    } else {
-        return false
     }
+    return false
 }
 
 /**
@@ -1938,16 +1977,21 @@ function giveItem(player, itemStack){
  * @param amount Int
  */
 function dropItems(world, x, y, z, itemStack, amount) {
-    var Location = org.bukkit.Location
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
 
-    let stackSize = itemStack.getMaxStackSize()
-    let location = new Location(world, x, y, z)
-    itemStack.setAmount(stackSize)
-    for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { dropItem(world, location, itemStack) }
-    if (givenAmt < amount) {
-        itemStack.setAmount(amount - givenAmt)
-        dropItem(world, location, itemStack)
+    if (itemStack instanceof ItemStack) {
+        let Location = Packages.org.bukkit.Location
+        let stackSize = itemStack.getMaxStackSize()
+        let location = new Location(world, x, y, z)
+        itemStack.setAmount(stackSize)
+        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { dropItem(world, location, itemStack) }
+        if (givenAmt < amount) {
+            itemStack.setAmount(amount - givenAmt)
+            dropItem(world, location, itemStack)
+        }
+        return true
     }
+    return false
 }
 
 /**
@@ -1957,7 +2001,10 @@ function dropItems(world, x, y, z, itemStack, amount) {
  * @param itemStack ItemStack
  */
 function dropItem(world, location, itemStack){
-    BukkitScheduler.callSyncMethod(PouvoirPlugin, () => {
+    let Bukkit = Packages.org.bukkit.Bukkit
+
+    let BukkitScheduler = Bukkit.getScheduler()
+    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), () => {
         world.dropItem(location, itemStack)
     })
 }
@@ -1969,7 +2016,9 @@ function dropItem(world, location, itemStack){
  * @param defaultValue any 默认值
  */
 function getConfigValue(file, key, defaultValue) {
-    var config = YamlConfiguration.loadConfiguration(file)
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+
+    let config = YamlConfiguration.loadConfiguration(file)
     if (config.contains(key)) {
         return config.get(key)
     } else {
@@ -1984,8 +2033,11 @@ function getConfigValue(file, key, defaultValue) {
  * @return Object || null
  */
  function dataParse(string, random) {
-    if (typeof string == 'string') {
-        try { let obj=JSON.parse(string)
+    let String = Packages.java.lang.String
+
+    if (string instanceof String) {
+        try { 
+            let obj=JSON.parse(string)
             if (typeof obj == 'object' && obj ){
                 for (let key in obj) {
                     NIConfig.sections[random][key] = obj[key]
@@ -2104,6 +2156,7 @@ function globalSectionParse(Sections, section, random) {
  */
 function setPapiWithNoColor(player, text) {
     let StringBuilder = Packages.java.lang.StringBuilder
+
     let builder = new StringBuilder(text.length)
 
     let identifier = new StringBuilder()
@@ -2177,6 +2230,7 @@ function setPapiWithNoColor(player, text) {
 function itemToTellrawJson(itemStack, name = getItemName(itemStack)) {
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
+
     let itemKey = itemStack.type.key.key
     let itemTag = NMSKt.getItemTag(itemStack)
     let tellrawJson = new TellrawJson()
@@ -2191,6 +2245,8 @@ function itemToTellrawJson(itemStack, name = getItemName(itemStack)) {
  * @return TellrawJson
  */
 function getItemName(itemStack) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
     if (!(itemStack instanceof ItemStack)) return null
     let name = Tool.getItemName(itemStack)
     if (name == "") {
