@@ -99,6 +99,8 @@ function NeigeItems() {
 
 function CommandRegister() {
     let Bukkit = Packages.org.bukkit.Bukkit
+    let Consumer = Packages.java.util.function.Consumer
+    let BukkitScheduler = Bukkit.getScheduler()
     let BukkitRunnable = Packages.org.bukkit.scheduler.BukkitRunnable
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
@@ -153,245 +155,73 @@ function CommandRegister() {
                 switch(args[0].toLowerCase()) {
                     // nim list (页码) > 查看所有NI物品
                     case "list":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 检测指令长度
-                                if (args.length == 1 || incrementingArray(pageAmount).indexOf(args[1]) != -1) {
-                                    // 获取当前页码
-                                    let page = 0
-                                    if (args.length > 1) page = parseInt(args[1]) - 1
-                                    // 预构建待发送信息
-                                    let listMessage = new TellrawJson()
-                                    // 添加信息前缀
-                                    listMessage.append(listPrefix + "\n")
-                                    // 获取当前序号
-                                    let prevItemAmount = page*listItemAmount
-                                    // 逐个获取物品
-                                    for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
-                                        // 替换信息内变量
-                                        let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
-                                        listItemMessage = listItemMessage.replace(/{ID}/g, NIConfig.itemIDList[index])
-                                        listItemMessage = listItemMessage.split("{name}")
-                                        // 构建信息及物品
-                                        let listItemRaw = new TellrawJson()
-                                        let itemStack = getNiItem(NIConfig.itemIDList[index], sender, sender)
-                                        for (let i = 0; i < listItemMessage.length; i++) {
-                                            listItemRaw.append(listItemMessage[i])
-                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + NIConfig.itemIDList[index]))
-                                        }
-                                        // 合并信息
-                                        listMessage.append(listItemRaw)
-                                        listMessage.append("\n")
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length == 1 || incrementingArray(pageAmount).indexOf(args[1]) != -1) {
+                                // 获取当前页码
+                                let page = 0
+                                if (args.length > 1) page = parseInt(args[1]) - 1
+                                // 预构建待发送信息
+                                let listMessage = new TellrawJson()
+                                // 添加信息前缀
+                                listMessage.append(listPrefix + "\n")
+                                // 获取当前序号
+                                let prevItemAmount = page*listItemAmount
+                                // 逐个获取物品
+                                for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
+                                    // 替换信息内变量
+                                    let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
+                                    listItemMessage = listItemMessage.replace(/{ID}/g, NIConfig.itemIDList[index])
+                                    listItemMessage = listItemMessage.split("{name}")
+                                    // 构建信息及物品
+                                    let listItemRaw = new TellrawJson()
+                                    let itemStack = getNiItem(NIConfig.itemIDList[index], sender, sender)
+                                    for (let i = 0; i < listItemMessage.length; i++) {
+                                        listItemRaw.append(listItemMessage[i])
+                                        if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson(itemStack).runCommand("/ni get " + NIConfig.itemIDList[index]))
                                     }
-                                    let prevRaw = new TellrawJson()
-                                    prevRaw.append(listPrev)
-                                    if (page != 0) {
-                                        prevRaw.hoverText(listPrev + ": " + page)
-                                        prevRaw.runCommand("/ni list " + page)
-                                    }
-                                    let nextRaw = new TellrawJson()
-                                    nextRaw.append(listNext)
-                                    if (page != pageAmount-1) {
-                                        nextRaw.hoverText(listNext + ": " + (page+2))
-                                        nextRaw.runCommand("/ni list " + (page+2))
-                                    }
-                                    let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
-                                    listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
-                                    listSuffixMessage = listSuffixMessage.split("!@#$%")
-                                    listSuffixMessage.forEach(value => {
-                                        if (value == "{prev}") {
-                                            listMessage.append(prevRaw)
-                                        }else if (value == "{next}") {
-                                            listMessage.append(nextRaw)
-                                        } else {
-                                            listMessage.append(value)
-                                        }
-                                    })
-                                    // 向玩家发送信息
-                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
-                                } else {
-                                    // 非法数量提示
-                                    sender.sendMessage(invalidAmount)
-                                    return
+                                    // 合并信息
+                                    listMessage.append(listItemRaw)
+                                    listMessage.append("\n")
                                 }
+                                let prevRaw = new TellrawJson()
+                                prevRaw.append(listPrev)
+                                if (page != 0) {
+                                    prevRaw.hoverText(listPrev + ": " + page)
+                                    prevRaw.runCommand("/ni list " + page)
+                                }
+                                let nextRaw = new TellrawJson()
+                                nextRaw.append(listNext)
+                                if (page != pageAmount-1) {
+                                    nextRaw.hoverText(listNext + ": " + (page+2))
+                                    nextRaw.runCommand("/ni list " + (page+2))
+                                }
+                                let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
+                                listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
+                                listSuffixMessage = listSuffixMessage.split("!@#$%")
+                                listSuffixMessage.forEach(value => {
+                                    if (value == "{prev}") {
+                                        listMessage.append(prevRaw)
+                                    }else if (value == "{next}") {
+                                        listMessage.append(nextRaw)
+                                    } else {
+                                        listMessage.append(value)
+                                    }
+                                })
+                                // 向玩家发送信息
+                                TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                            } else {
+                                // 非法数量提示
+                                sender.sendMessage(invalidAmount)
+                                return
                             }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        }))
                         return true
                     // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NIM物品
                     case "get":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 如果指令发送者不是玩家
-                                if (sender instanceof Player) {
-                                    // 检测指令长度
-                                    if (args.length > 1) {
-                                        // 检测是否存在对应ID的NIM物品
-                                        if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
-                                            let data = null
-                                            if (args.length > 4) data = Java.from(args).slice(4).join(" ")
-                                            let itemAmt
-                                            // 获取数量
-                                            if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
-                                                itemAmt = itemAmt || 1
-                                                // 如果仅需一样的物品
-                                                if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
-                                                    let itemStack = getNiItem(args[1], sender, sender, data)
-                                                    // 替换提示信息中的占位符
-                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                    // 给予物品
-                                                    if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
-                                                        // 给予失败提示
-                                                        sender.sendMessage(failureInfo)
-                                                    }
-                                                // 如果需要反复构建
-                                                } else {
-                                                    // {物品名: 产出次数}
-                                                    let amtMap = new HashMap()
-                                                    // 循环构建物品
-                                                    for (let index = 0; index < itemAmt; index++) {
-                                                        // 构建物品
-                                                        let itemStack = getNiItem(args[1], sender, sender, data)
-                                                        // 记录物品名及次数
-                                                        var itemName = getItemName(itemStack)
-                                                        if (amtMap[itemName] == null) {
-                                                            amtMap[itemName] = 1
-                                                        } else {
-                                                            amtMap[itemName] ++
-                                                        }
-                                                        // 给予物品
-                                                        if (!giveItem(sender, itemStack)) {
-                                                            // 给予失败提示
-                                                            sender.sendMessage(failureInfo)
-                                                            return
-                                                        }
-                                                    }
-                                                    for (let key in amtMap) {
-                                                        // 替换提示信息中的占位符
-                                                        let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
-                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
-                                                        // 获取成功提示
-                                                        if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
-                                                    }
-                                                }
-                                            } else {
-                                                // 非法数量提示
-                                                sender.sendMessage(invalidAmount)
-                                            }
-                                        } else {
-                                            // 替换提示信息中的占位符
-                                            let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
-                                            // 未知物品提示
-                                            sender.sendMessage(unknownItemMessage)
-                                        }
-                                    } else {
-                                        // 发送帮助信息
-                                        sendMessages(sender, helpMessages)
-                                    }
-                                } else {
-                                    // 后台无法执行提示
-                                    sender.sendMessage(invalidPaser)
-                                }
-                            }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                        return true
-                    // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NIM物品
-                    case "give":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 检测指令长度
-                                if (args.length > 2) {
-                                    let player
-                                    // 获取对应在线玩家
-                                    if (player = Bukkit.getPlayer(args[1])) {
-                                        // 检测是否存在对应ID的NIM物品
-                                        if (NIConfig.itemIDList.indexOf(args[2]) != -1) {
-                                            let data = null
-                                            if (args.length > 5) data = Java.from(args).slice(5).join(" ")
-                                            let itemAmt
-                                            // 获取数量
-                                            if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
-                                                itemAmt = itemAmt || 1
-                                                // 如果仅需一样的物品
-                                                if (args.length > 4 && (args[4] == "false" || args[4] == "0")) {
-                                                    let itemStack = getNiItem(args[2], player, sender, data)
-                                                    // 替换提示信息中的占位符
-                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                    // 给予物品
-                                                    if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
-                                                        // 给予失败提示
-                                                        sender.sendMessage(failureInfo)
-                                                    }
-                                                    // 替换提示信息中的占位符
-                                                    let successInfoMessage = successInfo.replace(/{player}/g, args[1])
-                                                    successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                    // 给予成功提示
-                                                    sender.sendMessage(successInfoMessage)
-                                                // 如果需要反复构建
-                                                } else {
-                                                    // {物品名: 产出次数}
-                                                    let amtMap = new HashMap()
-                                                    // 循环构建物品
-                                                    for (let index = 0; index < itemAmt; index++) {
-                                                        // 构建物品
-                                                        let itemStack = getNiItem(args[2], player, sender, data)
-                                                        // 记录物品名及次数
-                                                        var itemName = getItemName(itemStack)
-                                                        if (amtMap[itemName] == null) {
-                                                            amtMap[itemName] = 1
-                                                        } else {
-                                                            amtMap[itemName] ++
-                                                        }
-                                                        // 给予物品
-                                                        if (!giveItem(player, itemStack)) {
-                                                            // 给予失败提示
-                                                            sender.sendMessage(failureInfo)
-                                                            return
-                                                        }
-                                                    }
-                                                    for (let key in amtMap) {
-                                                        // 替换提示信息中的占位符
-                                                        let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
-                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
-                                                        // 获取成功提示
-                                                        if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
-                                                        // 替换提示信息中的占位符
-                                                        let successInfoMessage = successInfo.replace(/{player}/g, args[1])
-                                                        successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
-                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, key)
-                                                        // 给予成功提示
-                                                        sender.sendMessage(successInfoMessage)
-                                                    }
-                                                }
-                                            } else {
-                                                // 非法数量提示
-                                                sender.sendMessage(invalidAmount)
-                                            }
-                                        } else {
-                                            // 未知物品提示
-                                            let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
-                                            sender.sendMessage(unknownItemMessage)
-                                        }
-                                    } else {
-                                        // 玩家不存在/不在线提示
-                                        sender.sendMessage(invalidPlayer)
-                                    }
-                                } else {
-                                    // 发送帮助信息
-                                    sendMessages(sender, helpMessages)
-                                }
-                            }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                        return true
-                    // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NIM物品
-                    case "giveall":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 如果指令发送者不是玩家
+                            if (sender instanceof Player) {
                                 // 检测指令长度
                                 if (args.length > 1) {
                                     // 检测是否存在对应ID的NIM物品
@@ -404,62 +234,44 @@ function CommandRegister() {
                                             itemAmt = itemAmt || 1
                                             // 如果仅需一样的物品
                                             if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
-                                                // 对于每个在线玩家
-                                                Bukkit.getOnlinePlayers().forEach((player) => {
-                                                    let itemStack = getNiItem(args[1], player, sender, data)
-                                                    // 替换提示信息中的占位符
-                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                    // 给予物品
-                                                    if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
-                                                        // 给予失败提示
-                                                        sender.sendMessage(failureInfo)
-                                                    }
-                                                    // 替换提示信息中的占位符
-                                                    let successInfoMessage = successInfo.replace(/{player}/g, player.getDisplayName())
-                                                    successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                    // 给予成功提示
-                                                    sender.sendMessage(successInfoMessage)
-                                                })
+                                                let itemStack = getNiItem(args[1], sender, sender, data)
+                                                // 替换提示信息中的占位符
+                                                let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
+                                                givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                // 给予物品
+                                                if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
+                                                    // 给予失败提示
+                                                    sender.sendMessage(failureInfo)
+                                                }
                                             // 如果需要反复构建
                                             } else {
-                                                // 对于每个在线玩家
-                                                Bukkit.getOnlinePlayers().forEach((player) => {
-                                                    // {物品名: 产出次数}
-                                                    let amtMap = new HashMap()
-                                                    // 循环构建物品
-                                                    for (let index = 0; index < itemAmt; index++) {
-                                                        // 构建物品
-                                                        itemStack = getNiItem(args[1], player, sender, data)
-                                                        // 记录物品名及次数
-                                                        var itemName = getItemName(itemStack)
-                                                        if (amtMap[itemName] == null) {
-                                                            amtMap[itemName] = 1
-                                                        } else {
-                                                            amtMap[itemName] ++
-                                                        }
-                                                        // 给予物品
-                                                        if (!giveItem(player, itemStack)) {
-                                                            // 给予失败提示
-                                                            sender.sendMessage(failureInfo)
-                                                            return
-                                                        }
+                                                // {物品名: 产出次数}
+                                                let amtMap = new HashMap()
+                                                // 循环构建物品
+                                                for (let index = 0; index < itemAmt; index++) {
+                                                    // 构建物品
+                                                    let itemStack = getNiItem(args[1], sender, sender, data)
+                                                    // 记录物品名及次数
+                                                    var itemName = getItemName(itemStack)
+                                                    if (amtMap[itemName] == null) {
+                                                        amtMap[itemName] = 1
+                                                    } else {
+                                                        amtMap[itemName] ++
                                                     }
-                                                    for (let key in amtMap) {
-                                                        // 替换提示信息中的占位符
-                                                        let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
-                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
-                                                        // 获取成功提示
-                                                        if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
-                                                        // 替换提示信息中的占位符
-                                                        let successInfoMessage = successInfo.replace(/{player}/g, args[1])
-                                                        successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
-                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, key)
-                                                        // 给予成功提示
-                                                        sender.sendMessage(successInfoMessage)
+                                                    // 给予物品
+                                                    if (!giveItem(sender, itemStack)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                        return
                                                     }
-                                                })
+                                                }
+                                                for (let key in amtMap) {
+                                                    // 替换提示信息中的占位符
+                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
+                                                    // 获取成功提示
+                                                    if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
+                                                }
                                             }
                                         } else {
                                             // 非法数量提示
@@ -475,183 +287,352 @@ function CommandRegister() {
                                     // 发送帮助信息
                                     sendMessages(sender, helpMessages)
                                 }
+                            } else {
+                                // 后台无法执行提示
+                                sender.sendMessage(invalidPaser)
                             }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        }))
+                        return true
+                    // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NIM物品
+                    case "give":
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length > 2) {
+                                let player
+                                // 获取对应在线玩家
+                                if (player = Bukkit.getPlayer(args[1])) {
+                                    // 检测是否存在对应ID的NIM物品
+                                    if (NIConfig.itemIDList.indexOf(args[2]) != -1) {
+                                        let data = null
+                                        if (args.length > 5) data = Java.from(args).slice(5).join(" ")
+                                        let itemAmt
+                                        // 获取数量
+                                        if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
+                                            itemAmt = itemAmt || 1
+                                            // 如果仅需一样的物品
+                                            if (args.length > 4 && (args[4] == "false" || args[4] == "0")) {
+                                                let itemStack = getNiItem(args[2], player, sender, data)
+                                                // 替换提示信息中的占位符
+                                                let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
+                                                givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                // 给予物品
+                                                if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                    // 给予失败提示
+                                                    sender.sendMessage(failureInfo)
+                                                }
+                                                // 替换提示信息中的占位符
+                                                let successInfoMessage = successInfo.replace(/{player}/g, args[1])
+                                                successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
+                                                successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                // 给予成功提示
+                                                sender.sendMessage(successInfoMessage)
+                                            // 如果需要反复构建
+                                            } else {
+                                                // {物品名: 产出次数}
+                                                let amtMap = new HashMap()
+                                                // 循环构建物品
+                                                for (let index = 0; index < itemAmt; index++) {
+                                                    // 构建物品
+                                                    let itemStack = getNiItem(args[2], player, sender, data)
+                                                    // 记录物品名及次数
+                                                    var itemName = getItemName(itemStack)
+                                                    if (amtMap[itemName] == null) {
+                                                        amtMap[itemName] = 1
+                                                    } else {
+                                                        amtMap[itemName] ++
+                                                    }
+                                                    // 给予物品
+                                                    if (!giveItem(player, itemStack)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                        return
+                                                    }
+                                                }
+                                                for (let key in amtMap) {
+                                                    // 替换提示信息中的占位符
+                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
+                                                    // 获取成功提示
+                                                    if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
+                                                    // 替换提示信息中的占位符
+                                                    let successInfoMessage = successInfo.replace(/{player}/g, args[1])
+                                                    successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
+                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, key)
+                                                    // 给予成功提示
+                                                    sender.sendMessage(successInfoMessage)
+                                                }
+                                            }
+                                        } else {
+                                            // 非法数量提示
+                                            sender.sendMessage(invalidAmount)
+                                        }
+                                    } else {
+                                        // 未知物品提示
+                                        let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
+                                        sender.sendMessage(unknownItemMessage)
+                                    }
+                                } else {
+                                    // 玩家不存在/不在线提示
+                                    sender.sendMessage(invalidPlayer)
+                                }
+                            } else {
+                                // 发送帮助信息
+                                sendMessages(sender, helpMessages)
+                            }
+                        }))
+                        return true
+                    // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NIM物品
+                    case "giveall":
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length > 1) {
+                                // 检测是否存在对应ID的NIM物品
+                                if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
+                                    let data = null
+                                    if (args.length > 4) data = Java.from(args).slice(4).join(" ")
+                                    let itemAmt
+                                    // 获取数量
+                                    if (args.length == 2 || ((itemAmt = parseInt(args[2])) && itemAmt > 0)) {
+                                        itemAmt = itemAmt || 1
+                                        // 如果仅需一样的物品
+                                        if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
+                                            // 对于每个在线玩家
+                                            Bukkit.getOnlinePlayers().forEach((player) => {
+                                                let itemStack = getNiItem(args[1], player, sender, data)
+                                                // 替换提示信息中的占位符
+                                                let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
+                                                givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                // 给予物品
+                                                if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                    // 给予失败提示
+                                                    sender.sendMessage(failureInfo)
+                                                }
+                                                // 替换提示信息中的占位符
+                                                let successInfoMessage = successInfo.replace(/{player}/g, player.getDisplayName())
+                                                successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
+                                                successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                // 给予成功提示
+                                                sender.sendMessage(successInfoMessage)
+                                            })
+                                        // 如果需要反复构建
+                                        } else {
+                                            // 对于每个在线玩家
+                                            Bukkit.getOnlinePlayers().forEach((player) => {
+                                                // {物品名: 产出次数}
+                                                let amtMap = new HashMap()
+                                                // 循环构建物品
+                                                for (let index = 0; index < itemAmt; index++) {
+                                                    // 构建物品
+                                                    itemStack = getNiItem(args[1], player, sender, data)
+                                                    // 记录物品名及次数
+                                                    var itemName = getItemName(itemStack)
+                                                    if (amtMap[itemName] == null) {
+                                                        amtMap[itemName] = 1
+                                                    } else {
+                                                        amtMap[itemName] ++
+                                                    }
+                                                    // 给予物品
+                                                    if (!giveItem(player, itemStack)) {
+                                                        // 给予失败提示
+                                                        sender.sendMessage(failureInfo)
+                                                        return
+                                                    }
+                                                }
+                                                for (let key in amtMap) {
+                                                    // 替换提示信息中的占位符
+                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
+                                                    // 获取成功提示
+                                                    if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
+                                                    // 替换提示信息中的占位符
+                                                    let successInfoMessage = successInfo.replace(/{player}/g, args[1])
+                                                    successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
+                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, key)
+                                                    // 给予成功提示
+                                                    sender.sendMessage(successInfoMessage)
+                                                }
+                                            })
+                                        }
+                                    } else {
+                                        // 非法数量提示
+                                        sender.sendMessage(invalidAmount)
+                                    }
+                                } else {
+                                    // 替换提示信息中的占位符
+                                    let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
+                                    // 未知物品提示
+                                    sender.sendMessage(unknownItemMessage)
+                                }
+                            } else {
+                                // 发送帮助信息
+                                sendMessages(sender, helpMessages)
+                            }
+                        }))
                         return true
                     // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] (是否反复随机) (物品解析对象) (指向数据) > 于指定位置掉落NIM物品
                     case "drop":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 检测指令长度
-                                if (args.length > 6) {
-                                    let player
-                                    // 如果指令发送者是玩家 或 指令发送者是后台但指定了玩家
-                                    if (args.length > 8 || sender instanceof Player) {
-                                        if (args.length > 8) {
-                                            player = Bukkit.getOfflinePlayer(args[8])
-                                        } else {
-                                            player = sender
-                                        }
-                                        // 检测是否存在对应ID的NIM物品
-                                        if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
-                                            let data = null
-                                            if (args.length > 9) data = Java.from(args).slice(9).join(" ")
-                                            let itemAmt
-                                            // 获取数量
-                                            if ((itemAmt = parseInt(args[2])) && itemAmt > 0) {
-                                                // 获取世界
-                                                let world = Bukkit.getWorld(args[3])
-                                                let x = parseFloat(args[4])
-                                                let y = parseFloat(args[5])
-                                                let z = parseFloat(args[6])
-                                                // 如果存在世界
-                                                if (world != null) {
-                                                    // 如果坐标合法
-                                                    if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-                                                        // 如果仅需一样的物品
-                                                        if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length > 6) {
+                                let player
+                                // 如果指令发送者是玩家 或 指令发送者是后台但指定了玩家
+                                if (args.length > 8 || sender instanceof Player) {
+                                    if (args.length > 8) {
+                                        player = Bukkit.getOfflinePlayer(args[8])
+                                    } else {
+                                        player = sender
+                                    }
+                                    // 检测是否存在对应ID的NIM物品
+                                    if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
+                                        let data = null
+                                        if (args.length > 9) data = Java.from(args).slice(9).join(" ")
+                                        let itemAmt
+                                        // 获取数量
+                                        if ((itemAmt = parseInt(args[2])) && itemAmt > 0) {
+                                            // 获取世界
+                                            let world = Bukkit.getWorld(args[3])
+                                            let x = parseFloat(args[4])
+                                            let y = parseFloat(args[5])
+                                            let z = parseFloat(args[6])
+                                            // 如果存在世界
+                                            if (world != null) {
+                                                // 如果坐标合法
+                                                if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                                                    // 如果仅需一样的物品
+                                                    if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
+                                                        let itemStack = getNiItem(args[1], player, sender, data)
+                                                        // 掉落物品
+                                                        dropItems(world, x, y, z, itemStack, itemAmt)
+                                                        // 替换提示信息中的占位符
+                                                        let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
+                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
+                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
+                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
+                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, itemAmt)
+                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                        // 给予成功提示
+                                                        sender.sendMessage(dropSuccessInfoMessage)
+                                                    // 如果需要反复构建
+                                                    } else {
+                                                        // {物品名: 产出次数}
+                                                        let amtMap = new HashMap()
+                                                        // 循环构建物品
+                                                        for (let index = 0; index < itemAmt; index++) {
+                                                            // 构建物品
                                                             let itemStack = getNiItem(args[1], player, sender, data)
+                                                            // 记录物品名及次数
+                                                            var itemName = getItemName(itemStack)
+                                                            if (amtMap[itemName] == null) {
+                                                                amtMap[itemName] = 1
+                                                            } else {
+                                                                amtMap[itemName] ++
+                                                            }
                                                             // 掉落物品
                                                             dropItems(world, x, y, z, itemStack, itemAmt)
+                                                        }
+                                                        for (let key in amtMap) {
                                                             // 替换提示信息中的占位符
                                                             let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
-                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, itemAmt)
-                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, amtMap[key])
+                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, key)
                                                             // 给予成功提示
                                                             sender.sendMessage(dropSuccessInfoMessage)
-                                                        // 如果需要反复构建
-                                                        } else {
-                                                            // {物品名: 产出次数}
-                                                            let amtMap = new HashMap()
-                                                            // 循环构建物品
-                                                            for (let index = 0; index < itemAmt; index++) {
-                                                                // 构建物品
-                                                                let itemStack = getNiItem(args[1], player, sender, data)
-                                                                // 记录物品名及次数
-                                                                var itemName = getItemName(itemStack)
-                                                                if (amtMap[itemName] == null) {
-                                                                    amtMap[itemName] = 1
-                                                                } else {
-                                                                    amtMap[itemName] ++
-                                                                }
-                                                                // 掉落物品
-                                                                dropItems(world, x, y, z, itemStack, itemAmt)
-                                                            }
-                                                            for (let key in amtMap) {
-                                                                // 替换提示信息中的占位符
-                                                                let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
-                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
-                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
-                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
-                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, amtMap[key])
-                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, key)
-                                                                // 给予成功提示
-                                                                sender.sendMessage(dropSuccessInfoMessage)
-                                                            }
                                                         }
-                                                    } else {
-                                                        // 非法坐标提示
-                                                        sender.sendMessage(invalidLocation)
                                                     }
                                                 } else {
-                                                    // 非法世界提示
-                                                    sender.sendMessage(invalidWorld)
+                                                    // 非法坐标提示
+                                                    sender.sendMessage(invalidLocation)
                                                 }
                                             } else {
-                                                // 非法数量提示
-                                                sender.sendMessage(invalidAmount)
+                                                // 非法世界提示
+                                                sender.sendMessage(invalidWorld)
                                             }
                                         } else {
-                                            // 替换提示信息中的占位符
-                                            let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
-                                            // 未知物品提示
-                                            sender.sendMessage(unknownItemMessage)
+                                            // 非法数量提示
+                                            sender.sendMessage(invalidAmount)
                                         }
                                     } else {
-                                        // 无效解析对象提示
-                                        sender.sendMessage(invalidPaser)
+                                        // 替换提示信息中的占位符
+                                        let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
+                                        // 未知物品提示
+                                        sender.sendMessage(unknownItemMessage)
                                     }
                                 } else {
-                                    // 发送帮助信息
-                                    sendMessages(sender, helpMessages)
+                                    // 无效解析对象提示
+                                    sender.sendMessage(invalidPaser)
                                 }
+                            } else {
+                                // 发送帮助信息
+                                sendMessages(sender, helpMessages)
                             }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        }))
                         return true
                     // nim save [物品ID] (保存路径) > 将手中物品以对应ID保存至对应路径
                     case "save":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 检测指令长度
-                                if (args.length > 1) {
-                                    // 获取手中物品
-                                    let itemStack = sender.getInventory().getItemInMainHand()
-                                    // 获取保存路径
-                                    let path = args[2] || args[1] + ".yml"
-                                    let saveResult
-                                    // 保存物品
-                                    if (saveResult = saveNiItem(itemStack, args[1], args[2], false)) {
-                                        // 重载物品列表
-                                        getNiItems()
-                                        // 替换提示信息中的占位符
-                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
-                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
-                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
-                                        // 保存成功提示
-                                        sender.sendMessage(successSaveInfoMessage)
-                                    } else if (saveResult == 0) {
-                                        // 物品ID已存在提示
-                                        let existedKeyMessage = existedKey.replace(/{itemID}/g, args[1])
-                                        sender.sendMessage(existedKeyMessage)
-                                    } else {
-                                        // 空气提示
-                                        sender.sendMessage(airItem)
-                                    }
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length > 1) {
+                                // 获取手中物品
+                                let itemStack = sender.getInventory().getItemInMainHand()
+                                // 获取保存路径
+                                let path = args[2] || args[1] + ".yml"
+                                let saveResult
+                                // 保存物品
+                                if (saveResult = saveNiItem(itemStack, args[1], args[2], false)) {
+                                    // 重载物品列表
+                                    getNiItems()
+                                    // 替换提示信息中的占位符
+                                    let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
+                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
+                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
+                                    // 保存成功提示
+                                    sender.sendMessage(successSaveInfoMessage)
+                                } else if (saveResult == 0) {
+                                    // 物品ID已存在提示
+                                    let existedKeyMessage = existedKey.replace(/{itemID}/g, args[1])
+                                    sender.sendMessage(existedKeyMessage)
                                 } else {
-                                    // 发送帮助信息
-                                    sendMessages(sender, helpMessages)
+                                    // 空气提示
+                                    sender.sendMessage(airItem)
                                 }
+                            } else {
+                                // 发送帮助信息
+                                sendMessages(sender, helpMessages)
                             }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        }))
                         return true
                     // nim cover [物品ID] (保存路径) > 将手中物品以对应ID覆盖至对应路径
                     case "cover":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 检测指令长度
-                                if (args.length > 1) {
-                                    // 获取手中物品
-                                    let itemStack = sender.getInventory().getItemInMainHand()
-                                    // 获取保存路径
-                                    let path = args[2] || args[1] + ".yml"
-                                    // 保存物品
-                                    let saveResult = saveNiItem(itemStack, args[1], args[2], true)
-                                    if (saveResult != 2) {
-                                        // 重载物品列表
-                                        getNiItems()
-                                        // 替换提示信息中的占位符
-                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
-                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
-                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
-                                        // 保存成功提示
-                                        sender.sendMessage(successSaveInfoMessage)
-                                    } else {
-                                        // 空气提示
-                                        sender.sendMessage(airItem)
-                                    }
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 检测指令长度
+                            if (args.length > 1) {
+                                // 获取手中物品
+                                let itemStack = sender.getInventory().getItemInMainHand()
+                                // 获取保存路径
+                                let path = args[2] || args[1] + ".yml"
+                                // 保存物品
+                                let saveResult = saveNiItem(itemStack, args[1], args[2], true)
+                                if (saveResult != 2) {
+                                    // 重载物品列表
+                                    getNiItems()
+                                    // 替换提示信息中的占位符
+                                    let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
+                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
+                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
+                                    // 保存成功提示
+                                    sender.sendMessage(successSaveInfoMessage)
                                 } else {
-                                    // 发送帮助信息
-                                    sendMessages(sender, helpMessages)
+                                    // 空气提示
+                                    sender.sendMessage(airItem)
                                 }
+                            } else {
+                                // 发送帮助信息
+                                sendMessages(sender, helpMessages)
                             }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        }))
                         return true
                     case "mm":
                         // 检测指令长度
@@ -659,225 +640,119 @@ function CommandRegister() {
                             switch(args[1].toLowerCase()) {
                                 // nim mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NIM物品
                                 case "load":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
-                                            // 检测指令长度
-                                            if (args.length > 2) {
-                                                // 获取MM物品
-                                                let mmItem = itemManager.getItem(args[2])
-                                                if (mmItem.isPresent()){
-                                                    let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
-                                                    // 获取保存路径
-                                                    let path = args[3] || MMItemsPath
-                                                    let saveResult
-                                                    // 保存物品
-                                                    if (saveResult = saveNiItem(itemStack, args[2], path, false)) {
-                                                        // 重载物品列表
-                                                        getNiItems()
-                                                        // 替换提示信息中的占位符
-                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
-                                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
-                                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
-                                                        // 保存成功提示
-                                                        sender.sendMessage(successSaveInfoMessage)
-                                                    } else if (saveResult == 0) {
-                                                        // 替换提示信息中的占位符
-                                                        let existedKeyMessage = existedKey.replace(/{itemID}/g, args[2])
-                                                        // 物品ID已存在提示
-                                                        sender.sendMessage(existedKeyMessage)
-                                                    } else {
-                                                        // 空气提示
-                                                        sender.sendMessage(airItem)
-                                                    }
-                                                } else {
-                                                    // 替换给予信息中的占位符
-                                                    let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
-                                                    // 未知物品提示
-                                                    sender.sendMessage(unknownItemMessage)
-                                                    return
-                                                }
-                                            } else {
-                                                // 发送帮助信息
-                                                sendMessages(sender, helpMessages)
-                                            }
-                                        }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                                    break
-                                // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NIM物品
-                                case "cover":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
-                                            // 检测指令长度
-                                            if (args.length > 2) {
-                                                // 获取MM物品
-                                                let mmItem = itemManager.getItem(args[2])
-                                                if (mmItem.isPresent()){
-                                                    let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
-                                                    // 获取保存路径
-                                                    let path = args[3] || MMItemsPath
-                                                    let saveResult = saveNiItem(itemStack, args[2], path, true)
-                                                    // 保存物品
-                                                    if (saveResult != 2) {
-                                                        // 重载物品列表
-                                                        getNiItems()
-                                                        // 替换提示信息中的占位符
-                                                        let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
-                                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
-                                                        successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
-                                                        // 保存成功提示
-                                                        sender.sendMessage(successSaveInfoMessage)
-                                                    } else {
-                                                        // 空气提示
-                                                        sender.sendMessage(airItem)
-                                                    }
-                                                } else {
-                                                    // 替换给予信息中的占位符
-                                                    let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
-                                                    // 未知物品提示
-                                                    sender.sendMessage(unknownItemMessage)
-                                                    return
-                                                }
-                                            } else {
-                                                // 发送帮助信息
-                                                sendMessages(sender, helpMessages)
-                                            }
-                                        }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                                    break
-                                // nim mm loadAll > 将全部MM物品转化为NIM物品
-                                case "loadall":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
-                                            // 获取保存路径
-                                            let path = args[2] || MMItemsPath
-                                            // 获取全部MM物品并操作
-                                            itemManager.getItems().stream().forEach((item) => {
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        // 检测指令长度
+                                        if (args.length > 2) {
+                                            // 获取MM物品
+                                            let mmItem = itemManager.getItem(args[2])
+                                            if (mmItem.isPresent()){
+                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                // 获取保存路径
+                                                let path = args[3] || MMItemsPath
                                                 let saveResult
                                                 // 保存物品
-                                                if (!(saveResult = saveNiItem(BukkitAdapter.adapt(item.generateItemStack(1)), item.getInternalName(), path, false))) {
+                                                if (saveResult = saveNiItem(itemStack, args[2], path, false)) {
+                                                    // 重载物品列表
+                                                    getNiItems()
                                                     // 替换提示信息中的占位符
-                                                    let existedKeyMessage = existedKey.replace(/{itemID}/g, item.getInternalName())
+                                                    let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
+                                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
+                                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
+                                                    // 保存成功提示
+                                                    sender.sendMessage(successSaveInfoMessage)
+                                                } else if (saveResult == 0) {
+                                                    // 替换提示信息中的占位符
+                                                    let existedKeyMessage = existedKey.replace(/{itemID}/g, args[2])
                                                     // 物品ID已存在提示
                                                     sender.sendMessage(existedKeyMessage)
-                                                } else if (saveResult == 2) {
+                                                } else {
                                                     // 空气提示
                                                     sender.sendMessage(airItem)
                                                 }
-                                            })
-                                            // 重载物品列表
-                                            getNiItems()
-                                            // 替换提示信息中的占位符
-                                            let mMImportSuccessInfoMessage = mMImportSuccessInfo.replace(/{path}/g, path)
-                                            // 保存成功提示
-                                            sender.sendMessage(mMImportSuccessInfoMessage)
+                                            } else {
+                                                // 替换给予信息中的占位符
+                                                let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
+                                                // 未知物品提示
+                                                sender.sendMessage(unknownItemMessage)
+                                                return
+                                            }
+                                        } else {
+                                            // 发送帮助信息
+                                            sendMessages(sender, helpMessages)
                                         }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                                    }))
+                                    break
+                                // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NIM物品
+                                case "cover":
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        // 检测指令长度
+                                        if (args.length > 2) {
+                                            // 获取MM物品
+                                            let mmItem = itemManager.getItem(args[2])
+                                            if (mmItem.isPresent()){
+                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                // 获取保存路径
+                                                let path = args[3] || MMItemsPath
+                                                let saveResult = saveNiItem(itemStack, args[2], path, true)
+                                                // 保存物品
+                                                if (saveResult != 2) {
+                                                    // 重载物品列表
+                                                    getNiItems()
+                                                    // 替换提示信息中的占位符
+                                                    let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName(itemStack))
+                                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
+                                                    successSaveInfoMessage = successSaveInfoMessage.replace(/{path}/g, path)
+                                                    // 保存成功提示
+                                                    sender.sendMessage(successSaveInfoMessage)
+                                                } else {
+                                                    // 空气提示
+                                                    sender.sendMessage(airItem)
+                                                }
+                                            } else {
+                                                // 替换给予信息中的占位符
+                                                let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
+                                                // 未知物品提示
+                                                sender.sendMessage(unknownItemMessage)
+                                                return
+                                            }
+                                        } else {
+                                            // 发送帮助信息
+                                            sendMessages(sender, helpMessages)
+                                        }
+                                    }))
+                                    break
+                                // nim mm loadAll > 将全部MM物品转化为NIM物品
+                                case "loadall":
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        // 获取保存路径
+                                        let path = args[2] || MMItemsPath
+                                        // 获取全部MM物品并操作
+                                        itemManager.getItems().stream().forEach((item) => {
+                                            let saveResult
+                                            // 保存物品
+                                            if (!(saveResult = saveNiItem(BukkitAdapter.adapt(item.generateItemStack(1)), item.getInternalName(), path, false))) {
+                                                // 替换提示信息中的占位符
+                                                let existedKeyMessage = existedKey.replace(/{itemID}/g, item.getInternalName())
+                                                // 物品ID已存在提示
+                                                sender.sendMessage(existedKeyMessage)
+                                            } else if (saveResult == 2) {
+                                                // 空气提示
+                                                sender.sendMessage(airItem)
+                                            }
+                                        })
+                                        // 重载物品列表
+                                        getNiItems()
+                                        // 替换提示信息中的占位符
+                                        let mMImportSuccessInfoMessage = mMImportSuccessInfo.replace(/{path}/g, path)
+                                        // 保存成功提示
+                                        sender.sendMessage(mMImportSuccessInfoMessage)
+                                    }))
                                     break
                                 // nim mm get [物品ID] (数量) > 根据ID获取MM物品
                                 case "get":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
-                                            // 如果指令发送者不是玩家
-                                            if (sender instanceof Player) {
-                                                // 检测指令长度
-                                                if (args.length > 2) {
-                                                    // 获取MM物品
-                                                    let mmItem = itemManager.getItem(args[2])
-                                                    if (mmItem.isPresent()) {
-                                                        let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
-                                                        let itemAmt
-                                                        // 获取数量
-                                                        if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
-                                                            itemAmt = itemAmt || 1
-                                                            // 替换给予信息中的占位符
-                                                            let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                            // 给予物品
-                                                            if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
-                                                                // 给予失败提示
-                                                                sender.sendMessage(failureInfo)
-                                                            }
-                                                        } else {
-                                                            // 非法数量提示
-                                                            sender.sendMessage(invalidAmount)
-                                                        }
-                                                    } else {
-                                                        // 替换给予信息中的占位符
-                                                        let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
-                                                        // 未知物品提示
-                                                        sender.sendMessage(unknownItemMessage)
-                                                    }
-                                                } else {
-                                                    // 发送帮助信息
-                                                    sendMessages(sender, helpMessages)
-                                                }
-                                            } else {
-                                                // 后台无法执行提示
-                                                sender.sendMessage(invalidPaser)
-                                            }
-                                        }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                                    break
-                                // nim mm give [玩家ID] [物品ID] (数量) > 根据ID给予MM物品
-                                case "give":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
-                                            if (args.length > 3) {
-                                                let player
-                                                // 获取对应在线玩家
-                                                if (player = Bukkit.getPlayer(args[2])) {
-                                                    // 获取MM物品
-                                                    let mmItem = itemManager.getItem(args[3])
-                                                    if (mmItem.isPresent()) {
-                                                        let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
-                                                        let itemAmt
-                                                        // 获取数量
-                                                        if (args.length == 4 || ((itemAmt = parseInt(args[4])) && itemAmt > 0)) {
-                                                            itemAmt = itemAmt || 1
-                                                            // 替换给予信息中的占位符
-                                                            let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
-                                                            givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                            // 给予物品
-                                                            if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
-                                                                // 给予失败提示
-                                                                sender.sendMessage(failureInfo)
-                                                            }
-                                                            // 替换给予信息中的占位符
-                                                            let successInfoMessage = successInfo.replace(/{player}/g, args[2])
-                                                            successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                            successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                            // 给予成功提示
-                                                            sender.sendMessage(successInfoMessage)
-                                                        } else {
-                                                            // 非法数量提示
-                                                            sender.sendMessage(invalidAmount)
-                                                        }
-                                                    } else {
-                                                        // 替换给予信息中的占位符
-                                                        let unknownItemMessage = unknownItem.replace(/{itemID}/, args[3])
-                                                        // 未知物品提示
-                                                        sender.sendMessage(unknownItemMessage)
-                                                    }
-                                                } else {
-                                                    // 玩家不存在/不在线提示
-                                                    sender.sendMessage(invalidPlayer)
-                                                }
-                                            } else {
-                                                // 发送帮助信息
-                                                sendMessages(sender, helpMessages)
-                                            }
-                                        }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
-                                    break
-                                // nim mm giveAll [物品ID] (数量) > 根据ID给予所有人MM物品
-                                case "giveall":
-                                    var AsyncTask = Java.extend(BukkitRunnable, {
-                                        run: () => {
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        // 如果指令发送者不是玩家
+                                        if (sender instanceof Player) {
                                             // 检测指令长度
                                             if (args.length > 2) {
                                                 // 获取MM物品
@@ -891,20 +766,11 @@ function CommandRegister() {
                                                         // 替换给予信息中的占位符
                                                         let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                         givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                        // 对于每个在线玩家
-                                                        Bukkit.getOnlinePlayers().forEach((player) => {
-                                                            // 给予物品
-                                                            if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
-                                                                // 给予失败提示
-                                                                sender.sendMessage(failureInfo)
-                                                            }
-                                                        })
-                                                        // 替换提示信息中的占位符
-                                                        let successInfoMessage = successInfo.replace(/{player}/g, "所有玩家")
-                                                        successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
-                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
-                                                        // 给予成功提示
-                                                        sender.sendMessage(successInfoMessage)
+                                                        // 给予物品
+                                                        if (!giveItems(sender, itemStack, itemAmt, givenInfoMessage)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                        }
                                                     } else {
                                                         // 非法数量提示
                                                         sender.sendMessage(invalidAmount)
@@ -919,9 +785,106 @@ function CommandRegister() {
                                                 // 发送帮助信息
                                                 sendMessages(sender, helpMessages)
                                             }
+                                        } else {
+                                            // 后台无法执行提示
+                                            sender.sendMessage(invalidPaser)
                                         }
-                                    })
-                                    new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                                    }))
+                                    break
+                                // nim mm give [玩家ID] [物品ID] (数量) > 根据ID给予MM物品
+                                case "give":
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        if (args.length > 3) {
+                                            let player
+                                            // 获取对应在线玩家
+                                            if (player = Bukkit.getPlayer(args[2])) {
+                                                // 获取MM物品
+                                                let mmItem = itemManager.getItem(args[3])
+                                                if (mmItem.isPresent()) {
+                                                    let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                    let itemAmt
+                                                    // 获取数量
+                                                    if (args.length == 4 || ((itemAmt = parseInt(args[4])) && itemAmt > 0)) {
+                                                        itemAmt = itemAmt || 1
+                                                        // 替换给予信息中的占位符
+                                                        let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
+                                                        givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                        // 给予物品
+                                                        if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                        }
+                                                        // 替换给予信息中的占位符
+                                                        let successInfoMessage = successInfo.replace(/{player}/g, args[2])
+                                                        successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
+                                                        successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                        // 给予成功提示
+                                                        sender.sendMessage(successInfoMessage)
+                                                    } else {
+                                                        // 非法数量提示
+                                                        sender.sendMessage(invalidAmount)
+                                                    }
+                                                } else {
+                                                    // 替换给予信息中的占位符
+                                                    let unknownItemMessage = unknownItem.replace(/{itemID}/, args[3])
+                                                    // 未知物品提示
+                                                    sender.sendMessage(unknownItemMessage)
+                                                }
+                                            } else {
+                                                // 玩家不存在/不在线提示
+                                                sender.sendMessage(invalidPlayer)
+                                            }
+                                        } else {
+                                            // 发送帮助信息
+                                            sendMessages(sender, helpMessages)
+                                        }
+                                    }))
+                                    break
+                                // nim mm giveAll [物品ID] (数量) > 根据ID给予所有人MM物品
+                                case "giveall":
+                                    BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                                        // 检测指令长度
+                                        if (args.length > 2) {
+                                            // 获取MM物品
+                                            let mmItem = itemManager.getItem(args[2])
+                                            if (mmItem.isPresent()) {
+                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                let itemAmt
+                                                // 获取数量
+                                                if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
+                                                    itemAmt = itemAmt || 1
+                                                    // 替换给予信息中的占位符
+                                                    let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
+                                                    givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                    // 对于每个在线玩家
+                                                    Bukkit.getOnlinePlayers().forEach((player) => {
+                                                        // 给予物品
+                                                        if (!giveItems(player, itemStack, itemAmt, givenInfoMessage)) {
+                                                            // 给予失败提示
+                                                            sender.sendMessage(failureInfo)
+                                                        }
+                                                    })
+                                                    // 替换提示信息中的占位符
+                                                    let successInfoMessage = successInfo.replace(/{player}/g, "所有玩家")
+                                                    successInfoMessage = successInfoMessage.replace(/{amount}/g, itemAmt)
+                                                    successInfoMessage = successInfoMessage.replace(/{name}/g, getItemName(itemStack))
+                                                    // 给予成功提示
+                                                    sender.sendMessage(successInfoMessage)
+                                                } else {
+                                                    // 非法数量提示
+                                                    sender.sendMessage(invalidAmount)
+                                                }
+                                            } else {
+                                                // 替换给予信息中的占位符
+                                                let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
+                                                // 未知物品提示
+                                                sender.sendMessage(unknownItemMessage)
+                                            }
+                                        } else {
+                                            // 发送帮助信息
+                                            sendMessages(sender, helpMessages)
+                                        }
+                                    }))
                                     break
                                 default:
                                     // 发送帮助信息
@@ -934,23 +897,20 @@ function CommandRegister() {
                         return true
                     // nim reload > 重新加载NIM物品
                     case "reload":
-                        var AsyncTask = Java.extend(BukkitRunnable, {
-                            run: () => {
-                                // 重载配置文件
-                                NeigeItemsConfig()
-                                // 创建节点缓存文件
-                                NIConfig.sections = {}
-                                // 重载全局节点列表
-                                getGlobalSections()
-                                // 重载NIM物品列表
-                                getNiItems()
-                                // 重载MM物品列表
-                                mmItemLoad()
-                                // 重载成功提示
-                                sender.sendMessage(reloadedMessage)
-                            }
-                        })
-                        new AsyncTask().runTaskAsynchronously(Tool.getPlugin("Pouvoir"))
+                        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                            // 重载配置文件
+                            NeigeItemsConfig()
+                            // 创建节点缓存文件
+                            NIConfig.sections = {}
+                            // 重载全局节点列表
+                            getGlobalSections()
+                            // 重载NIM物品列表
+                            getNiItems()
+                            // 重载MM物品列表
+                            mmItemLoad()
+                            // 重载成功提示
+                            sender.sendMessage(reloadedMessage)
+                        }))
                         return true
                     default:
                         // 发送帮助信息
@@ -1242,6 +1202,7 @@ function getNiItem(itemID, player, sender, data) {
     // 对文本化配置进行全局节点解析
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set(itemID, itemKeySection)
+    let itemHashCode = tempItemKeySection.saveToString().hashCode()
     stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random)
     stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
@@ -1306,6 +1267,7 @@ function getNiItem(itemID, player, sender, data) {
         itemTag.NeigeItems = new ItemTag()
         itemTag.NeigeItems.id = new ItemTagData(itemID)
         itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NIConfig.sections[random]))
+        itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
         // 设置物品NBT
         if (itemKeySection.contains("NBT")) {
             // 获取配置NBT
