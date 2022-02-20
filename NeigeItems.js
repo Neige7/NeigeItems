@@ -14,7 +14,7 @@ function NeigeItemsConfig() {
 	// MM物品默认保存路径
 	NIConfig.MMItemsPath = getConfigValue(file, "Main.MMItemsPath", "MMItems.yml")
 	// 不进行保存的NBT键
-	NIConfig.ignoreKeys = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["HideFlags","Enchantments","VARIABLES_DATA","ench"]))
+	NIConfig.ignoreKeys = getConfigValue(file, "Main.ignoreKeys", Arrays.asList(["hideflags","enchantments","VARIABLES_DATA","ench"]))
 
 	// 玩家不在线提示
 	NIConfig.invalidPlayer = getConfigValue(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
@@ -67,7 +67,7 @@ function NeigeItemsConfig() {
         "§e/ni §fcover [物品ID] (保存路径) §7> 将手中物品以对应ID覆盖至对应路径",
         "§e/ni §fmm load [物品ID] (保存路径) §7> 将对应ID的MM物品保存为NI物品",
         "§e/ni §fmm cover [物品ID] (保存路径) §7> 将对应ID的MM物品覆盖为NI物品",
-        "§e/ni §fmm loadAll §7> 将全部MM物品转化为NI物品",
+        "§e/ni §fmm loadAll (保存路径) §7> 将全部MM物品转化为NI物品",
         "§e/ni §fmm get [物品ID] (数量) §7> 根据ID获取MM物品",
         "§e/ni §fmm give [玩家ID] [物品ID] (数量) §7> 根据ID给予MM物品",
         "§e/ni §fmm giveAll [物品ID] (数量) §7> 根据ID给予所有人MM物品",
@@ -101,7 +101,6 @@ function CommandRegister() {
     let Bukkit = Packages.org.bukkit.Bukkit
     let Consumer = Packages.java.util.function.Consumer
     let BukkitScheduler = Bukkit.getScheduler()
-    let BukkitRunnable = Packages.org.bukkit.scheduler.BukkitRunnable
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
@@ -213,7 +212,6 @@ function CommandRegister() {
                             } else {
                                 // 非法数量提示
                                 sender.sendMessage(invalidAmount)
-                                return
                             }
                         }))
                         return true
@@ -721,7 +719,7 @@ function CommandRegister() {
                                         }
                                     }))
                                     break
-                                // nim mm loadAll > 将全部MM物品转化为NIM物品
+                                // nim mm loadAll (保存路径) > 将全部MM物品转化为NIM物品
                                 case "loadall":
                                     BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                                         // 获取保存路径
@@ -1045,7 +1043,7 @@ function saveNiItem(itemStack, itemKey, path = itemKey + ".yml", cover) {
             config.createSection(itemKey)
             let itemKeySection = config.getConfigurationSection(itemKey)
             // 设置物品材质
-            itemKeySection.set("Material", itemStack.getType().toString())
+            itemKeySection.set("material", itemStack.getType().toString())
             // 如果物品有ItemMeta
             if (itemStack.hasItemMeta()) {
                 // 获取ItemMeta
@@ -1056,31 +1054,31 @@ function saveNiItem(itemStack, itemKey, path = itemKey + ".yml", cover) {
                 let display = itemNBT.display
                 itemNBT.remove("display")
                 // 设置CustomModelData
-                if (itemNBT.containsKey("CustomModelData")) {
-                    itemKeySection.set("CustomModelData", parseInt(itemNBT.CustomModelData.slice(6)))
-                    itemNBT.remove("CustomModelData")
+                if (itemNBT.containsKey("custommodeldata")) {
+                    itemKeySection.set("custommodeldata", parseInt(itemNBT.CustomModelData.slice(6)))
+                    itemNBT.remove("custommodeldata")
                 }
                 // 设置子ID/损伤值
                 if (itemNBT.containsKey("Damage")) {
-                    itemKeySection.set("Data", parseInt(itemNBT.Damage.slice(6)))
+                    itemKeySection.set("damage", parseInt(itemNBT.Damage.slice(6)))
                     itemNBT.remove("Damage")
                 }
                 // 设置物品名
                 if (itemMeta.hasDisplayName()) {
-                    itemKeySection.set("Name", itemMeta.getDisplayName())
+                    itemKeySection.set("name", itemMeta.getDisplayName())
                 }
                 // 设置Lore
                 if (itemMeta.hasLore()) {
-                    itemKeySection.set("Lore", itemMeta.getLore())
+                    itemKeySection.set("lore", itemMeta.getLore())
                 }
                 // 设置是否无法破坏
                 if (itemMeta.isUnbreakable()) {
-                    itemKeySection.set("Unbreakable", itemMeta.isUnbreakable())
+                    itemKeySection.set("unbreakable", itemMeta.isUnbreakable())
                 }
                 // 设置物品附魔
                 if (itemMeta.hasEnchants()) {
-                    itemKeySection.createSection("Enchantments")
-                    let enchantSection = itemKeySection.getConfigurationSection("Enchantments")
+                    itemKeySection.createSection("enchantments")
+                    let enchantSection = itemKeySection.getConfigurationSection("enchantments")
                     itemMeta.getEnchants().keySet().forEach((enchant) => {
                         if (enchant != null) {
                             enchantSection.set(enchant.getName(), itemMeta.getEnchantLevel(enchant))
@@ -1093,15 +1091,15 @@ function saveNiItem(itemStack, itemKey, path = itemKey + ".yml", cover) {
                     for (let key in flags) {
                         flags[key] = flags[key].toString()
                     }
-                    itemKeySection.set("HideFlags", flags)
+                    itemKeySection.set("hideflags", flags)
                 }
                 // 设置物品颜色
                 if (display && display.containsKey("color")) {
-                    itemKeySection.set("Color", display.color)
+                    itemKeySection.set("color", display.color)
                 }
                 // 设置物品NBT
                 if (!itemNBT.isEmpty()) {
-                    itemKeySection.set("NBT", itemNBT)
+                    itemKeySection.set("nbt", itemNBT)
                 }
             }
             config.save(file)
@@ -1174,9 +1172,9 @@ function getNiItem(itemID, player, sender, data) {
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
     // 如果调用了全局节点
-    if (itemKeySection.contains("GlobalSections")) {
+    if (itemKeySection.contains("globalsections")) {
         // 获取全局节点ID
-        var gSectionIDList = itemKeySection.getStringList("GlobalSections")
+        var gSectionIDList = itemKeySection.getStringList("globalsections")
         // 针对每个试图调用的全局节点
         gSectionIDList.forEach((gSectionID) => {
             // 在每个全局节点文件进行查找
@@ -1184,41 +1182,42 @@ function getNiItem(itemID, player, sender, data) {
                 // 如果当前文件中存在相应节点
                 let index = gSectionIDs[1].indexOf(gSectionID)
                 if (index != -1) {
-                    itemKeySection.set("Sections." + gSectionID, getConfigSection(gSectionIDs[0])[index])
+                    itemKeySection.set("sections." + gSectionID, getConfigSection(gSectionIDs[0])[index])
                 }
             })
         })
     }
     // 获取私有节点配置
-    if (itemKeySection.contains("Sections")) var Sections = itemKeySection.getConfigurationSection("Sections")
+    if (itemKeySection.contains("sections")) var Sections = itemKeySection.getConfigurationSection("sections")
     // 如果当前物品包含预声明节点
     if (Sections != undefined) {
         // 针对每个节点
         Sections.getKeys(false).forEach((section) => {
             // 节点解析
-            globalSectionParse(Sections, section, random)
+            globalSectionParse(Sections, section, random, player)
         })
     }
     // 对文本化配置进行全局节点解析
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set(itemID, itemKeySection)
     let itemHashCode = tempItemKeySection.saveToString().hashCode()
-    stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random)
+    stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random, player)
+    stringSection = stringSection.replace(/\\</g, "<")
     stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
     // 构建物品
     let material
-    if (itemKeySection.contains("Material") && itemKeySection.getString("Material") && (material = Material.matchMaterial(itemKeySection.getString("Material").toUpperCase()))) {
+    if (itemKeySection.contains("material") && itemKeySection.getString("material") && (material = Material.matchMaterial(itemKeySection.getString("material").toUpperCase()))) {
         let itemStack = new ItemStack(material)
         // 设置子ID/损伤值
-        if (itemKeySection.contains("Data")) {
-            itemStack.setDurability(itemKeySection.getInt("Data"))
+        if (itemKeySection.contains("damage")) {
+            itemStack.setDurability(itemKeySection.getInt("damage"))
         }
         // 设置物品附魔
-        if (itemKeySection.contains("Enchantments")) {
-            let enchantSection = itemKeySection.getConfigurationSection("Enchantments")
+        if (itemKeySection.contains("enchantments")) {
+            let enchantSection = itemKeySection.getConfigurationSection("enchantments")
             enchantSection.getKeys(false).forEach((enchant) => {
                 if (enchant != null) {
                     let level = enchantSection.getInt(enchant)
@@ -1231,26 +1230,26 @@ function getNiItem(itemID, player, sender, data) {
         // 获取ItemMeta
         let itemMeta = itemStack.getItemMeta()
         // 设置CustomModelData
-        if (itemKeySection.contains("CustomModelData")) {
-            try { itemMeta.setCustomModelData(itemKeySection.getInt("CustomModelData")) } catch (e) {}
+        if (itemKeySection.contains("custommodeldata")) {
+            try { itemMeta.setCustomModelData(itemKeySection.getInt("custommodeldata")) } catch (e) {}
         }
         // 设置物品名
-        if (itemKeySection.contains("Name")) {
-            itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemKeySection.getString("Name")))
+        if (itemKeySection.contains("name")) {
+            itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemKeySection.getString("name")))
         }
         // 设置Lore
-        if (itemKeySection.contains("Lore")) {
-            let lores = itemKeySection.getStringList("Lore")
+        if (itemKeySection.contains("lore")) {
+            let lores = itemKeySection.getStringList("lore")
             lores.replaceAll(lore => ChatColor.translateAlternateColorCodes('&', lore))
             itemMeta.setLore(lores)
         }
         // 设置是否无法破坏
-        if (itemKeySection.contains("Unbreakable")) {
-            itemMeta.setUnbreakable(itemKeySection.getBoolean("Unbreakable"))
+        if (itemKeySection.contains("unbreakable")) {
+            itemMeta.setUnbreakable(itemKeySection.getBoolean("unbreakable"))
         }
         // 设置ItemFlags
-        if (itemKeySection.contains("HideFlags")) {
-            var flags = itemKeySection.getStringList("HideFlags")
+        if (itemKeySection.contains("hideflags")) {
+            var flags = itemKeySection.getStringList("hideflags")
             if (flags.length) {
                 for (let key in flags) {
                     itemMeta.addItemFlags(ItemFlag.valueOf(flags[key]))
@@ -1258,8 +1257,8 @@ function getNiItem(itemID, player, sender, data) {
             }
         }
         // 设置物品颜色
-        if (itemKeySection.contains("Color")) {
-            try { itemMeta.setColor(Color.fromRGB(itemKeySection.getInt("Color"))) } catch (e) {}
+        if (itemKeySection.contains("color")) {
+            try { itemMeta.setColor(Color.fromRGB(itemKeySection.getInt("color"))) } catch (e) {}
         }
         itemStack.setItemMeta(itemMeta)
         // 获取物品NBT
@@ -1269,9 +1268,9 @@ function getNiItem(itemID, player, sender, data) {
         itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NIConfig.sections[random]))
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
         // 设置物品NBT
-        if (itemKeySection.contains("NBT")) {
+        if (itemKeySection.contains("nbt")) {
             // 获取配置NBT
-            var itemNBT = getItemTagNBT(toHashMap(itemKeySection.get("NBT")))
+            var itemNBT = getItemTagNBT(toHashMap(itemKeySection.get("nbt")))
             for (let key in itemNBT) {
                 if (key != "NeigeItems") itemTag[key] = itemNBT[key]
             }
@@ -1642,8 +1641,9 @@ function toHashMap(configSection){
  * @param Sections ConfigurationSection 物品配置
  * @param string String 待解析文本
  * @param random number 随机数
+ * @param player Player 待解析玩家
  */
-function getSection(Sections, string, random) {
+function getSection(Sections, string, random, player) {
     let ArrayList = Packages.java.util.ArrayList
     let LinkedList = Packages.java.util.LinkedList
 
@@ -1653,8 +1653,8 @@ function getSection(Sections, string, random) {
     let start = new ArrayList()
     let end = new ArrayList()
     for (let index = 0; index < string.length; index++) {
-        // 如果是左括号
-        if (string.charAt(index) == "<") {
+        // 如果是待识别的左括号
+        if (string.charAt(index) == "<" && string.charAt(index-1) != "\\") {
             // 压栈
             stack.push(index)
         // 如果是右括号
@@ -1678,7 +1678,7 @@ function getSection(Sections, string, random) {
     listString.push(string.slice(0, start[0]))
     for (let index = 0; index < start.length; index++) {
         // 目标文本
-        listString.push(getSection(Sections, string.slice(start[index]+1, end[index]), random))
+        listString.push(getSection(Sections, string.slice(start[index]+1, end[index]), random, player))
 
         if (index+1 != start.length) {
             listString.push(string.slice(end[index]+1, start[index+1]))
@@ -1689,7 +1689,7 @@ function getSection(Sections, string, random) {
     // 针对目标文本
     for (let index = 1; index < listString.length; index+=2) {
         // 键值解析
-        listString[index] = parseSection(Sections, listString[index], random)
+        listString[index] = parseSection(Sections, listString[index], random, player)
     }
     return listString.join("")
 }
@@ -1699,8 +1699,9 @@ function getSection(Sections, string, random) {
  * @param Sections ConfigurationSection 物品配置
  * @param string String 待解析文本
  * @param random number 随机数
+ * @param player Player 待解析玩家
  */
-function parseSection(Sections, string, random) {
+function parseSection(Sections, string, random, player) {
     // 分离获取各参数
     var parts = string.split("::")
     // 如果只指定了类型和参数
@@ -1722,21 +1723,21 @@ function parseSection(Sections, string, random) {
     // 如果尚未解析对应ID节点
     } else {
         // 尝试解析并返回对应节点值
-        if (globalSectionParse(Sections, name, random)) return NIConfig.sections[random][name]
+        if (globalSectionParse(Sections, name, random, player)) return NIConfig.sections[random][name]
     }
     switch (type) {
         case "strings":
             if (args.length > 1) {
-                var result = getSection(Sections, args[parseInt(Math.random()*(args.length))], random)
+                var result = getSection(Sections, args[parseInt(Math.random()*(args.length))], random, player)
             } else {
-                var result = getSection(Sections, args[0], random)
+                var result = getSection(Sections, args[0], random, player)
             }
             if (name) NIConfig.sections[random][name] = result
             return result
         case "number":
-            if (args.length > 1) var result = Math.random()*(parseFloat(getSection(Sections, args[1], random))-parseFloat(getSection(Sections, args[0], random)))+parseFloat(getSection(Sections, args[0], random))
+            if (args.length > 1) var result = Math.random()*(parseFloat(getSection(Sections, args[1], random, player))-parseFloat(getSection(Sections, args[0], random, player)))+parseFloat(getSection(Sections, args[0], random, player))
             if (args.length > 2) {
-                result = result.toFixed(parseInt(getSection(Sections, args[2], random)))
+                result = result.toFixed(parseInt(getSection(Sections, args[2], random, player)))
             } else {
                 result = result.toFixed(0)
             }
@@ -1751,7 +1752,7 @@ function parseSection(Sections, string, random) {
             if (args.length > 0) {
                 try {
                     // 获取公式结果
-                    let result = eval(getSection(Sections, args[0], random))
+                    let result = eval(getSection(Sections, args[0], random, player))
                     // 获取取整位数
                     let fixed
                     if (args.length > 1) {
@@ -1781,7 +1782,7 @@ function parseSection(Sections, string, random) {
             break
         case "weight":
             if (args.length = 1) {
-                var result = getSection(Sections, args[0].slice(args[0].indexOf("::")+2), random)
+                var result = getSection(Sections, args[0].slice(args[0].indexOf("::")+2), random, player)
                 if (name) NIConfig.sections[random][name] = result
                 return result
             }
@@ -1792,7 +1793,7 @@ function parseSection(Sections, string, random) {
                 let string = value.slice(index+2)
                 for (let index = 0; index < weight; index++) strings.push(string)
             })
-            var result = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
+            var result = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
             if (name) NIConfig.sections[random][name] = result
             return result
         case "js":
@@ -1801,7 +1802,7 @@ function parseSection(Sections, string, random) {
                 var path = info[0]
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
-                var result = getSection(Sections, global[func](NIConfig.sections[random]), random)
+                var result = getSection(Sections, global[func](NIConfig.sections[random], player), random, player)
                 if (name) NIConfig.sections[random][name] = result
                 return result
             } catch (error) {
@@ -1818,9 +1819,9 @@ function parseSection(Sections, string, random) {
             // 如果尚未解析对应ID节点
             } else {
                 // 尝试解析并返回对应节点值
-                if (globalSectionParse(Sections, name, random)) return NIConfig.sections[random][name]
+                if (globalSectionParse(Sections, name, random, player)) return NIConfig.sections[random][name]
             }
-            return "未知节点"
+            return "<" + string + ">"
     }
 }
 
@@ -1829,12 +1830,13 @@ function parseSection(Sections, string, random) {
  * @param Sections ConfigurationSection 物品配置
  * @param string String 待解析文本
  * @param random number 随机数
+ * @param player Player 待解析玩家
  */
-function loadSection(Sections, string, random) {
+function loadSection(Sections, string, random, player) {
     let result, length
     while (length != Object.keys(NIConfig.sections[random]).length) {
         length = Object.keys(NIConfig.sections[random]).length
-        result = getSection(Sections, string, random)
+        result = getSection(Sections, string, random, player)
     }
     return result
 }
@@ -2000,7 +2002,7 @@ function getConfigValue(file, key, defaultValue) {
     if (string instanceof String) {
         try { 
             let obj=JSON.parse(string)
-            if (typeof obj == 'object' && obj ){
+            if (typeof obj == "object" && obj ){
                 for (let key in obj) {
                     NIConfig.sections[random][key] = obj[key]
                 }
@@ -2014,9 +2016,10 @@ function getConfigValue(file, key, defaultValue) {
  * @param Sections ConfigurationSection 节点配置部分
  * @param section String 节点名
  * @param random number 随机数
+ * @param player Player 待解析玩家
  * @return Boolean 是否包含相应节点
  */
-function globalSectionParse(Sections, section, random) {
+function globalSectionParse(Sections, section, random, player) {
     if (Sections != null && Sections.contains(section)) {
         let currentSection = Sections.getConfigurationSection(section)
         // 获取节点类型
@@ -2027,19 +2030,19 @@ function globalSectionParse(Sections, section, random) {
                 if (currentSection.contains("values")) {
                     // 加载字符串组
                     var strings = currentSection.get("values")
-                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
+                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
                 }
                 break
             case "number":
                 // 如果配置了数字范围
                 if (currentSection.contains("min") && currentSection.contains("max")) {
                     // 获取大小范围
-                    let min = parseFloat(getSection(Sections, currentSection.getString("min"), random))
-                    let max = parseFloat(getSection(Sections, currentSection.getString("max"), random))
+                    let min = parseFloat(getSection(Sections, currentSection.getString("min"), random, player))
+                    let max = parseFloat(getSection(Sections, currentSection.getString("max"), random, player))
                     // 获取取整位数
                     let fixed
                     if (currentSection.contains("fixed")) {
-                        fixed = parseInt(getSection(Sections, currentSection.getString("fixed"), random))
+                        fixed = parseInt(getSection(Sections, currentSection.getString("fixed"), random, player))
                     }
                     if (isNaN(fixed)) fixed = 0
                     // 加载随机数
@@ -2050,7 +2053,7 @@ function globalSectionParse(Sections, section, random) {
                 if (currentSection.contains("formula")) {
                     try {
                         // 获取公式结果
-                        let result = eval(getSection(Sections, currentSection.getString("formula"), random))
+                        let result = eval(getSection(Sections, currentSection.getString("formula"), random, player))
                         // 如果配置了数字范围
                         if (currentSection.contains("min")) {
                             let min = currentSection.getDouble("min")
@@ -2085,7 +2088,7 @@ function globalSectionParse(Sections, section, random) {
                         let string = value.slice(index+2)
                         for (let index = 0; index < weight; index++) strings.push(string)
                     })
-                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random)
+                    NIConfig.sections[random][section] = getSection(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
                 }
                 break
             case "js":
@@ -2095,7 +2098,7 @@ function globalSectionParse(Sections, section, random) {
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
-                        NIConfig.sections[random][section] = getSection(Sections, global[func](NIConfig.sections[random]), random)
+                        NIConfig.sections[random][section] = getSection(Sections, global[func](NIConfig.sections[random]), random, player)
                     }
                 } catch (error) {
                     NIConfig.sections[random][section] = "公式节点计算错误"
