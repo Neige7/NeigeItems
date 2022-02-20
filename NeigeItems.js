@@ -93,14 +93,20 @@ function NeigeItems() {
     NIConfig.sections = {}
     getGlobalSections()
     getNiItems()
+    getNiActions()
     mmItemLoad()
     CommandRegister()
+    Tool.removeListener("NeigeItemsInteract")
+    Tool.addListener("NeigeItemsInteract", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function (event) {
+        NeigeItemsPlayerInteractEvent(event)
+    })
 }
 
 function CommandRegister() {
     let Bukkit = Packages.org.bukkit.Bukkit
-    let Consumer = Packages.java.util.function.Consumer
     let BukkitScheduler = Bukkit.getScheduler()
+    let Consumer = Packages.java.util.function.Consumer
+    let HashMap = Packages.java.util.HashMap
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
@@ -215,14 +221,14 @@ function CommandRegister() {
                             }
                         }))
                         return true
-                    // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NIM物品
+                    // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NI物品
                     case "get":
                         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                             // 如果指令发送者不是玩家
                             if (sender instanceof Player) {
                                 // 检测指令长度
                                 if (args.length > 1) {
-                                    // 检测是否存在对应ID的NIM物品
+                                    // 检测是否存在对应ID的NI物品
                                     if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                         let data = null
                                         if (args.length > 4) data = Java.from(args).slice(4).join(" ")
@@ -291,7 +297,7 @@ function CommandRegister() {
                             }
                         }))
                         return true
-                    // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NIM物品
+                    // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NI物品
                     case "give":
                         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                             // 检测指令长度
@@ -299,7 +305,7 @@ function CommandRegister() {
                                 let player
                                 // 获取对应在线玩家
                                 if (player = Bukkit.getPlayer(args[1])) {
-                                    // 检测是否存在对应ID的NIM物品
+                                    // 检测是否存在对应ID的NI物品
                                     if (NIConfig.itemIDList.indexOf(args[2]) != -1) {
                                         let data = null
                                         if (args.length > 5) data = Java.from(args).slice(5).join(" ")
@@ -379,12 +385,12 @@ function CommandRegister() {
                             }
                         }))
                         return true
-                    // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NIM物品
+                    // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NI物品
                     case "giveall":
                         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                             // 检测指令长度
                             if (args.length > 1) {
-                                // 检测是否存在对应ID的NIM物品
+                                // 检测是否存在对应ID的NI物品
                                 if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                     let data = null
                                     if (args.length > 4) data = Java.from(args).slice(4).join(" ")
@@ -467,7 +473,7 @@ function CommandRegister() {
                             }
                         }))
                         return true
-                    // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] (是否反复随机) (物品解析对象) (指向数据) > 于指定位置掉落NIM物品
+                    // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] (是否反复随机) (物品解析对象) (指向数据) > 于指定位置掉落NI物品
                     case "drop":
                         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                             // 检测指令长度
@@ -480,7 +486,7 @@ function CommandRegister() {
                                     } else {
                                         player = sender
                                     }
-                                    // 检测是否存在对应ID的NIM物品
+                                    // 检测是否存在对应ID的NI物品
                                     if (NIConfig.itemIDList.indexOf(args[1]) != -1) {
                                         let data = null
                                         if (args.length > 9) data = Java.from(args).slice(9).join(" ")
@@ -636,7 +642,7 @@ function CommandRegister() {
                         // 检测指令长度
                         if (args.length > 1) {
                             switch(args[1].toLowerCase()) {
-                                // nim mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NIM物品
+                                // nim mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NI物品
                                 case "load":
                                     BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                                         // 检测指令长度
@@ -680,7 +686,7 @@ function CommandRegister() {
                                         }
                                     }))
                                     break
-                                // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NIM物品
+                                // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NI物品
                                 case "cover":
                                     BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                                         // 检测指令长度
@@ -719,7 +725,7 @@ function CommandRegister() {
                                         }
                                     }))
                                     break
-                                // nim mm loadAll (保存路径) > 将全部MM物品转化为NIM物品
+                                // nim mm loadAll (保存路径) > 将全部MM物品转化为NI物品
                                 case "loadall":
                                     BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                                         // 获取保存路径
@@ -893,7 +899,7 @@ function CommandRegister() {
                             sendMessages(sender, helpMessages)
                         }
                         return true
-                    // nim reload > 重新加载NIM物品
+                    // nim reload > 重新加载NI物品
                     case "reload":
                         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
                             // 重载配置文件
@@ -902,8 +908,10 @@ function CommandRegister() {
                             NIConfig.sections = {}
                             // 重载全局节点列表
                             getGlobalSections()
-                            // 重载NIM物品列表
+                            // 重载NI物品列表
                             getNiItems()
+                            // 重载NI物品动作列表
+                            getNiActions()
                             // 重载MM物品列表
                             mmItemLoad()
                             // 重载成功提示
@@ -1016,6 +1024,82 @@ function CommandRegister() {
     })
     // 注册指令
     Tool.regCommand(command)
+}
+
+/**
+ * 玩家交互方块事件
+ * @param event PlayerInteractEvent 玩家交互方块事件
+ */
+function NeigeItemsPlayerInteractEvent(event) {
+    let Action = Packages.org.bukkit.event.block.Action
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+    // 获取玩家
+    var player = event.player
+    // 获取手持物品
+    let itemStack = event.item
+    // 获取交互类型
+    let action = event.action
+    // 获取物品NBT
+    var itemNBT = NMSKt.getItemTag(itemStack)
+    let consume
+    try {
+        // 是否需要消耗
+        consume = itemNBT.NeigeItems.consume
+    } catch (error) {return}
+    // 获取待消耗数量
+    let amount = consume.amount || 1
+    // 检测数量
+    if (itemStack.amount >= amount) {
+        // 获取左键是否消耗
+        let left = ((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) && consume.left)
+        // 获取右键是否消耗
+        let right = ((action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) && consume.right)
+        if (left || right) {
+            event.setCancelled(true)
+            // 消耗物品
+            itemStack.setAmount(itemStack.getAmount()-amount)
+            let Bukkit = Packages.org.bukkit.Bukkit
+            let Consumer = Packages.java.util.function.Consumer
+            let BukkitScheduler = Bukkit.getScheduler()
+            // 执行动作
+            BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                let actions
+                if (actions = NIConfig.actions[itemNBT.NeigeItems.id.asString()]) {
+                    let PlaceholderAPI = Tool.staticClass('me.clip.placeholderapi.PlaceholderAPI')
+                    if (left && actions.left) {
+                        let leftPlayer = actions.left.player || []
+                        leftPlayer.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
+                        })
+                        let leftConsole = actions.left.console || []
+                        leftConsole.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
+                        })
+                    }
+                    if (right && actions.right) {
+                        let rightPlayer = actions.right.player || []
+                        rightPlayer.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
+                        })
+                        let rightConsole = actions.right.console || []
+                        rightConsole.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
+                        })
+                    }
+                    if (actions.all) {
+                        let allPlayer = actions.all.player || []
+                        allPlayer.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
+                        })
+                        let allConsole = actions.all.console || []
+                        allConsole.forEach(element => {
+                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
+                        })
+                    }
+                }
+            }))
+        }
+    }
 }
 
 /**
@@ -1267,6 +1351,9 @@ function getNiItem(itemID, player, sender, data) {
         itemTag.NeigeItems.id = new ItemTagData(itemID)
         itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NIConfig.sections[random]))
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
+        if (itemKeySection.contains("options.consume")) {
+            itemTag.NeigeItems.consume = getItemTagNBT(toHashMap(itemKeySection.get("options.consume")))
+        }
         // 设置物品NBT
         if (itemKeySection.contains("nbt")) {
             // 获取配置NBT
@@ -1297,7 +1384,7 @@ function getNiItem(itemID, player, sender, data) {
 }
 
 /**
- * 加载NIM物品列表
+ * 加载NI物品列表
  */
 function getNiItems() {
     let ArrayList = Packages.java.util.ArrayList
@@ -1317,6 +1404,23 @@ function getNiItems() {
         NIConfig.items.push(new ArrayList(Arrays.asList([config, list])))
     })
     pageAmount = Math.ceil(NIConfig.itemIDList.length/NIConfig.listItemAmount)
+}
+
+/**
+ * 加载NI物品动作列表
+ */
+function getNiActions() {
+    let HashMap = Packages.java.util.HashMap
+    
+    let configs = getAllConfig(getAllFile(getDir(scriptName + "/ItemActions")))
+    // {id: {left: {console: [], player: []}, right: {console: [], player: []}}}
+    NIConfig.actions = new HashMap()
+    configs.forEach((config) => {
+        let configSections = getConfigSection(config)
+        configSections.forEach((section) => {
+            NIConfig.actions[section.getName()] = toHashMap(section)
+        })
+    })
 }
 
 /**
@@ -2234,4 +2338,19 @@ function incrementingArray(length) {
         arr.push(i)
     }
     return arr
+}
+
+/**
+ * 执行指令
+ * @param length Int 数组长度
+ * @param sender CommandSender 默认为后台
+ */
+function runCMD(cmd, sender) {
+    let Bukkit = Packages.org.bukkit.Bukkit
+    let BukkitScheduler = Bukkit.getScheduler()
+    let BukkitServer = Bukkit.getServer()
+    sender = sender || BukkitServer.getConsoleSender()
+    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        BukkitServer.dispatchCommand(sender, cmd)
+    })
 }
