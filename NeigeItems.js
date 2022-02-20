@@ -44,6 +44,8 @@ function NeigeItemsConfig() {
 	NIConfig.invalidLocation = getConfigValue(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
 	// 权限不足提示
 	NIConfig.insufficientPermissions = getConfigValue(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
+	// 权限不足提示
+	NIConfig.itemCooldown = getConfigValue(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
 	// 重载完毕提示
 	NIConfig.reloadedMessage = getConfigValue(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
 
@@ -1032,72 +1034,130 @@ function CommandRegister() {
  */
 function NeigeItemsPlayerInteractEvent(event) {
     let Action = Packages.org.bukkit.event.block.Action
+    let Bukkit = Packages.org.bukkit.Bukkit
+    let BukkitScheduler = Bukkit.getScheduler()
+    let Consumer = Packages.java.util.function.Consumer
+    let Material = Packages.org.bukkit.Material
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     // 获取玩家
     var player = event.player
     // 获取手持物品
     let itemStack = event.item
+    if (itemStack == null || itemStack.getType() == Material.AIR) return
     // 获取交互类型
     let action = event.action
+    var leftAction = (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)
+    var rightAction = (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)
     // 获取物品NBT
     var itemNBT = NMSKt.getItemTag(itemStack)
-    let consume
-    try {
-        // 是否需要消耗
-        consume = itemNBT.NeigeItems.consume
-    } catch (error) {return}
-    // 获取待消耗数量
-    let amount = consume.amount || 1
-    // 检测数量
-    if (itemStack.amount >= amount) {
-        // 获取左键是否消耗
-        let left = ((action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) && consume.left)
-        // 获取右键是否消耗
-        let right = ((action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) && consume.right)
-        if (left || right) {
-            event.setCancelled(true)
-            // 消耗物品
-            itemStack.setAmount(itemStack.getAmount()-amount)
-            let Bukkit = Packages.org.bukkit.Bukkit
-            let Consumer = Packages.java.util.function.Consumer
-            let BukkitScheduler = Bukkit.getScheduler()
-            // 执行动作
-            BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
-                let actions
-                if (actions = NIConfig.actions[itemNBT.NeigeItems.id.asString()]) {
-                    let PlaceholderAPI = Tool.staticClass('me.clip.placeholderapi.PlaceholderAPI')
-                    if (left && actions.left) {
-                        let leftPlayer = actions.left.player || []
-                        leftPlayer.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
-                        })
-                        let leftConsole = actions.left.console || []
-                        leftConsole.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
-                        })
+    // 如果为非NI物品则终止操作
+    if (itemNBT.NeigeItems == undefined) return
+    // 获取物品消耗信息
+    let consume = itemNBT.NeigeItems.consume
+    // 如果物品配置了消耗事件
+    if (consume != undefined) {
+        // 获取待消耗数量
+        let amount = consume.amount || 1
+        // 检测数量
+        if (itemStack.amount >= amount) {
+            // 获取左键是否消耗
+            var left = (leftAction && consume.left)
+            // 获取右键是否消耗
+            var right = (rightAction && consume.right)
+            // 如果该物品需要被消耗
+            if (left || right) {
+                // 取消交互事件
+                event.setCancelled(true)
+                // 获取冷却
+                let cooldown = consume.cooldown
+                // 如果冷却存在且大于0
+                if (cooldown && (cooldown = cooldown.asInt())) {
+                    // 获取当前时间
+                    let time = new Date().getTime()
+                    // 获取上次使用时间
+                    let lastTime = getMetaData(player, "NeigeItems-Consume-Cooldown-" + itemNBT.NeigeItems.id, "Double", 0)
+                    // 如果仍处于冷却时间
+                    if ((lastTime + cooldown) > time) {
+                        PlayerUtils.sendActionBar(player, NIConfig.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
+                        // 终止操作
+                        return
                     }
-                    if (right && actions.right) {
-                        let rightPlayer = actions.right.player || []
-                        rightPlayer.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
-                        })
-                        let rightConsole = actions.right.console || []
-                        rightConsole.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
-                        })
-                    }
-                    if (actions.all) {
-                        let allPlayer = actions.all.player || []
-                        allPlayer.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element), player)
-                        })
-                        let allConsole = actions.all.console || []
-                        allConsole.forEach(element => {
-                            runCMD(PlaceholderAPI.setPlaceholders(player, element))
-                        })
-                    }
+                    setMetaData(player, "NeigeItems-Consume-Cooldown-" + itemNBT.NeigeItems.id, time)
                 }
-            }))
+                // 消耗物品
+                itemStack.setAmount(itemStack.getAmount()-amount)
+                // 执行动作
+                BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+                    executeNiAction(player, itemNBT, left, right)
+                }))
+            }
+        }
+    } else if (NIConfig.actions[itemNBT.NeigeItems.id.asString()]) {
+        // 取消交互事件
+        event.setCancelled(true)
+        BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
+            // 获取冷却
+            let cooldown = itemNBT.NeigeItems.cooldown
+            // 如果冷却存在且大于0
+            if (cooldown && (cooldown = cooldown.asInt())) {
+                // 获取当前时间
+                let time = new Date().getTime()
+                // 获取上次使用时间
+                let lastTime = getMetaData(player, "NeigeItems-Cooldown-" + itemNBT.NeigeItems.id, "Double", 0)
+                // 如果仍处于冷却时间
+                if ((lastTime + cooldown) > time) {
+                    PlayerUtils.sendActionBar(player, NIConfig.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
+                    // 终止操作
+                    return
+                }
+                setMetaData(player, "NeigeItems-Cooldown-" + itemNBT.NeigeItems.id, time)
+            }
+            // 执行动作
+            executeNiAction(player, itemNBT, leftAction, rightAction)
+        }))
+    }
+}
+
+/**
+ * 执行NI动作
+ * @param player Player 物品ID
+ * @param itemNBT ItemTag 物品NBT
+ * @param left Boolean 是否执行左键动作
+ * @param right Boolean 是否执行右键动作
+ */
+ function executeNiAction(player, itemNBT, left, right) {
+    let actions
+    if (actions = NIConfig.actions[itemNBT.NeigeItems.id.asString()]) {
+        let PlaceholderAPI = Tool.staticClass('me.clip.placeholderapi.PlaceholderAPI')
+        if (left && actions.left) {
+            let leftPlayer = actions.left.player || []
+            leftPlayer.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element), player)
+            })
+            let leftConsole = actions.left.console || []
+            leftConsole.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element))
+            })
+        }
+        if (right && actions.right) {
+            let rightPlayer = actions.right.player || []
+            rightPlayer.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element), player)
+            })
+            let rightConsole = actions.right.console || []
+            rightConsole.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element))
+            })
+        }
+        if (actions.all) {
+            let allPlayer = actions.all.player || []
+            allPlayer.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element), player)
+            })
+            let allConsole = actions.all.console || []
+            allConsole.forEach(element => {
+                runCommand(PlaceholderAPI.setPlaceholders(player, element))
+            })
         }
     }
 }
@@ -1353,6 +1413,9 @@ function getNiItem(itemID, player, sender, data) {
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
         if (itemKeySection.contains("options.consume")) {
             itemTag.NeigeItems.consume = getItemTagNBT(toHashMap(itemKeySection.get("options.consume")))
+        }
+        if (itemKeySection.contains("options.cooldown")) {
+            itemTag.NeigeItems.cooldown = new ItemTagData(itemKeySection.getInt("options.cooldown"))
         }
         // 设置物品NBT
         if (itemKeySection.contains("nbt")) {
@@ -2345,7 +2408,7 @@ function incrementingArray(length) {
  * @param length Int 数组长度
  * @param sender CommandSender 默认为后台
  */
-function runCMD(cmd, sender) {
+function runCommand(cmd, sender) {
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
     let BukkitServer = Bukkit.getServer()
@@ -2353,4 +2416,28 @@ function runCMD(cmd, sender) {
     BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
         BukkitServer.dispatchCommand(sender, cmd)
     })
+}
+
+/**
+ * 获取玩家MetaData
+ * @param player Player 玩家
+ * @param key MetaData键
+ * @param type String 待获取值的类型
+ * @param def 默认值
+ * @return Any
+ */
+function getMetaData(player, key, type, def){
+    if(player.hasMetadata(key)) return player.getMetadata(key).get(0)["as" + type]()
+    return def
+}
+
+/**
+ * 设置玩家MetaData
+ * @param player Player 玩家
+ * @param key MetaData键
+ * @param value MetaData值
+ */
+function setMetaData(player, key, value){
+    let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
+    player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
 }
