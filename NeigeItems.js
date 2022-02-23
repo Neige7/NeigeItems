@@ -1825,7 +1825,7 @@ function getSection(Sections, string, random, player) {
             // 压栈
             stack.push(index)
         // 如果是右括号
-        } else if (string.charAt(index) == ">") {
+        } else if (string.charAt(index) == ">" && string.charAt(index+1) != "\\") {
             // 前面有左括号了
             if (!stack.isEmpty()) {
                 // 还不止一个
