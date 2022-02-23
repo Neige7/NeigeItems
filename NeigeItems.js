@@ -1346,7 +1346,7 @@ function getNiItem(itemID, player, sender, data) {
     tempItemKeySection.set(itemID, itemKeySection)
     let itemHashCode = tempItemKeySection.saveToString().hashCode()
     stringSection = loadSection(Sections, tempItemKeySection.saveToString(), random, player)
-    stringSection = stringSection.replace(/\\</g, "<")
+    stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
     stringSection = setPapiWithNoColor(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
