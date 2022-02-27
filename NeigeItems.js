@@ -104,6 +104,71 @@ function NeigeItems() {
     })
 }
 
+// 发包替换
+//@Awake(enable)
+//@Awake(reload)
+function ItemLoreReplacer() {
+    ILR = {
+        neigeitems: (itemTag, param) => {
+            switch (param) {
+                case "charge":
+                    if (itemTag.NeigeItems.charge == null) return
+                    return itemTag.NeigeItems.charge.asString()
+                case "maxCharge":
+                    if (itemTag.NeigeItems.maxCharge == null) return
+                    return itemTag.NeigeItems.maxCharge.asString()
+                default:
+                    break
+            }
+        }
+    }
+    let itemParse = (itemStack) => {
+        let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+        let itemTag = NMSKt.getItemTag(itemStack)
+        if (itemTag.NeigeItems == undefined) return
+
+        let itemMeta = itemStack.getItemMeta()
+        if (itemMeta.hasLore()) {
+            let lore = itemMeta.getLore()
+            for (let index = 0; index < lore.length; index++) {
+                lore[index] = parseItemPlaceholder(itemTag, lore[index])
+            }
+            itemMeta.setLore(lore)
+        } else if (itemMeta.hasDisplayName()) {
+            itemMeta.setDisplayName(parseItemPlaceholder(itemTag, itemMeta.getDisplayName()))
+        }
+        itemStack.setItemMeta(itemMeta)
+    }
+
+    let PacketType = Packages.com.comphenix.protocol.PacketType
+    let ListenerPriority = Packages.com.comphenix.protocol.events.ListenerPriority
+    Tool.removePacketListener("ItemLoreReplacer")
+    Tool.addPacketListener(
+        "ItemLoreReplacer",
+        ListenerPriority.NORMAL,
+        [PacketType.Play.Server.WINDOW_ITEMS, PacketType.Play.Server.SET_SLOT],
+        (event) => {
+            if (event.getPlayer().getGameMode() == "SURVIVAL") {
+                if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS) {
+                    let items = event.getPacket().getItemListModifier().read(0)
+                    for (let index = 0; index < items.length; index++) {
+                        if (items[index].hasItemMeta()) itemParse(items[index])
+                    }
+                    event.getPacket().getItemListModifier().write(0, items)
+                } else {
+                    let itemStack = event.getPacket().getItemModifier().read(0)
+                    if (itemStack.hasItemMeta()) {
+                        let result = itemParse(itemStack)
+                        if (result) event.getPacket().getItemListModifier().write(0, itemStack)
+                    }
+                }
+            }
+        },
+        (event) => {
+        }
+    )
+}
+
 function CommandRegister() {
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
@@ -1049,17 +1114,19 @@ function NeigeItemsPlayerInteractEvent(event) {
     var leftAction = (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)
     var rightAction = (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)
     // 获取物品NBT
-    var itemNBT = NMSKt.getItemTag(itemStack)
+    var itemTag = NMSKt.getItemTag(itemStack)
     // 如果为非NI物品则终止操作
-    if (itemNBT.NeigeItems == undefined) return
+    if (itemTag.NeigeItems == undefined) return
     // 获取物品消耗信息
-    let consume = itemNBT.NeigeItems.consume
+    let consume =  NIConfig.actions[itemTag.NeigeItems.id.asString()].consume
     // 如果物品配置了消耗事件
     if (consume != undefined) {
         // 获取待消耗数量
         let amount = consume.amount || 1
-        // 检测数量
-        if (itemStack.amount >= amount) {
+        // 获取物品使用次数
+        let charge = itemTag.NeigeItems.charge
+        // 检测数量是否充足/是否存在使用次数
+        if (itemStack.amount >= amount || (charge != undefined)) {
             // 获取左键是否消耗
             var left = (leftAction && consume.left)
             // 获取右键是否消耗
@@ -1069,51 +1136,71 @@ function NeigeItemsPlayerInteractEvent(event) {
                 // 取消交互事件
                 event.setCancelled(true)
                 // 获取冷却
-                let cooldown = consume.cooldown
+                let cooldown = parseInt(consume.cooldown)
                 // 如果冷却存在且大于0
-                if (cooldown && (cooldown = cooldown.asInt())) {
+                if (cooldown != undefined && cooldown > 0) {
                     // 获取当前时间
                     let time = new Date().getTime()
                     // 获取上次使用时间
-                    let lastTime = getMetaData(player, "NeigeItems-Consume-Cooldown-" + itemNBT.NeigeItems.id, "Double", 0)
+                    let lastTime = getMetaData(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                     // 如果仍处于冷却时间
                     if ((lastTime + cooldown) > time) {
                         PlayerUtils.sendActionBar(player, NIConfig.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                         // 终止操作
                         return
                     }
-                    setMetaData(player, "NeigeItems-Consume-Cooldown-" + itemNBT.NeigeItems.id, time)
+                    setMetaData(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, time)
                 }
-                // 消耗物品
-                itemStack.setAmount(itemStack.getAmount()-amount)
+                // 如果物品存在使用次数
+                if (charge != undefined) {
+                    let itemClone = null
+                    // 拆分物品
+                    if (itemStack.amount != 1) {
+                        itemClone = itemStack.clone()
+                        itemClone.setAmount(itemClone.amount - 1)
+                        itemStack.setAmount(1)
+                    }
+                    // 更新次数
+                    let chargeInt = charge.asInt()
+                    if (chargeInt == 1) {
+                        itemStack.setAmount(0)
+                    } else {
+                        itemTag.NeigeItems.charge = new ItemTagData(chargeInt - 1)
+                        itemTag.saveTo(itemStack)
+                    }
+                    if (itemClone) giveItem(player, itemClone)
+                } else {
+                    // 消耗物品
+                    itemStack.setAmount(itemStack.getAmount()-amount)
+                }
                 // 执行动作
                 BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
-                    executeNiAction(player, itemNBT, left, right)
+                    executeNiAction(player, itemTag, left, right)
                 }))
             }
         }
-    } else if (NIConfig.actions[itemNBT.NeigeItems.id.asString()]) {
+    } else if (NIConfig.actions[itemTag.NeigeItems.id.asString()]) {
         // 取消交互事件
         event.setCancelled(true)
         BukkitScheduler.runTaskAsynchronously(Tool.getPlugin("Pouvoir"), new Consumer(() => {
             // 获取冷却
-            let cooldown = itemNBT.NeigeItems.cooldown
+            let cooldown = parseInt(NIConfig.actions[itemTag.NeigeItems.id.asString()].cooldown)
             // 如果冷却存在且大于0
-            if (cooldown && (cooldown = cooldown.asInt())) {
+            if (cooldown != undefined && cooldown > 0) {
                 // 获取当前时间
                 let time = new Date().getTime()
                 // 获取上次使用时间
-                let lastTime = getMetaData(player, "NeigeItems-Cooldown-" + itemNBT.NeigeItems.id, "Double", 0)
+                let lastTime = getMetaData(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                 // 如果仍处于冷却时间
                 if ((lastTime + cooldown) > time) {
                     PlayerUtils.sendActionBar(player, NIConfig.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                     // 终止操作
                     return
                 }
-                setMetaData(player, "NeigeItems-Cooldown-" + itemNBT.NeigeItems.id, time)
+                setMetaData(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, time)
             }
             // 执行动作
-            executeNiAction(player, itemNBT, leftAction, rightAction)
+            executeNiAction(player, itemTag, leftAction, rightAction)
         }))
     }
 }
@@ -1411,11 +1498,9 @@ function getNiItem(itemID, player, sender, data) {
         itemTag.NeigeItems.id = new ItemTagData(itemID)
         itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NIConfig.sections[random]))
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
-        if (itemKeySection.contains("options.consume")) {
-            itemTag.NeigeItems.consume = getItemTagNBT(toHashMap(itemKeySection.get("options.consume")))
-        }
-        if (itemKeySection.contains("options.cooldown")) {
-            itemTag.NeigeItems.cooldown = new ItemTagData(itemKeySection.getInt("options.cooldown"))
+        if (itemKeySection.contains("options.charge")) {
+            itemTag.NeigeItems.charge = new ItemTagData(itemKeySection.get("options.charge"))
+            itemTag.NeigeItems.maxCharge = new ItemTagData(itemKeySection.get("options.charge"))
         }
         // 设置物品NBT
         if (itemKeySection.contains("nbt")) {
@@ -2079,7 +2164,7 @@ function giveItems(player, itemStack, amount, message) {
  * @param player OnlinePlayer
  * @param itemStack ItemStack
  */
-function giveItem(player, itemStack){
+function giveItem(player, itemStack) {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
 
     if (itemStack instanceof ItemStack && player.isOnline()) {
@@ -2287,70 +2372,88 @@ function globalSectionParse(Sections, section, random, player) {
  * @return String 是否包含相应节点
  */
 function setPapiWithNoColor(player, text) {
-    let StringBuilder = Packages.java.lang.StringBuilder
-
-    let builder = new StringBuilder(text.length)
-
-    let identifier = new StringBuilder()
-    let parameters = new StringBuilder()
-
+    // 新建字符串
+    let builder = ""
+    // 新建命名空间字符串/参数字符串
+    let identifier = ""
+    let parameters = ""
+    // 遍历待解析文本
     for (let i = 0; i < text.length; i++) {
+        // 获取当前字母
         let l = text[i]
+        // 如果当前字母不是识别符或现在是最后一个字符
         if (l != "%" || i + 1 >= text.length) {
-          builder.append(l)
+            // 怼进去
+          builder += l
+          // 继续遍历
           continue
         }
-        let identified = false
-        let oopsitsbad = true
-        let hadSpace = false
+        let identified,oopsitsbad,hadSpace = false
+        // 一直到倒数第二个字符
         while (++i < text.length) {
+            // 获取当前字母
             let p = text[i]
             if (p == ' ' && !identified) {
                 hadSpace = true
                 break
             }
             if (p == "%") {
-                oopsitsbad = false
+                oopsitsbad = true
                 break
             }
             if (p == '_' && !identified) {
                 identified = true
                 continue
             }
+            // 录入命名空间/参数
             if (identified) {
-                parameters.append(p)
+                parameters += p
             } else {
-                identifier.append(p)
+                identifier += p
             }
         }
-        let identifierString = identifier.toString()
+        // 获取命名空间
+        let identifierString = identifier
+        // 小写化
         let lowercaseIdentifierString = identifierString.toLowerCase()
-        let parametersString = parameters.toString()
-        identifier.setLength(0)
-        parameters.setLength(0)
-        if (oopsitsbad) {
-            builder.append("%").append(identifierString)
-            if (identified) builder.append('_').append(parametersString)
-            if (hadSpace) builder.append(' ')
+        // 获取参数
+        let parametersString = parameters
+        // 重置命名空间/参数字符串
+        identifier = ""
+        parameters = ""
+        // 如果没匹配到另一个%
+        if (!oopsitsbad) {
+            // 怼回去
+            builder += "%" + identifierString
+            if (identified) builder += '_' + parametersString
+            if (hadSpace) builder += ' '
             continue
         }
+        // 匹配到了就获取一下对应的附属
         let placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
-        if (placeholder == null) {
-            builder.append("%").append(lowercaseIdentifierString)
-            if (identified) builder.append('_')
-            builder.append(parametersString).append("%")
+        // 如果没获取到
+        if (placeholder == undefined) {
+            // 怼回去
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
             continue
         }
+        // 获取一下结果
         let replacement = placeholder.onRequest(player, parametersString)
+        // 如果获取不到结果
         if (replacement == null) {
-            builder.append("%").append(lowercaseIdentifierString)
-            if (identified) builder.append('_')
-            builder.append(parametersString).append("%")
+            // 怼回去
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
             continue
         }
-        builder.append(replacement)
+        // 把结果怼进去
+        builder += replacement
     }
-    return builder.toString()
+    // 返回结果字符串
+    return builder
 }
 
 /**
@@ -2440,4 +2543,71 @@ function getMetaData(player, key, type, def){
 function setMetaData(player, key, value){
     let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
     player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
+}
+
+/**
+ * 根据物品解析文本内占位符
+ * @param itemTag ItemTag
+ * @param string String 待解析文本
+ * @return String 解析后文本
+ */
+ function parseItemPlaceholder(itemTag, string) {
+    let builder = ""
+    let identifier = ""
+    let parameters = ""
+    for (let i = 0; i < string.length; i++) {
+        let l = string[i]
+        if (l != "%" || i + 1 >= string.length) {
+          builder += l
+          continue
+        }
+        let identified,oopsitsbad,hadSpace = false
+        while (++i < string.length) {
+            let p = string[i]
+            if (p == ' ' && !identified) {
+                hadSpace = true
+                break
+            }
+            if (p == "%") {
+                oopsitsbad = true
+                break
+            }
+            if (p == '_' && !identified) {
+                identified = true
+                continue
+            }
+            if (identified) {
+                parameters += p
+            } else {
+                identifier += p
+            }
+        }
+        let identifierString = identifier
+        let lowercaseIdentifierString = identifierString.toLowerCase()
+        let parametersString = parameters
+        identifier = ""
+        parameters = ""
+        if (!oopsitsbad) {
+            builder += "%" + identifierString
+            if (identified) builder += '_' + parametersString
+            if (hadSpace) builder += ' '
+            continue
+        }
+        let placeholder = ILR[lowercaseIdentifierString]
+        if (placeholder == undefined) {
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        let replacement = placeholder(itemTag, parametersString)
+        if (replacement == null) {
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        builder += replacement
+    }
+    return builder
 }
