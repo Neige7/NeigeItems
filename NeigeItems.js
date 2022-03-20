@@ -221,7 +221,7 @@ function commandRegister_NI() {
         // 检测指令内容
         if (command.getName().equalsIgnoreCase(NeigeItemManagerCommand)) {
             // 仅限后台/OP执行
-            if (!sender instanceof Player || sender.isOp()) {
+            if (!(sender instanceof Player) || sender.isOp()) {
                 switch(args[0].toLowerCase()) {
                     // nim list (页码) > 查看所有NI物品
                     case "list":
@@ -466,7 +466,7 @@ function commandRegister_NI() {
                                         // 如果仅需一样的物品
                                         if (args.length > 3 && (args[3] == "false" || args[3] == "0")) {
                                             // 对于每个在线玩家
-                                            Bukkit.getonlinePlayerNames_NI().forEach((player) => {
+                                            Bukkit.getOnlinePlayers().forEach((player) => {
                                                 let itemStack = getNiItem_NI(args[1], player, sender, data)
                                                 // 替换提示信息中的占位符
                                                 let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
@@ -486,7 +486,7 @@ function commandRegister_NI() {
                                         // 如果需要反复构建
                                         } else {
                                             // 对于每个在线玩家
-                                            Bukkit.getonlinePlayerNames_NI().forEach((player) => {
+                                            Bukkit.getOnlinePlayers().forEach((player) => {
                                                 // {物品名: 产出次数}
                                                 let amtMap = new HashMap()
                                                 // 循环构建物品
@@ -926,7 +926,7 @@ function commandRegister_NI() {
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, itemAmt)
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, getItemName_NI(itemStack))
                                                     // 对于每个在线玩家
-                                                    Bukkit.getonlinePlayerNames_NI().forEach((player) => {
+                                                    Bukkit.getOnlinePlayers().forEach((player) => {
                                                         // 给予物品
                                                         if (!giveItems_NI(player, itemStack, itemAmt, givenInfoMessage)) {
                                                             // 给予失败提示
@@ -998,9 +998,9 @@ function commandRegister_NI() {
     })
     // 指令补全列表
     command.setTabCompleter((sender, command, alias, args) => {
+        let emptyList = Arrays.asList([])
         // 仅限后台/OP使用
-        if (!sender instanceof Player || sender.isOp()) {
-            let emptyList = Arrays.asList([])
+        if (!(sender instanceof Player) || sender.isOp()) {
             switch(args.length) {
                 case 1:
                     return Arrays.asList(["list", "get", "give", "giveAll", "drop", "save", "cover", "mm", "help", "reload"])
@@ -1082,10 +1082,9 @@ function commandRegister_NI() {
                         default:
                             return emptyList
                     }
-                default:
-                    return emptyList
             } 
         }
+        return emptyList
     })
     // 注册指令
     Tool.regCommand(command)
@@ -1212,7 +1211,7 @@ function PlayerInteractEvent_NI(event) {
  function executeNiAction_NI(player, itemNBT, left, right) {
     let actions
     if (actions = NeigeItemsData.actions[itemNBT.NeigeItems.id.asString()]) {
-        let PlaceholderAPI = Tool.staticClass('me.clip.placeholderapi.PlaceholderAPI')
+        let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
         if (left && actions.left) {
             let leftPlayer = actions.left.player || []
             leftPlayer.forEach(element => {
@@ -1866,7 +1865,7 @@ function getConfigSection_NI(configs) {
 }
 
 /**
- * 讲ConfigSection转化为HashMap
+ * 将ConfigSection转化为HashMap
  * @param configSection MemorySection
  * @return HashMap
  */
@@ -2109,7 +2108,7 @@ function onlinePlayerNames_NI() {
     let Bukkit = Packages.org.bukkit.Bukkit
 
     let onlinePlayers = new ArrayList()
-    Bukkit.getonlinePlayerNames_NI().forEach((player) => {
+    Bukkit.getOnlinePlayers().forEach((player) => {
         onlinePlayers.add(player.getDisplayName())
     })
     return onlinePlayers
@@ -2124,7 +2123,7 @@ function onlinePlayerNames_NI() {
     let Bukkit = Packages.org.bukkit.Bukkit
 
     let worlds = new ArrayList()
-    Bukkit.getWorldNames_NI().forEach((world) => {
+    Bukkit.getWorlds().forEach((world) => {
         worlds.add(world.getName())
     })
     return worlds
@@ -2155,7 +2154,6 @@ function giveItems_NI(player, itemStack, amount, message) {
     return false
 }
 
-
 /**
  * 给予玩家物品, 可用于异步
  * @param player OnlinePlayer
@@ -2172,7 +2170,7 @@ function giveItem_NI(player, itemStack) {
             let Bukkit = Packages.org.bukkit.Bukkit
             let BukkitScheduler = Bukkit.getScheduler()
             BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), () => {
-                loc.getWorld().dropItem_NI(loc, dropList[0])
+                loc.getWorld().dropItem(loc, dropList[0])
             })
         }
         return true
@@ -2218,7 +2216,7 @@ function dropItem_NI(world, location, itemStack){
 
     let BukkitScheduler = Bukkit.getScheduler()
     BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), () => {
-        world.dropItem_NI(location, itemStack)
+        world.dropItem(location, itemStack)
     })
 }
 
@@ -2474,7 +2472,7 @@ function itemToTellrawJson_NI(itemStack, name = getItemName_NI(itemStack)) {
  * 获取物品名
  * @param itemStack ItemStack
  * @param name String|null 显示文本, 默认为物品名
- * @return TellrawJson
+ * @return String
  */
 function getItemName_NI(itemStack) {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
@@ -2505,7 +2503,7 @@ function incrementingArray_NI(length) {
 
 /**
  * 执行指令
- * @param length Int 数组长度
+ * @param cmd String 指令内容
  * @param sender CommandSender 默认为后台
  */
 function runCommand_NI(cmd, sender) {
