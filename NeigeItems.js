@@ -652,7 +652,7 @@ function commandRegister_NI() {
                                 args.length > 2 ? path = args[2] : path = args[1] + ".yml"
                                 let saveResult
                                 // 保存物品
-                                if (saveResult = saveNiItem_NI(itemStack, args[1], args[2], false)) {
+                                if (saveResult = saveNiItem_NI(itemStack, args[1], path, false)) {
                                     // 重载物品列表
                                     getNiItems_NI()
                                     // 替换提示信息中的占位符
@@ -686,7 +686,7 @@ function commandRegister_NI() {
                                 let path
                                 args.length > 2 ? path = args[2] : path = args[1] + ".yml"
                                 // 保存物品
-                                let saveResult = saveNiItem_NI(itemStack, args[1], args[2], true)
+                                let saveResult = saveNiItem_NI(itemStack, args[1], path, true)
                                 if (saveResult != 2) {
                                     // 重载物品列表
                                     getNiItems_NI()
