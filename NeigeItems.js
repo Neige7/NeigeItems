@@ -239,6 +239,7 @@ function commandRegister_NI() {
                                 let prevItemAmount = page*listItemAmount
                                 // 逐个获取物品
                                 for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
+                                    if (index == NeigeItemsData.itemIDList.length) break
                                     // 替换信息内变量
                                     let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
                                     listItemMessage = listItemMessage.replace(/{ID}/g, NeigeItemsData.itemIDList[index])
@@ -647,7 +648,8 @@ function commandRegister_NI() {
                                 // 获取手中物品
                                 let itemStack = sender.getInventory().getItemInMainHand()
                                 // 获取保存路径
-                                let path = args[2] || args[1] + ".yml"
+                                let path
+                                args.length > 2 ? path = args[2] : path = args[1] + ".yml"
                                 let saveResult
                                 // 保存物品
                                 if (saveResult = saveNiItem_NI(itemStack, args[1], args[2], false)) {
@@ -681,7 +683,8 @@ function commandRegister_NI() {
                                 // 获取手中物品
                                 let itemStack = sender.getInventory().getItemInMainHand()
                                 // 获取保存路径
-                                let path = args[2] || args[1] + ".yml"
+                                let path
+                                args.length > 2 ? path = args[2] : path = args[1] + ".yml"
                                 // 保存物品
                                 let saveResult = saveNiItem_NI(itemStack, args[1], args[2], true)
                                 if (saveResult != 2) {
@@ -717,7 +720,8 @@ function commandRegister_NI() {
                                             if (mmItem.isPresent()){
                                                 let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
                                                 // 获取保存路径
-                                                let path = args[3] || MMItemsPath
+                                                let path
+                                                args.length > 3 ? path = args[3] : path = MMItemsPath
                                                 let saveResult
                                                 // 保存物品
                                                 if (saveResult = saveNiItem_NI(itemStack, args[2], path, false)) {
@@ -761,7 +765,8 @@ function commandRegister_NI() {
                                             if (mmItem.isPresent()){
                                                 let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
                                                 // 获取保存路径
-                                                let path = args[3] || MMItemsPath
+                                                let path
+                                                args.length > 3 ? path = args[3] : path = MMItemsPath
                                                 let saveResult = saveNiItem_NI(itemStack, args[2], path, true)
                                                 // 保存物品
                                                 if (saveResult != 2) {
@@ -794,7 +799,8 @@ function commandRegister_NI() {
                                 case "loadall":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 获取保存路径
-                                        let path = args[2] || MMItemsPath
+                                        let path
+                                        args.length > 2 ? path = args[2] : path = MMItemsPath
                                         // 获取全部MM物品并操作
                                         itemManager.getItems().stream().forEach(function(item) {
                                             let saveResult
@@ -1469,7 +1475,7 @@ function getNiItem_NI(itemID, player, sender, data) {
         // 设置Lore
         if (itemKeySection.contains("lore")) {
             let lores = itemKeySection.getStringList("lore")
-            lores.replaceAll(function(lore) {ChatColor.translateAlternateColorCodes('&', lore)})
+            lores.replaceAll(function(lore) {return ChatColor.translateAlternateColorCodes('&', lore)})
             itemMeta.setLore(lores)
         }
         // 设置是否无法破坏
@@ -1924,6 +1930,7 @@ function getSection_NI(Sections, string, random, player) {
             }
         }
     }
+    if (start.length == 0) return string
     let listString = []
     listString.push(string.slice(0, start[0]))
     for (let index = 0; index < start.length; index++) {
@@ -2465,7 +2472,7 @@ function itemToTellrawJson_NI(itemStack, name) {
 
     name = name || getItemName_NI(itemStack)
 
-    let itemKey = itemStack.type.key.key
+    let itemKey = itemStack.type.toString().toLowerCase()
     let itemTag = NMSKt.getItemTag(itemStack)
     let tellrawJson = new TellrawJson()
     tellrawJson.append(name)
