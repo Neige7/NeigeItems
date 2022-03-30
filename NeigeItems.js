@@ -1144,14 +1144,14 @@ function PlayerInteractEvent_NI(event) {
                     // 获取当前时间
                     let time = new Date().getTime()
                     // 获取上次使用时间
-                    let lastTime = getMetaData_NI(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
+                    let lastTime = getMetadata_NI(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                     // 如果仍处于冷却时间
                     if ((lastTime + cooldown) > time) {
                         PlayerUtils.sendActionBar(player, NeigeItemsData.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                         // 终止操作
                         return
                     }
-                    setMetaData_NI(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, time)
+                    setMetadata_NI(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, time)
                 }
                 // 如果物品存在使用次数
                 if (charge != undefined) {
@@ -1192,14 +1192,14 @@ function PlayerInteractEvent_NI(event) {
                 // 获取当前时间
                 let time = new Date().getTime()
                 // 获取上次使用时间
-                let lastTime = getMetaData_NI(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
+                let lastTime = getMetadata_NI(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                 // 如果仍处于冷却时间
                 if ((lastTime + cooldown) > time) {
                     PlayerUtils.sendActionBar(player, NeigeItemsData.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                     // 终止操作
                     return
                 }
-                setMetaData_NI(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, time)
+                setMetadata_NI(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, time)
             }
             // 执行动作
             executeNiAction_NI(player, itemTag, leftAction, rightAction)
@@ -2535,7 +2535,7 @@ function runCommand_NI(cmd, sender) {
  * @param def 默认值
  * @return Any
  */
-function getMetaData_NI(player, key, type, def){
+function getMetadata_NI(player, key, type, def){
     if(player.hasMetadata(key)) return player.getMetadata(key).get(0)["as" + type]()
     return def
 }
@@ -2546,7 +2546,7 @@ function getMetaData_NI(player, key, type, def){
  * @param key MetaData键
  * @param value MetaData值
  */
-function setMetaData_NI(player, key, value){
+function setMetadata_NI(player, key, value){
     let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
     player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
 }
