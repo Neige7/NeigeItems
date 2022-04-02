@@ -177,8 +177,8 @@ function commandRegister_NI() {
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
     let TLibBukkitAdapter = new BukkitAdapterClass()
-    let MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
-    let itemManager = MythicMobs.inst().getItemManager()
+    let MythicMobs = Tool.getPlugin("MythicMobs")
+    let itemManager = MythicMobs.getItemManager()
 
     let NeigeItemManagerCommand = NeigeItemsData.NeigeItemManagerCommand
     let MMItemsPath = NeigeItemsData.MMItemsPath
@@ -1106,6 +1106,7 @@ function PlayerInteractEvent_NI(event) {
     let BukkitScheduler = Bukkit.getScheduler()
     let Material = Packages.org.bukkit.Material
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+    let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     // 获取玩家
     var player = event.player
     // 获取手持物品
@@ -1602,8 +1603,8 @@ function getGlobalSections_NI() {
  */
 function loadMMItem_NI(){
     let ArrayList = Packages.java.util.ArrayList
-    let MythicMobs = Packages.io.lumine.xikage.mythicmobs.MythicMobs
-    let itemManager = MythicMobs.inst().getItemManager()
+    let MythicMobs = Tool.getPlugin("MythicMobs")
+    let itemManager = MythicMobs.getItemManager()
 
     MMIDs = new ArrayList()
     itemManager.getItems().stream().forEach(function(item) {
