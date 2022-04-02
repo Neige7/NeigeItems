@@ -227,7 +227,7 @@ function commandRegister_NI() {
                     case "list":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
-                            if (args.length == 1 || incrementingArray_NI(pageAmount).indexOf(args[1]) != -1) {
+                            if (args.length == 1 || incrementingArray_NI(pageAmount).indexOf(parseInt(args[1])) != -1) {
                                 // 获取当前页码
                                 let page = 0
                                 if (args.length > 1) page = parseInt(args[1]) - 1
