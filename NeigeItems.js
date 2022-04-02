@@ -2474,11 +2474,12 @@ function itemToTellrawJson_NI(itemStack, name) {
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
 
     name = name || getItemName_NI(itemStack)
+    let tellrawJson = new TellrawJson()
+    if (itemStack == null) return tellrawJson.append("物品生成错误")
+    tellrawJson.append(name)
 
     let itemKey = itemStack.type.toString().toLowerCase()
     let itemTag = NMSKt.getItemTag(itemStack)
-    let tellrawJson = new TellrawJson()
-    tellrawJson.append(name)
     return tellrawJson.hoverItem(itemKey, itemTag)
 }
 
