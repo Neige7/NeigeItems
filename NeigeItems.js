@@ -112,10 +112,10 @@ function ItemLoreReplacer_NI() {
             switch (param) {
                 case "charge":
                     if (itemTag.NeigeItems.charge == null) return
-                    return itemTag.NeigeItems.charge.asString()
+                    return itemTag.NeigeItems.charge.asInt().toFixed(0)
                 case "maxCharge":
                     if (itemTag.NeigeItems.maxCharge == null) return
-                    return itemTag.NeigeItems.maxCharge.asString()
+                    return itemTag.NeigeItems.maxCharge.asInt().toFixed(0)
                 default:
                     break
             }
@@ -1831,6 +1831,794 @@ function getAllFile_NI(baseFile) {
     Arrays.asList(files).forEach(function(file) {
         if (file.isDirectory()) {
             list.addAll(getAllFile_NI(file))
+        } else {
+            list.add(file)
+        }
+    })
+    return list
+}
+
+/**
+ * 获取所有配置
+ */
+function getAllConfig_NI(files) {
+    let ArrayList = Packages.java.util.ArrayList
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+
+    let list = new ArrayList()
+    files.forEach(function(file) {
+        list.add(YamlConfiguration.loadConfiguration(file))
+    })
+    return list
+}
+
+/**
+ * 获取所有配置的所有节点
+ */
+function getConfigSection_NI(configs) {
+    let ArrayList = Packages.java.util.ArrayList
+
+    let list = new ArrayList()
+    if (configs instanceof ArrayList) {
+        configs.forEach(function(config) {
+            config.getKeys(false).forEach(function(id) {
+                list.add(config.getConfigurationSection(id))
+            })
+        })
+    } else {
+        configs.getKeys(false).forEach(function(id) {
+            list.add(configs.getConfigurationSection(id))
+        })
+    }
+    return list
+}
+
+/**
+ * 将ConfigSection转化为HashMap
+ * @param configSection MemorySection
+ * @return HashMap
+ */
+function toHashMap_NI(configSection){
+    let HashMap = Packages.java.util.HashMap
+    let MemorySection = Packages.org.bukkit.configuration.MemorySection
+
+    let hashMapNBT = new HashMap()
+    configSection.getKeys(false).forEach(function(key) {
+        if (configSection.get(key) instanceof MemorySection) {
+            hashMapNBT[key] = toHashMap_NI(configSection.get(key))
+        } else {
+            hashMapNBT[key] = configSection.get(key)
+        }
+    })
+    return hashMapNBT
+}
+
+/**
+ * 解析一次文本内节点
+ * @param Sections ConfigurationSection 物品配置
+ * @param string String 待解析文本
+ * @param random number 随机数
+ * @param player Player 待解析玩家
+ */
+function getSection_NI(Sections, string, random, player) {
+    let ArrayList = Packages.java.util.ArrayList
+    let LinkedList = Packages.java.util.LinkedList
+
+    string = string + ""
+
+    let stack = new LinkedList()
+    let start = new ArrayList()
+    let end = new ArrayList()
+    for (let index = 0; index < string.length; index++) {
+        // 如果是待识别的左括号
+        if (string.charAt(index) == "<" && string.charAt(index-1) != "\\") {
+            // 压栈
+            stack.push(index)
+        // 如果是右括号
+        } else if (string.charAt(index) == ">" && string.charAt(index+1) != "\\") {
+            // 前面有左括号了
+            if (!stack.isEmpty()) {
+                // 还不止一个
+                if (stack.size() > 1) {
+                    // 出栈
+                    stack.pop()
+                // 只有一个
+                } else {
+                    // 记录并出栈
+                    start.add(stack.poll())
+                    end.add(index)
+                }
+            }
+        }
+    }
+    if (start.length == 0) return string
+    let listString = []
+    listString.push(string.slice(0, start[0]))
+    for (let index = 0; index < start.length; index++) {
+        // 目标文本
+        listString.push(getSection_NI(Sections, string.slice(start[index]+1, end[index]), random, player))
+
+        if (index+1 != start.length) {
+            listString.push(string.slice(end[index]+1, start[index+1]))
+        } else {
+            listString.push(string.slice(end[index]+1))
+        }
+    }
+    // 针对目标文本
+    for (let index = 1; index < listString.length; index+=2) {
+        // 键值解析
+        listString[index] = parseSection_NI(Sections, listString[index], random, player)
+    }
+    return listString.join("")
+}
+
+/**
+ * 解析当前层级节点
+ * @param Sections ConfigurationSection 物品配置
+ * @param string String 待解析文本
+ * @param random number 随机数
+ * @param player Player 待解析玩家
+ */
+function parseSection_NI(Sections, string, random, player) {
+    // 分离获取各参数
+    var parts = string.split("::")
+    // 如果只指定了类型和参数
+    if (parts.length == 2) {
+        var type = parts[0]
+        var args = parts.slice(1).join("::").split("_")
+    // 如果指定了节点ID
+    } else if (parts.length > 2){
+        var name = parts[0]
+        var type = parts[1]
+        var args = parts.slice(2).join("::").split("_")
+    } else {
+        var name = string
+    }
+    // 如果已解析对应ID节点
+    if (NeigeItemsData.sections[random][name] != undefined) {
+        // 直接返回对应节点值
+        return NeigeItemsData.sections[random][name]
+    // 如果尚未解析对应ID节点
+    } else {
+        // 尝试解析并返回对应节点值
+        if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
+    }
+    switch (type) {
+        case "strings":
+            if (args.length > 1) {
+                var result = getSection_NI(Sections, args[parseInt(Math.random()*(args.length))], random, player)
+            } else {
+                var result = getSection_NI(Sections, args[0], random, player)
+            }
+            if (name) NeigeItemsData.sections[random][name] = result
+            return result
+        case "number":
+            if (args.length > 1) var result = Math.random()*(parseFloat(getSection_NI(Sections, args[1], random, player))-parseFloat(getSection_NI(Sections, args[0], random, player)))+parseFloat(getSection_NI(Sections, args[0], random, player))
+            if (args.length > 2) {
+                result = result.toFixed(parseInt(getSection_NI(Sections, args[2], random, player)))
+            } else {
+                result = result.toFixed(0)
+            }
+            if (!isNaN(result)) {
+                // 已指定ID
+                if (name) NeigeItemsData.sections[random][name] = result
+                return result
+            }
+            return "未知数字节点参数"
+        case "calculation":
+            // 如果配置了公式
+            if (args.length > 0) {
+                try {
+                    // 获取公式结果
+                    let result = eval(getSection_NI(Sections, args[0], random, player))
+                    // 获取取整位数
+                    let fixed
+                    if (args.length > 1) {
+                        fixed = parseInt(args[1])
+                    }
+                    if (isNaN(fixed)) fixed = 0
+                    // 如果配置了数字范围
+                    if (args.length > 2) {
+                        let min = parseFloat(args[2])
+                        result = Math.max(min, result)
+                    }
+                    if (args.length > 3) {
+                        let max = parseFloat(args[3])
+                        result = Math.min(max, result)
+                    }
+                    if (!isNaN(result)) {
+                        result = result.toFixed(fixed)
+                        // 已指定ID
+                        if (name) NeigeItemsData.sections[random][name] = result
+                        return result
+                    }
+                } catch (error) {
+                    if (name) NeigeItemsData.sections[random][name] = "公式节点计算错误"
+                    return "公式节点计算错误"
+                }
+            }
+            break
+        case "weight":
+            if (args.length = 1) {
+                var result = getSection_NI(Sections, args[0].slice(args[0].indexOf("::")+2), random, player)
+                if (name) NeigeItemsData.sections[random][name] = result
+                return result
+            }
+            var strings = []
+            args.forEach(function(value) {
+                let index = value.indexOf("::")
+                let weight = parseInt(value.slice(0, index))
+                let string = value.slice(index+2)
+                for (let index = 0; index < weight; index++) strings.push(string)
+            })
+            var result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+            if (name) NeigeItemsData.sections[random][name] = result
+            return result
+        case "js":
+            try {
+                var info = args.join("_").split("::")
+                var path = info[0]
+                var func = info[1]
+                var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
+                var result = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
+                if (name) NeigeItemsData.sections[random][name] = result
+                return result
+            } catch (error) {
+                if (name) NeigeItemsData.sections[random][name] = "js函数获取失败"
+                return "js函数获取失败"
+            }
+        default:
+            // 将类型视作ID尝试解析
+            var name  = type
+            // 如果已解析对应ID节点
+            if (NeigeItemsData.sections[random][name] != undefined) {
+                // 直接返回对应节点值
+                return NeigeItemsData.sections[random][name]
+            // 如果尚未解析对应ID节点
+            } else {
+                // 尝试解析并返回对应节点值
+                if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
+            }
+            return "<" + string + ">"
+    }
+}
+
+/**
+ * 迭代解析所有节点
+ * @param Sections ConfigurationSection 物品配置
+ * @param string String 待解析文本
+ * @param random number 随机数
+ * @param player Player 待解析玩家
+ */
+function loadSection_NI(Sections, string, random, player) {
+    let result, length
+    while (length != Object.keys(NeigeItemsData.sections[random]).length) {
+        length = Object.keys(NeigeItemsData.sections[random]).length
+        result = getSection_NI(Sections, string, random, player)
+    }
+    return result
+}
+
+/**
+ * 发送信息
+ * @param player OnlinePlayer
+ * @param messages Array
+ */
+function sendMessages_NI(player, messages) {
+    messages.forEach(function(message) {
+        player.sendMessage(message)
+    })
+}
+
+/**
+ * 获取在线玩家ID列表
+ */
+function onlinePlayerNames_NI() {
+    let ArrayList = Packages.java.util.ArrayList
+    let Bukkit = Packages.org.bukkit.Bukkit
+
+    let onlinePlayers = new ArrayList()
+    Bukkit.getOnlinePlayers().forEach(function(player) {
+        onlinePlayers.add(player.getDisplayName())
+    })
+    return onlinePlayers
+}
+
+
+/**
+ * 加载世界列表
+ */
+ function getWorldNames_NI() {
+    let ArrayList = Packages.java.util.ArrayList
+    let Bukkit = Packages.org.bukkit.Bukkit
+
+    let worlds = new ArrayList()
+    Bukkit.getWorlds().forEach(function(world) {
+        worlds.add(world.getName())
+    })
+    return worlds
+}
+
+/**
+ * 给予玩家指定数量物品并发送信息
+ * @param player OnlinePlayer
+ * @param itemStack ItemStack
+ * @param amount Int
+ * @param message String || ""
+ * @return Boolean 是否成功
+ */
+function giveItems_NI(player, itemStack, amount, message) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
+    if (itemStack instanceof ItemStack && player.isOnline()) {
+        let stackSize = itemStack.getMaxStackSize()
+        itemStack.setAmount(stackSize)
+        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { giveItem_NI(player, itemStack) }
+        if (givenAmt < amount) {
+            itemStack.setAmount(amount - givenAmt)
+            giveItem_NI(player, itemStack)
+        }
+        if (message != "") player.sendMessage(message)
+        return true
+    }
+    return false
+}
+
+/**
+ * 给予玩家物品, 可用于异步
+ * @param player OnlinePlayer
+ * @param itemStack ItemStack
+ */
+function giveItem_NI(player, itemStack) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
+    if (itemStack instanceof ItemStack && player.isOnline()) {
+        let inv = player.getInventory()
+        let loc = player.getLocation()
+        let dropList = inv.addItem(itemStack)
+        if (!dropList.isEmpty()) {
+            let Bukkit = Packages.org.bukkit.Bukkit
+            let BukkitScheduler = Bukkit.getScheduler()
+            BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                loc.getWorld().dropItem(loc, dropList[0])
+            })
+        }
+        return true
+    }
+    return false
+}
+
+/**
+ * 于指定位置掉落指定数量物品
+ * @param world World 世界
+ * @param x Double x坐标
+ * @param y Double y坐标
+ * @param z Double z坐标
+ * @param itemStack ItemStack
+ * @param amount Int
+ */
+function dropItems_NI(world, x, y, z, itemStack, amount) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
+    if (itemStack instanceof ItemStack) {
+        let Location = Packages.org.bukkit.Location
+        let stackSize = itemStack.getMaxStackSize()
+        let location = new Location(world, x, y, z)
+        itemStack.setAmount(stackSize)
+        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { dropItem_NI(world, location, itemStack) }
+        if (givenAmt < amount) {
+            itemStack.setAmount(amount - givenAmt)
+            dropItem_NI(world, location, itemStack)
+        }
+        return true
+    }
+    return false
+}
+
+/**
+ * 给予玩家物品, 可用于异步
+ * @param world World 世界
+ * @param location Location 位置
+ * @param itemStack ItemStack
+ */
+function dropItem_NI(world, location, itemStack){
+    let Bukkit = Packages.org.bukkit.Bukkit
+
+    let BukkitScheduler = Bukkit.getScheduler()
+    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        world.dropItem(location, itemStack)
+    })
+}
+
+/**
+ * 获取config键值
+ * @param config ConfigurationSection
+ * @param key String 待获取键
+ * @param defaultValue any 默认值
+ */
+function getConfigValue_NI(file, key, defaultValue) {
+    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
+
+    let config = YamlConfiguration.loadConfiguration(file)
+    if (config.contains(key)) {
+        return config.get(key)
+    } else {
+        config.set(key, defaultValue)
+        config.save(file)
+        return defaultValue
+    }
+}
+
+/**
+ * 指向数据添加
+ * @return Object || null
+ */
+function dataParse_NI(string, random) {
+    let String = Packages.java.lang.String
+
+    if (string instanceof String) {
+        try { 
+            let obj=JSON.parse(string)
+            if (typeof obj == "object" && obj ){
+                for (let key in obj) {
+                    NeigeItemsData.sections[random][key] = obj[key]
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+/**
+ * 解析当前节点
+ * @param Sections ConfigurationSection 节点配置部分
+ * @param section String 节点名
+ * @param random number 随机数
+ * @param player Player 待解析玩家
+ * @return Boolean 是否包含相应节点
+ */
+function globalSectionParse_NI(Sections, section, random, player) {
+    if (Sections != null && Sections.contains(section)) {
+        let currentSection = Sections.getConfigurationSection(section)
+        // 获取节点类型
+        let type = currentSection.getString("type")
+        switch (type) {
+            case "strings":
+                // 如果配置了字符串组
+                if (currentSection.contains("values")) {
+                    // 加载字符串组
+                    var strings = currentSection.get("values")
+                    NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+                }
+                break
+            case "number":
+                // 如果配置了数字范围
+                if (currentSection.contains("min") && currentSection.contains("max")) {
+                    // 获取大小范围
+                    let min = parseFloat(getSection_NI(Sections, currentSection.getString("min"), random, player))
+                    let max = parseFloat(getSection_NI(Sections, currentSection.getString("max"), random, player))
+                    // 获取取整位数
+                    let fixed
+                    if (currentSection.contains("fixed")) {
+                        fixed = parseInt(getSection_NI(Sections, currentSection.getString("fixed"), random, player))
+                    }
+                    if (isNaN(fixed)) fixed = 0
+                    // 加载随机数
+                    NeigeItemsData.sections[random][section] = ((Math.random()*(max-min))+min).toFixed(fixed)
+                }
+                break
+            case "calculation":
+                if (currentSection.contains("formula")) {
+                    try {
+                        // 获取公式结果
+                        let result = eval(getSection_NI(Sections, currentSection.getString("formula"), random, player))
+                        // 如果配置了数字范围
+                        if (currentSection.contains("min")) {
+                            let min = currentSection.getDouble("min")
+                            result = Math.max(min, result)
+                        }
+                        if (currentSection.contains("max")) {
+                            let max = currentSection.getDouble("max")
+                            result = Math.min(max, result)
+                        }
+                        // 获取取整位数
+                        let fixed
+                        if (currentSection.contains("fixed")) {
+                            fixed = currentSection.getInt("fixed")
+                        }
+                        if (isNaN(fixed)) fixed = 0
+                        // 加载公式结果
+                        NeigeItemsData.sections[random][section] = result.toFixed(fixed)
+                    } catch (error) {
+                        NeigeItemsData.sections[random][section] = "公式节点计算错误"
+                        print("公式节点: " + section + " 出现计算错误, 请检查配置")
+                    }
+                }
+                break
+            case "weight":
+                // 如果配置了字符串组
+                if (currentSection.contains("values")) {
+                    // 加载字符串组
+                    var strings = []
+                    currentSection.get("values").forEach(function(value) {
+                        let index = value.indexOf("::")
+                        let weight = parseInt(value.slice(0, index))
+                        let string = value.slice(index+2)
+                        for (let index = 0; index < weight; index++) strings.push(string)
+                    })
+                    NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+                }
+                break
+            case "js":
+                try {
+                    if (currentSection.contains("path")) {
+                        var info = currentSection.getString("path").split("::")
+                        var path = info[0]
+                        var func = info[1]
+                        var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
+                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](NeigeItemsData.sections[random]), random, player)
+                    }
+                } catch (error) {
+                    NeigeItemsData.sections[random][section] = "公式节点计算错误"
+                }
+                break
+            default:
+        }
+        return true
+    } else {
+        return false
+    }
+}
+
+/**
+ * 解析PAPI变量, 但不解析颜色字符
+ * @author clip
+ * @param player OfflinePlayer
+ * @param text String 待解析文本
+ * @return String 是否包含相应节点
+ */
+function setPapiWithNoColor_NI(player, text) {
+    // 新建字符串
+    let builder = ""
+    // 新建命名空间字符串/参数字符串
+    let identifier = ""
+    let parameters = ""
+    // 遍历待解析文本
+    for (let i = 0; i < text.length; i++) {
+        // 获取当前字母
+        let l = text[i]
+        // 如果当前字母不是识别符或现在是最后一个字符
+        if (l != "%" || i + 1 >= text.length) {
+            // 怼进去
+          builder += l
+          // 继续遍历
+          continue
+        }
+        let identified,oopsitsbad,hadSpace = false
+        // 一直到倒数第二个字符
+        while (++i < text.length) {
+            // 获取当前字母
+            let p = text[i]
+            if (p == ' ' && !identified) {
+                hadSpace = true
+                break
+            }
+            if (p == "%") {
+                oopsitsbad = true
+                break
+            }
+            if (p == '_' && !identified) {
+                identified = true
+                continue
+            }
+            // 录入命名空间/参数
+            if (identified) {
+                parameters += p
+            } else {
+                identifier += p
+            }
+        }
+        // 获取命名空间
+        let identifierString = identifier
+        // 小写化
+        let lowercaseIdentifierString = identifierString.toLowerCase()
+        // 获取参数
+        let parametersString = parameters
+        // 重置命名空间/参数字符串
+        identifier = ""
+        parameters = ""
+        // 如果没匹配到另一个%
+        if (!oopsitsbad) {
+            // 怼回去
+            builder += "%" + identifierString
+            if (identified) builder += '_' + parametersString
+            if (hadSpace) builder += ' '
+            continue
+        }
+        // 匹配到了就获取一下对应的附属
+        let placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+        // 如果没获取到
+        if (placeholder == undefined) {
+            // 怼回去
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        // 获取一下结果
+        let replacement = placeholder.onRequest(player, parametersString)
+        // 如果获取不到结果
+        if (replacement == null) {
+            // 怼回去
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        // 把结果怼进去
+        builder += replacement
+    }
+    // 返回结果字符串
+    return builder
+}
+
+/**
+ * 获取TellrawJson形式物品
+ * @param itemStack ItemStack
+ * @param name String|null 显示文本, 默认为物品名
+ * @return TellrawJson
+ */
+function itemToTellrawJson_NI(itemStack, name) {
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+    let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
+
+    name = name || getItemName_NI(itemStack)
+
+    let itemKey = itemStack.type.toString().toLowerCase()
+    let itemTag = NMSKt.getItemTag(itemStack)
+    let tellrawJson = new TellrawJson()
+    tellrawJson.append(name)
+    return tellrawJson.hoverItem(itemKey, itemTag)
+}
+
+/**
+ * 获取物品名
+ * @param itemStack ItemStack
+ * @param name String|null 显示文本, 默认为物品名
+ * @return String
+ */
+function getItemName_NI(itemStack) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+
+    if (!(itemStack instanceof ItemStack)) return null
+    let name = Tool.getItemName(itemStack)
+    if (name == "") {
+        let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
+        if (itemStack.getItemMeta() instanceof SkullMeta) {
+            name = itemStack.getItemMeta().getOwner() + "的头"
+        }
+    }
+    return name
+}
+
+/**
+ * 生成递增数组
+ * @param length Int 数组长度
+ */
+function incrementingArray_NI(length) {
+    length = parseInt(length)
+    var arr = []
+    for (var i = 1; i <= length; i++) {
+        arr.push(i)
+    }
+    return arr
+}
+
+/**
+ * 执行指令
+ * @param cmd String 指令内容
+ * @param sender CommandSender 默认为后台
+ */
+function runCommand_NI(cmd, sender) {
+    let Bukkit = Packages.org.bukkit.Bukkit
+    let BukkitScheduler = Bukkit.getScheduler()
+    let BukkitServer = Bukkit.getServer()
+    sender = sender || BukkitServer.getConsoleSender()
+    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        BukkitServer.dispatchCommand(sender, cmd)
+    })
+}
+
+/**
+ * 获取玩家MetaData
+ * @param player Player 玩家
+ * @param key MetaData键
+ * @param type String 待获取值的类型
+ * @param def 默认值
+ * @return Any
+ */
+function getMetadata_NI(player, key, type, def){
+    if(player.hasMetadata(key)) return player.getMetadata(key).get(0)["as" + type]()
+    return def
+}
+
+/**
+ * 设置玩家MetaData
+ * @param player Player 玩家
+ * @param key MetaData键
+ * @param value MetaData值
+ */
+function setMetadata_NI(player, key, value){
+    let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
+    player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
+}
+
+/**
+ * 根据物品解析文本内占位符
+ * @param itemTag ItemTag
+ * @param string String 待解析文本
+ * @return String 解析后文本
+ */
+function parseItemPlaceholder_NI(itemTag, string) {
+    let builder = ""
+    let identifier = ""
+    let parameters = ""
+    for (let i = 0; i < string.length; i++) {
+        let l = string[i]
+        if (l != "%" || i + 1 >= string.length) {
+          builder += l
+          continue
+        }
+        let identified,oopsitsbad,hadSpace = false
+        while (++i < string.length) {
+            let p = string[i]
+            if (p == ' ' && !identified) {
+                hadSpace = true
+                break
+            }
+            if (p == "%") {
+                oopsitsbad = true
+                break
+            }
+            if (p == '_' && !identified) {
+                identified = true
+                continue
+            }
+            if (identified) {
+                parameters += p
+            } else {
+                identifier += p
+            }
+        }
+        let identifierString = identifier
+        let lowercaseIdentifierString = identifierString.toLowerCase()
+        let parametersString = parameters
+        identifier = ""
+        parameters = ""
+        if (!oopsitsbad) {
+            builder += "%" + identifierString
+            if (identified) builder += '_' + parametersString
+            if (hadSpace) builder += ' '
+            continue
+        }
+        let placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString]
+        if (placeholder == undefined) {
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        let replacement = placeholder(itemTag, parametersString)
+        if (replacement == null) {
+            builder += "%" + lowercaseIdentifierString
+            if (identified) builder += '_'
+            builder += parametersString + "%"
+            continue
+        }
+        builder += replacement
+    }
+    return builder
+}
+getAllFile_NI(file))
         } else {
             list.add(file)
         }
