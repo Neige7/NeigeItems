@@ -238,7 +238,7 @@ function commandRegister_NI() {
                                 // 获取当前序号
                                 let prevItemAmount = page*listItemAmount
                                 // 逐个获取物品
-                                for (let index = prevItemAmount; index < prevItemAmount + 10; index++) {
+                                for (let index = prevItemAmount; index < prevItemAmount + listItemAmount; index++) {
                                     if (index == NeigeItemsData.itemIDList.length) break
                                     // 替换信息内变量
                                     let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
