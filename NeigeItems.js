@@ -2277,7 +2277,7 @@ function dataParse_NI(string, random) {
  * @return Boolean 是否包含相应节点
  */
 function globalSectionParse_NI(Sections, section, random, player) {
-    if (Sections != null && Sections.contains(section)) {
+    if (Sections != null && Sections.contains(section) && NeigeItemsData.sections[random][section] == undefined) {
         let currentSection = Sections.getConfigurationSection(section)
         // 获取节点类型
         let type = currentSection.getString("type")
