@@ -34,6 +34,8 @@ function loadConfig_NI() {
 	NeigeItemsData.successSaveInfo = getConfigValue_NI(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
 	// MM物品转换完毕提示
 	NeigeItemsData.mMImportSuccessInfo = getConfigValue_NI(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
+	// 点击获取物品提示
+	NeigeItemsData.clickGiveMessage = getConfigValue_NI(file, "Messages.clickGiveMessage", "§e点击获取该物品")
 	// 不要保存空气提示
 	NeigeItemsData.airItem = getConfigValue_NI(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
 	// 输入无效数字提示
@@ -191,6 +193,7 @@ function commandRegister_NI() {
     let invalidPaser = NeigeItemsData.invalidPaser
     let successSaveInfo = NeigeItemsData.successSaveInfo
     let mMImportSuccessInfo = NeigeItemsData.mMImportSuccessInfo
+    let clickGiveMessage = NeigeItemsData.clickGiveMessage
     let airItem = NeigeItemsData.airItem
     let invalidAmount = NeigeItemsData.invalidAmount
     let invalidWorld = NeigeItemsData.invalidWorld
@@ -248,7 +251,9 @@ function commandRegister_NI() {
                                     let listItemRaw = new TellrawJson()
                                     let itemStack = getNiItem_NI(NeigeItemsData.itemIDList[index], sender, sender)
                                     for (let i = 0; i < listItemMessage.length; i++) {
-                                        listItemRaw.append(listItemMessage[i])
+                                        let tempRaw = new TellrawJson()
+                                        tempRaw.append(listItemMessage[i]).runCommand("/ni get " + NeigeItemsData.itemIDList[index]).hoverText(clickGiveMessage)
+                                        listItemRaw.append(tempRaw)
                                         if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItemsData.itemIDList[index]))
                                     }
                                     // 合并信息
