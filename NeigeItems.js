@@ -2273,17 +2273,25 @@ function globalSectionParse_NI(Sections, section, random, player) {
             case "number":
                 // 如果配置了数字范围
                 if (currentSection.contains("min") && currentSection.contains("max")) {
-                    // 获取大小范围
-                    let min = parseFloat(getSection_NI(Sections, currentSection.getString("min"), random, player))
-                    let max = parseFloat(getSection_NI(Sections, currentSection.getString("max"), random, player))
-                    // 获取取整位数
-                    let fixed
-                    if (currentSection.contains("fixed")) {
-                        fixed = parseInt(getSection_NI(Sections, currentSection.getString("fixed"), random, player))
+                    try {
+                        // 获取大小范围
+                        let min = parseFloat(getSection_NI(Sections, currentSection.getString("min"), random, player))
+                        let max = parseFloat(getSection_NI(Sections, currentSection.getString("max"), random, player))
+                        // 获取取整位数
+                        let fixed
+                        if (currentSection.contains("fixed")) {
+                            fixed = parseInt(getSection_NI(Sections, currentSection.getString("fixed"), random, player))
+                        }
+                        if (isNaN(fixed)) fixed = 0
+                        // 加载随机数
+                        NeigeItemsData.sections[random][section] = ((Math.random()*(max-min))+min).toFixed(fixed)
+                    } catch (error) {
+                        NeigeItemsData.sections[random][section] = "随机数节点: " + section + " 解析错误"
+                        print("随机数节点: " + section + " 解析错误")
                     }
-                    if (isNaN(fixed)) fixed = 0
-                    // 加载随机数
-                    NeigeItemsData.sections[random][section] = ((Math.random()*(max-min))+min).toFixed(fixed)
+                } else {
+                    NeigeItemsData.sections[random][section] = "随机数节点: " + section + " 缺少 min 或 max 配置项"
+                    print("随机数节点: " + section + " 缺少 min 或 max 配置项")
                 }
                 break
             case "calculation":
@@ -2309,36 +2317,51 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         // 加载公式结果
                         NeigeItemsData.sections[random][section] = result.toFixed(fixed)
                     } catch (error) {
-                        NeigeItemsData.sections[random][section] = "公式节点计算错误"
-                        print("公式节点: " + section + " 出现计算错误, 请检查配置")
+                        NeigeItemsData.sections[random][section] = "公式节点: " + section + " 解析错误"
+                        print("公式节点: " + section + " 解析错误")
                     }
+                } else {
+                    NeigeItemsData.sections[random][section] = "公式节点: " + section + " 缺少 formula 配置项"
+                    print("公式节点: " + section + " 缺少 formula 配置项")
                 }
                 break
             case "weight":
                 // 如果配置了字符串组
                 if (currentSection.contains("values")) {
-                    // 加载字符串组
-                    var strings = []
-                    currentSection.get("values").forEach(function(value) {
-                        let index = value.indexOf("::")
-                        let weight = parseInt(value.slice(0, index))
-                        let string = value.slice(index+2)
-                        for (let index = 0; index < weight; index++) strings.push(string)
-                    })
-                    NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+                    try {
+                        // 加载字符串组
+                        var strings = []
+                        currentSection.get("values").forEach(function(value) {
+                            let index = value.indexOf("::")
+                            let weight = parseInt(value.slice(0, index))
+                            let string = value.slice(index+2)
+                            for (let index = 0; index < weight; index++) strings.push(string)
+                        })
+                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+                    } catch (error) {
+                        NeigeItemsData.sections[random][section] = "权重节点: " + section + " 解析错误"
+                        print("权重节点: " + section + " 解析错误")
+                    }
+                } else {
+                    NeigeItemsData.sections[random][section] = "权重节点: " + section + " 缺少 values 配置项"
+                    print("权重节点: " + section + " 缺少 values 配置项")
                 }
                 break
             case "js":
-                try {
-                    if (currentSection.contains("path")) {
+                if (currentSection.contains("path")) {
+                    try {
                         var info = currentSection.getString("path").split("::")
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](NeigeItemsData.sections[random]), random, player)
+                    } catch (error) {
+                        NeigeItemsData.sections[random][section] = "Js节点: " + section + " 解析错误"
+                        print("Js节点: " + section + " 解析错误")
                     }
-                } catch (error) {
-                    NeigeItemsData.sections[random][section] = "公式节点计算错误"
+                } else {
+                    NeigeItemsData.sections[random][section] = "Js节点: " + section + " 缺少 path 配置项"
+                    print("Js节点: " + section + " 缺少 path 配置项")
                 }
                 break
             default:
@@ -2354,9 +2377,10 @@ function globalSectionParse_NI(Sections, section, random, player) {
  * @author clip
  * @param target OfflinePlayer/ItemTag
  * @param text String 待解析文本
+ * @param item Boolean 是否为物品占位符
  * @return String 是否包含相应节点
  */
-function setPapiWithNoColor_NI(target, text, type) {
+function setPapiWithNoColor_NI(target, text, item) {
     // 新建字符串
     let builder = ""
     // 新建命名空间字符串/参数字符串
@@ -2416,7 +2440,7 @@ function setPapiWithNoColor_NI(target, text, type) {
         }
         // 匹配到了就获取一下对应的附属
         let placeholder
-        if (type == true) {
+        if (item == true) {
             placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString]
         } else {
             placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
@@ -2431,7 +2455,7 @@ function setPapiWithNoColor_NI(target, text, type) {
         }
         // 获取一下结果
         let replacement
-        if (type == true) {
+        if (item == true) {
             replacement = placeholder(target, parametersString)
         } else {
             replacement = placeholder.onRequest(target, parametersString)
@@ -2520,9 +2544,9 @@ function runCommand_NI(cmd, sender) {
 }
 
 /**
- * 获取玩家MetaData
+ * 获取玩家Metadata
  * @param player Player 玩家
- * @param key MetaData键
+ * @param key Metadata键
  * @param type String 待获取值的类型
  * @param def 默认值
  * @return Any
@@ -2533,10 +2557,10 @@ function getMetadata_NI(player, key, type, def) {
 }
 
 /**
- * 设置玩家MetaData
+ * 设置玩家Metadata
  * @param player Player 玩家
- * @param key MetaData键
- * @param value MetaData值
+ * @param key Metadata键
+ * @param value Metadata值
  */
 function setMetadata_NI(player, key, value) {
     let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
