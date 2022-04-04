@@ -132,11 +132,11 @@ function ItemLoreReplacer_NI() {
         if (itemMeta.hasLore()) {
             let lore = itemMeta.getLore()
             for (let index = 0; index < lore.length; index++) {
-                lore[index] = parseItemPlaceholder_NI(itemTag, lore[index])
+                lore[index] = setPapiWithNoColor_NI(itemTag, lore[index], true)
             }
             itemMeta.setLore(lore)
         } else if (itemMeta.hasDisplayName()) {
-            itemMeta.setDisplayName(parseItemPlaceholder_NI(itemTag, itemMeta.getDisplayName()))
+            itemMeta.setDisplayName(setPapiWithNoColor_NI(itemTag, itemMeta.getDisplayName(), true))
         }
         itemStack.setItemMeta(itemMeta)
     }
@@ -2356,7 +2356,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
  * @param text String 待解析文本
  * @return String 是否包含相应节点
  */
-function setPapiWithNoColor_NI(player, text) {
+function setPapiWithNoColor_NI(player, text, type) {
     // 新建字符串
     let builder = ""
     // 新建命名空间字符串/参数字符串
@@ -2415,7 +2415,12 @@ function setPapiWithNoColor_NI(player, text) {
             continue
         }
         // 匹配到了就获取一下对应的附属
-        let placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+        let placeholder
+        if (type == true) {
+            placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString]
+        } else {
+            placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+        }
         // 如果没获取到
         if (placeholder == undefined) {
             // 怼回去
@@ -2531,71 +2536,4 @@ function getMetadata_NI(player, key, type, def) {
 function setMetadata_NI(player, key, value) {
     let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
     player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
-}
-
-/**
- * 根据物品解析文本内占位符
- * @param itemTag ItemTag
- * @param string String 待解析文本
- * @return String 解析后文本
- */
-function parseItemPlaceholder_NI(itemTag, string) {
-    let builder = ""
-    let identifier = ""
-    let parameters = ""
-    for (let i = 0; i < string.length; i++) {
-        let l = string[i]
-        if (l != "%" || i + 1 >= string.length) {
-          builder += l
-          continue
-        }
-        let identified,oopsitsbad,hadSpace = false
-        while (++i < string.length) {
-            let p = string[i]
-            if (p == ' ' && !identified) {
-                hadSpace = true
-                break
-            }
-            if (p == "%") {
-                oopsitsbad = true
-                break
-            }
-            if (p == '_' && !identified) {
-                identified = true
-                continue
-            }
-            if (identified) {
-                parameters += p
-            } else {
-                identifier += p
-            }
-        }
-        let identifierString = identifier
-        let lowercaseIdentifierString = identifierString.toLowerCase()
-        let parametersString = parameters
-        identifier = ""
-        parameters = ""
-        if (!oopsitsbad) {
-            builder += "%" + identifierString
-            if (identified) builder += '_' + parametersString
-            if (hadSpace) builder += ' '
-            continue
-        }
-        let placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString]
-        if (placeholder == undefined) {
-            builder += "%" + lowercaseIdentifierString
-            if (identified) builder += '_'
-            builder += parametersString + "%"
-            continue
-        }
-        let replacement = placeholder(itemTag, parametersString)
-        if (replacement == null) {
-            builder += "%" + lowercaseIdentifierString
-            if (identified) builder += '_'
-            builder += parametersString + "%"
-            continue
-        }
-        builder += replacement
-    }
-    return builder
 }
