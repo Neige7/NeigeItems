@@ -47,6 +47,8 @@ function loadConfig_NI() {
 	// 权限不足提示
 	NeigeItemsData.insufficientPermissions = getConfigValue_NI(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
 	// 权限不足提示
+	NeigeItemsData.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
+	// 权限不足提示
 	NeigeItemsData.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
 	// 重载完毕提示
 	NeigeItemsData.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
@@ -98,7 +100,9 @@ function onEnable_NI() {
     getGlobalSections_NI()
     getNiItems_NI()
     getActions_NI()
-    loadMMItem_NI()
+    if (Tool.isPluginEnabled("MythicMobs")) {
+        loadMMItem_NI()
+    }
     commandRegister_NI()
     ItemLoreReplacer_NI()
     Tool.removeListener("PlayerInteractEvent_NI")
@@ -179,8 +183,6 @@ function commandRegister_NI() {
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
     let TLibBukkitAdapter = new BukkitAdapterClass()
-    let MythicMobs = Tool.getPlugin("MythicMobs")
-    let itemManager = MythicMobs.getItemManager()
 
     let NeigeItemManagerCommand = NeigeItemsData.NeigeItemManagerCommand
     let MMItemsPath = NeigeItemsData.MMItemsPath
@@ -199,6 +201,7 @@ function commandRegister_NI() {
     let invalidWorld = NeigeItemsData.invalidWorld
     let invalidLocation = NeigeItemsData.invalidLocation
     let insufficientPermissions = NeigeItemsData.insufficientPermissions
+    let invalidPlugin = NeigeItemsData.invalidPlugin
     let reloadedMessage = NeigeItemsData.reloadedMessage
     let failureInfo = NeigeItemsData.failureInfo
     let helpMessages = NeigeItemsData.helpMessages
@@ -714,6 +717,13 @@ function commandRegister_NI() {
                     case "mm":
                         // 检测指令长度
                         if (args.length > 1) {
+                            if (!Tool.isPluginEnabled("MythicMobs")) {
+                                // 发送未发现前置插件信息
+                                sender.sendMessage(invalidPlugin.replace(/{plugin}/g, "MythicMobs"))
+                                return true
+                            }
+                            let MythicMobs = Tool.getPlugin("MythicMobs")
+                            let itemManager = MythicMobs.getItemManager()
                             switch(args[1].toLowerCase()) {
                                 // nim mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NI物品
                                 case "load":
@@ -752,7 +762,6 @@ function commandRegister_NI() {
                                                 let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
                                                 // 未知物品提示
                                                 sender.sendMessage(unknownItemMessage)
-                                                return
                                             }
                                         } else {
                                             // 发送帮助信息
@@ -792,7 +801,6 @@ function commandRegister_NI() {
                                                 let unknownItemMessage = unknownItem.replace(/{itemID}/, args[2])
                                                 // 未知物品提示
                                                 sender.sendMessage(unknownItemMessage)
-                                                return
                                             }
                                         } else {
                                             // 发送帮助信息
@@ -989,7 +997,9 @@ function commandRegister_NI() {
                             // 重载NI物品动作列表
                             getActions_NI()
                             // 重载MM物品列表
-                            loadMMItem_NI()
+                            if (Tool.isPluginEnabled("MythicMobs")) {
+                                loadMMItem_NI()
+                            }
                             // 重载成功提示
                             sender.sendMessage(reloadedMessage)
                         })
