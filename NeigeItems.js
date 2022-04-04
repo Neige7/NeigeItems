@@ -1,14 +1,14 @@
 // 配置文件
 function loadConfig_NI() {
     
-	// 配置文件名
-	scriptName = "NeigeItems"
-    // 创建文件夹
-    getDir_NI(scriptName + "/Items")
-    getDir_NI(scriptName + "/Scripts")
-    getDir_NI(scriptName + "/GlobalSections")
-    let file = getFile_NI(getDir_NI(scriptName), "config.yml")
     NeigeItemsData = {}
+	// 配置文件名
+	NeigeItemsData.scriptName = "NeigeItems"
+    // 创建文件夹
+    getDir_NI(NeigeItemsData.scriptName + "/Items")
+    getDir_NI(NeigeItemsData.scriptName + "/Scripts")
+    getDir_NI(NeigeItemsData.scriptName + "/GlobalSections")
+    let file = getFile_NI(getDir_NI(NeigeItemsData.scriptName), "config.yml")
 	// 物品管理指令
 	NeigeItemsData.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
 	// MM物品默认保存路径
@@ -1277,7 +1277,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
     // 检测是否为空气
     if (itemStack != null && itemStack.getType() != Material.AIR) {
         // 获取路径文件
-        let dir = getDir_NI(scriptName + "/Items")
+        let dir = getDir_NI(NeigeItemsData.scriptName + "/Items")
         file = getFile_NI(dir, path)
         let config = YamlConfiguration.loadConfiguration(file)
         // 检测节点是否存在
@@ -1549,7 +1549,7 @@ function getNiItem_NI(itemID, player, sender, data) {
 function getNiItems_NI() {
     let ArrayList = Packages.java.util.ArrayList
     
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName + "/Items")))
+    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/Items")))
     // [[config, [id]]]
     NeigeItemsData.items = []
     // [id]
@@ -1572,7 +1572,7 @@ function getNiItems_NI() {
 function getActions_NI() {
     let HashMap = Packages.java.util.HashMap
     
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName + "/ItemActions")))
+    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/ItemActions")))
     // {id: {left: {console: [], player: []}, right: {console: [], player: []}}}
     NeigeItemsData.actions = new HashMap()
     configs.forEach(function(config) {
@@ -1589,7 +1589,7 @@ function getActions_NI() {
 function getGlobalSections_NI() {
     let ArrayList = Packages.java.util.ArrayList
 
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName + "/GlobalSections")))
+    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/GlobalSections")))
     // [[config, [id]]]
     NeigeItemsData.globalSections = []
     // [id]
@@ -1967,37 +1967,21 @@ function getSection_NI(Sections, string, random, player) {
  * @param player Player 待解析玩家
  */
 function parseSection_NI(Sections, string, random, player) {
-    // 分离获取各参数
-    var parts = string.split("::")
-    // 如果只指定了类型和参数
-    if (parts.length == 2) {
-        var type = parts[0]
-        var args = parts.slice(1).join("::").split("_")
-    // 如果指定了节点ID
-    } else if (parts.length > 2){
-        var name = parts[0]
-        var type = parts[1]
-        var args = parts.slice(2).join("::").split("_")
-    } else {
-        var name = string
+    let name = string
+    let index = string.indexOf("::")
+    let args = []
+    if (index != -1) {
+        name = string.slice(0, index)
+        args = string.slice(index+2).split("_")
     }
-    // 如果已解析对应ID节点
-    if (NeigeItemsData.sections[random][name] != undefined) {
-        // 直接返回对应节点值
-        return NeigeItemsData.sections[random][name]
-    // 如果尚未解析对应ID节点
-    } else {
-        // 尝试解析并返回对应节点值
-        if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
-    }
-    switch (type) {
+    switch (name) {
         case "strings":
+            var result = "<" + string + ">"
             if (args.length > 1) {
-                var result = getSection_NI(Sections, args[parseInt(Math.random()*(args.length))], random, player)
+                result = getSection_NI(Sections, args[parseInt(Math.random()*(args.length))], random, player)
             } else {
-                var result = getSection_NI(Sections, args[0], random, player)
+                result = getSection_NI(Sections, args[0], random, player)
             }
-            if (name) NeigeItemsData.sections[random][name] = result
             return result
         case "number":
             if (args.length > 1) var result = Math.random()*(parseFloat(getSection_NI(Sections, args[1], random, player))-parseFloat(getSection_NI(Sections, args[0], random, player)))+parseFloat(getSection_NI(Sections, args[0], random, player))
@@ -2007,8 +1991,6 @@ function parseSection_NI(Sections, string, random, player) {
                 result = result.toFixed(0)
             }
             if (!isNaN(result)) {
-                // 已指定ID
-                if (name) NeigeItemsData.sections[random][name] = result
                 return result
             }
             return "未知数字节点参数"
@@ -2035,12 +2017,9 @@ function parseSection_NI(Sections, string, random, player) {
                     }
                     if (!isNaN(result)) {
                         result = result.toFixed(fixed)
-                        // 已指定ID
-                        if (name) NeigeItemsData.sections[random][name] = result
                         return result
                     }
                 } catch (error) {
-                    if (name) NeigeItemsData.sections[random][name] = "公式节点计算错误"
                     return "公式节点计算错误"
                 }
             }
@@ -2048,7 +2027,6 @@ function parseSection_NI(Sections, string, random, player) {
         case "weight":
             if (args.length = 1) {
                 var result = getSection_NI(Sections, args[0].slice(args[0].indexOf("::")+2), random, player)
-                if (name) NeigeItemsData.sections[random][name] = result
                 return result
             }
             var strings = []
@@ -2059,24 +2037,19 @@ function parseSection_NI(Sections, string, random, player) {
                 for (let index = 0; index < weight; index++) strings.push(string)
             })
             var result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
-            if (name) NeigeItemsData.sections[random][name] = result
             return result
         case "js":
             try {
                 var info = args.join("_").split("::")
                 var path = info[0]
                 var func = info[1]
-                var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
+                var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 var result = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
-                if (name) NeigeItemsData.sections[random][name] = result
                 return result
             } catch (error) {
-                if (name) NeigeItemsData.sections[random][name] = "js函数获取失败"
                 return "js函数获取失败"
             }
         default:
-            // 将类型视作ID尝试解析
-            var name  = type
             // 如果已解析对应ID节点
             if (NeigeItemsData.sections[random][name] != undefined) {
                 // 直接返回对应节点值
@@ -2361,7 +2334,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var info = currentSection.getString("path").split("::")
                         var path = info[0]
                         var func = info[1]
-                        var global = loadWithNewGlobal("plugins/" + scriptName + "/Scripts/" + path)
+                        var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](NeigeItemsData.sections[random]), random, player)
                     }
                 } catch (error) {
@@ -2544,7 +2517,7 @@ function runCommand_NI(cmd, sender) {
  * @param def 默认值
  * @return Any
  */
-function getMetadata_NI(player, key, type, def){
+function getMetadata_NI(player, key, type, def) {
     if(player.hasMetadata(key)) return player.getMetadata(key).get(0)["as" + type]()
     return def
 }
@@ -2555,7 +2528,7 @@ function getMetadata_NI(player, key, type, def){
  * @param key MetaData键
  * @param value MetaData值
  */
-function setMetadata_NI(player, key, value){
+function setMetadata_NI(player, key, value) {
     let FixedMetadataValue = Packages.org.bukkit.metadata.FixedMetadataValue
     player.setMetadata(key, new FixedMetadataValue(Tool.getPlugin("Pouvoir"), value))
 }
