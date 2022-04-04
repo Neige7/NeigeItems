@@ -2352,11 +2352,11 @@ function globalSectionParse_NI(Sections, section, random, player) {
 /**
  * 解析PAPI变量, 但不解析颜色字符
  * @author clip
- * @param player OfflinePlayer
+ * @param target OfflinePlayer/ItemTag
  * @param text String 待解析文本
  * @return String 是否包含相应节点
  */
-function setPapiWithNoColor_NI(player, text, type) {
+function setPapiWithNoColor_NI(target, text, type) {
     // 新建字符串
     let builder = ""
     // 新建命名空间字符串/参数字符串
@@ -2430,7 +2430,12 @@ function setPapiWithNoColor_NI(player, text, type) {
             continue
         }
         // 获取一下结果
-        let replacement = placeholder.onRequest(player, parametersString)
+        let replacement
+        if (type == true) {
+            replacement = placeholder(target, parametersString)
+        } else {
+            replacement = placeholder.onRequest(target, parametersString)
+        }
         // 如果获取不到结果
         if (replacement == null) {
             // 怼回去
