@@ -1977,6 +1977,9 @@ function getSection_NI(Sections, string, random, player) {
  * @param player Player 待解析玩家
  */
 function parseSection_NI(Sections, string, random, player) {
+    let Color = Packages.java.awt.Color
+    let ChatColor = Packages.net.md_5.bungee.api.ChatColor
+
     let name = string
     let index = string.indexOf("::")
     let args = []
@@ -2068,6 +2071,14 @@ function parseSection_NI(Sections, string, random, player) {
             } else {
                 // 尝试解析并返回对应节点值
                 if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
+                if (string.startsWith("#")) {
+                    let hex = parseInt(string.replace("#", "0x"))
+                    if (!isNaN(hex)) {
+                        hex = Math.min(Math.max(hex, 0), 0xFFFFFF)
+                        let color = new Color(hex)
+                        return ChatColor.of(color).toString()
+                    }
+                }
             }
             return "<" + string + ">"
     }
