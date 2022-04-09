@@ -2053,12 +2053,13 @@ function parseSection_NI(Sections, string, random, player) {
             return result
         case "js":
             try {
+                let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
                 var info = args.join("_").split("::")
                 var path = info[0]
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                global.papi = function(string) {return setPapiWithNoColor_NI(player, string)}
+                global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                 global.player = player
                 var result = getSection_NI(Sections, global[func](player), random, player)
                 return result
@@ -2374,12 +2375,13 @@ function globalSectionParse_NI(Sections, section, random, player) {
             case "js":
                 if (currentSection.contains("path")) {
                     try {
+                        let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
                         var info = currentSection.getString("path").split("::")
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                        global.papi = function(string) {return setPapiWithNoColor_NI(player, string)}
+                        global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                         global.player = player
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](), random, player)
                     } catch (error) {
