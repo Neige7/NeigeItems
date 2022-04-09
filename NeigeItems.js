@@ -2058,6 +2058,7 @@ function parseSection_NI(Sections, string, random, player) {
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
+                global.papi = function(string) {return setPapiWithNoColor_NI(player, string)}
                 global.player = player
                 var result = getSection_NI(Sections, global[func](player), random, player)
                 return result
@@ -2378,6 +2379,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
+                        global.papi = function(string) {return setPapiWithNoColor_NI(player, string)}
                         global.player = player
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](), random, player)
                     } catch (error) {
