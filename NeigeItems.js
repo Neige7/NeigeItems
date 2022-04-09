@@ -2058,7 +2058,8 @@ function parseSection_NI(Sections, string, random, player) {
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                var result = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
+                global.player = player
+                var result = getSection_NI(Sections, global[func](player), random, player)
                 return result
             } catch (error) {
                 return "js函数获取失败"
@@ -2377,7 +2378,8 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
+                        global.player = player
+                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](), random, player)
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "Js节点: " + section + " 解析错误"
                         print("Js节点: " + section + " 解析错误")
