@@ -1108,7 +1108,9 @@ function commandRegister_NI() {
         return emptyList
     })
     // 注册指令
-    Tool.regCommand(command)
+    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        Tool.regCommand(command)
+    })
 }
 
 /**
