@@ -2057,6 +2057,7 @@ function parseSection_NI(Sections, string, random, player) {
                 var path = info[0]
                 var func = info[1]
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
+                global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                 var result = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
                 return result
             } catch (error) {
@@ -2375,6 +2376,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
+                        global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](NeigeItemsData.sections[random], player), random, player)
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "Js节点: " + section + " 解析错误"
