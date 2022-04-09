@@ -2051,9 +2051,12 @@ function parseSection_NI(Sections, string, random, player) {
             })
             var result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
             return result
+        case "papi":
+            var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
+            return PlaceholderAPI.setPlaceholders(player, args.join("_"))
         case "js":
             try {
-                let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
+                var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
                 var info = args.join("_").split("::")
                 var path = info[0]
                 var func = info[1]
