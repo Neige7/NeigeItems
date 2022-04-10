@@ -240,7 +240,9 @@ function commandRegister_NI() {
                                 // 预构建待发送信息
                                 let listMessage = new TellrawJson()
                                 // 添加信息前缀
-                                listMessage.append(listPrefix + "\n")
+                                listMessage.append(listPrefix)
+                                TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                                listMessage = new TellrawJson()
                                 // 获取当前序号
                                 let prevItemAmount = page*listItemAmount
                                 // 逐个获取物品
@@ -259,9 +261,7 @@ function commandRegister_NI() {
                                         listItemRaw.append(tempRaw)
                                         if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItemsData.itemIDList[index]))
                                     }
-                                    // 合并信息
-                                    listMessage.append(listItemRaw)
-                                    listMessage.append("\n")
+                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listItemRaw.toRawMessage())
                                 }
                                 let prevRaw = new TellrawJson()
                                 prevRaw.append(listPrev)
