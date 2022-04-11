@@ -2081,11 +2081,15 @@ function parseSection_NI(Sections, string, random, player) {
                 // 尝试解析并返回对应节点值
                 if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
                 if (string.startsWith("#")) {
-                    let hex = parseInt(string.replace("#", "0x"))
-                    if (!isNaN(hex)) {
-                        hex = Math.min(Math.max(hex, 0), 0xFFFFFF)
-                        let color = new Color(hex)
-                        return ChatColor.of(color).toString()
+                    try {
+                        let hex = parseInt(string.replace("#", "0x"))
+                        if (!isNaN(hex)) {
+                            hex = Math.min(Math.max(hex, 0), 0xFFFFFF)
+                            let color = new Color(hex)
+                            return ChatColor.of(color).toString()
+                        }
+                    } catch (error) {
+                        print("§e[NI] §6低于1.16的版本不能使用16进制颜色哦")
                     }
                 }
             }
