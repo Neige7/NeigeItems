@@ -2,66 +2,66 @@
 function loadConfig_NI() {
     
     NeigeItemsData = {}
-	// 配置文件名
-	NeigeItemsData.scriptName = "NeigeItems"
+    // 配置文件名
+    NeigeItemsData.scriptName = "NeigeItems"
     // 创建文件夹
     getDir_NI(NeigeItemsData.scriptName + "/Items")
     getDir_NI(NeigeItemsData.scriptName + "/Scripts")
     getDir_NI(NeigeItemsData.scriptName + "/GlobalSections")
     let file = getFile_NI(getDir_NI(NeigeItemsData.scriptName), "config.yml")
-	// 物品管理指令
-	NeigeItemsData.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
-	// MM物品默认保存路径
-	NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
-	// 不进行保存的NBT键
-	NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["hideflags","enchantments","VARIABLES_DATA","ench"]))
+    // 物品管理指令
+    NeigeItemsData.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
+    // MM物品默认保存路径
+    NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
+    // 不进行保存的NBT键
+    NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["hideflags","enchantments","VARIABLES_DATA","ench"]))
 
-	// 玩家不在线提示
-	NeigeItemsData.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
-	// 给予成功提示
-	NeigeItemsData.successInfo = getConfigValue_NI(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
-	// 被给予成功提示(设置为""则不进行提示)
-	NeigeItemsData.givenInfo = getConfigValue_NI(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
-	// 给予成功提示
-	NeigeItemsData.dropSuccessInfo = getConfigValue_NI(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
-	// 未知物品提示
-	NeigeItemsData.unknownItem = getConfigValue_NI(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
-	// 对应ID物品已存在提示
-	NeigeItemsData.existedKey = getConfigValue_NI(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
-	// 未知解析对象提示
-	NeigeItemsData.invalidPaser = getConfigValue_NI(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
-	// 保存成功提示
-	NeigeItemsData.successSaveInfo = getConfigValue_NI(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
-	// MM物品转换完毕提示
-	NeigeItemsData.mMImportSuccessInfo = getConfigValue_NI(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
-	// 点击获取物品提示
-	NeigeItemsData.clickGiveMessage = getConfigValue_NI(file, "Messages.clickGiveMessage", "§e点击获取该物品")
-	// 不要保存空气提示
-	NeigeItemsData.airItem = getConfigValue_NI(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
-	// 输入无效数字提示
-	NeigeItemsData.invalidAmount = getConfigValue_NI(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
-	// 输入无效世界提示
-	NeigeItemsData.invalidWorld = getConfigValue_NI(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
-	// 输入无效坐标提示
-	NeigeItemsData.invalidLocation = getConfigValue_NI(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
-	// 权限不足提示
-	NeigeItemsData.insufficientPermissions = getConfigValue_NI(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
-	// 权限不足提示
-	NeigeItemsData.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
-	// 权限不足提示
-	NeigeItemsData.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
-	// 重载完毕提示
-	NeigeItemsData.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
+    // 玩家不在线提示
+    NeigeItemsData.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
+    // 给予成功提示
+    NeigeItemsData.successInfo = getConfigValue_NI(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
+    // 被给予成功提示(设置为""则不进行提示)
+    NeigeItemsData.givenInfo = getConfigValue_NI(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
+    // 给予成功提示
+    NeigeItemsData.dropSuccessInfo = getConfigValue_NI(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
+    // 未知物品提示
+    NeigeItemsData.unknownItem = getConfigValue_NI(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
+    // 对应ID物品已存在提示
+    NeigeItemsData.existedKey = getConfigValue_NI(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
+    // 未知解析对象提示
+    NeigeItemsData.invalidPaser = getConfigValue_NI(file, "Messages.invalidPaser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
+    // 保存成功提示
+    NeigeItemsData.successSaveInfo = getConfigValue_NI(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
+    // MM物品转换完毕提示
+    NeigeItemsData.mMImportSuccessInfo = getConfigValue_NI(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
+    // 点击获取物品提示
+    NeigeItemsData.clickGiveMessage = getConfigValue_NI(file, "Messages.clickGiveMessage", "§e点击获取该物品")
+    // 不要保存空气提示
+    NeigeItemsData.airItem = getConfigValue_NI(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
+    // 输入无效数字提示
+    NeigeItemsData.invalidAmount = getConfigValue_NI(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
+    // 输入无效世界提示
+    NeigeItemsData.invalidWorld = getConfigValue_NI(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
+    // 输入无效坐标提示
+    NeigeItemsData.invalidLocation = getConfigValue_NI(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
+    // 权限不足提示
+    NeigeItemsData.insufficientPermissions = getConfigValue_NI(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
+    // 权限不足提示
+    NeigeItemsData.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
+    // 权限不足提示
+    NeigeItemsData.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
+    // 重载完毕提示
+    NeigeItemsData.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
 
-	// 无效NBT提示
-	NeigeItemsData.invalidNBT = getConfigValue_NI(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
-	// 错误物品提示
-	NeigeItemsData.invalidItem = getConfigValue_NI(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
-	// 给予失败提示
-	NeigeItemsData.failureInfo = getConfigValue_NI(file, "Messages.failureInfo", "§e[NI] §6物品给予失败, 可能原因: 物品未配置材质/玩家已下线")
+    // 无效NBT提示
+    NeigeItemsData.invalidNBT = getConfigValue_NI(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
+    // 错误物品提示
+    NeigeItemsData.invalidItem = getConfigValue_NI(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
+    // 给予失败提示
+    NeigeItemsData.failureInfo = getConfigValue_NI(file, "Messages.failureInfo", "§e[NI] §6物品给予失败, 可能原因: 物品未配置材质/玩家已下线")
 
-	// 帮助信息
-	NeigeItemsData.helpMessages = getConfigValue_NI(file, "Messages.helpMessages", Arrays.asList([
+    // 帮助信息
+    NeigeItemsData.helpMessages = getConfigValue_NI(file, "Messages.helpMessages", Arrays.asList([
         "§6====================§eNeigeItems§6====================",
         "§6==================[]为必填, ()为选填==================",
         "§e/ni §flist (页码) §7> 查看所有NI物品",
@@ -105,9 +105,9 @@ function onEnable_NI() {
     }
     commandRegister_NI()
     ItemLoreReplacer_NI()
-    Tool.removeListener("PlayerInteractEvent_NI")
-    Tool.addListener("PlayerInteractEvent_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
-        PlayerInteractEvent_NI(event)
+    Tool.removeListener("onPlayerInteract_NI")
+    Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
+        onPlayerInteract_NI(event)
     })
 }
 
@@ -431,7 +431,7 @@ function commandRegister_NI() {
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
                                                     // 获取成功提示
-                                                    if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
+                                                    if (givenInfoMessage) player.sendMessage(givenInfoMessage)
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, args[1])
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
@@ -521,7 +521,7 @@ function commandRegister_NI() {
                                                     let givenInfoMessage = givenInfo.replace(/{amount}/g, amtMap[key])
                                                     givenInfoMessage = givenInfoMessage.replace(/{name}/g, key)
                                                     // 获取成功提示
-                                                    if (givenInfoMessage) sender.sendMessage(givenInfoMessage)
+                                                    if (givenInfoMessage) player.sendMessage(givenInfoMessage)
                                                     // 替换提示信息中的占位符
                                                     let successInfoMessage = successInfo.replace(/{player}/g, args[1])
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
@@ -1011,9 +1011,9 @@ function commandRegister_NI() {
                 }
             } else {
                 // 权限不足提示
-				sender.sendMessage(insufficientPermissions)
-				return true
-			}
+                sender.sendMessage(insufficientPermissions)
+                return true
+            }
         }
         return false
     })
@@ -1117,7 +1117,7 @@ function commandRegister_NI() {
  * 玩家交互方块事件
  * @param event PlayerInteractEvent 玩家交互方块事件
  */
-function PlayerInteractEvent_NI(event) {
+function onPlayerInteract_NI(event) {
     let Action = Packages.org.bukkit.event.block.Action
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
