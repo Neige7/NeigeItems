@@ -731,9 +731,8 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let mmItem = itemManager.getItem(args[2])
-                                            if (mmItem.isPresent()){
-                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                            let itemStack = itemManager.getItemStack(args[2])
+                                            if (itemStack != null){
                                                 // 获取保存路径
                                                 let path
                                                 args.length > 3 ? path = args[3] : path = MMItemsPath
@@ -1622,8 +1621,7 @@ function getGlobalSections_NI() {
  */
 function loadMMItem_NI(){
     let ArrayList = Packages.java.util.ArrayList
-    let MythicMobs = Tool.getPlugin("MythicMobs")
-    let itemManager = MythicMobs.getItemManager()
+    let itemManager = Tool.getPlugin("MythicMobs").getItemManager()
 
     MMIDs = new ArrayList()
     itemManager.getItems().stream().forEach(function(item) {
@@ -2187,16 +2185,16 @@ function giveItem_NI(player, itemStack) {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
 
     if (itemStack instanceof ItemStack && player.isOnline()) {
-        let inv = player.getInventory()
-        let loc = player.getLocation()
-        let dropList = inv.addItem(itemStack)
-        if (!dropList.isEmpty()) {
-            let Bukkit = Packages.org.bukkit.Bukkit
-            let BukkitScheduler = Bukkit.getScheduler()
-            BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        let Bukkit = Packages.org.bukkit.Bukkit
+        let BukkitScheduler = Bukkit.getScheduler()
+        BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+            let inv = player.getInventory()
+            let loc = player.getLocation()
+            let dropList = inv.addItem(itemStack)
+            if (!dropList.isEmpty()) {
                 loc.getWorld().dropItem(loc, dropList[0])
-            })
-        }
+            }
+        })
         return true
     }
     return false
