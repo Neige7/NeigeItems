@@ -1349,7 +1349,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                 }
                 // 设置物品颜色
                 if (display && display.containsKey("color")) {
-                    itemKeySection.set("color", display.color)
+                    itemKeySection.set("color", parseInt(display.color.slice(6)))
                 }
                 // 设置物品NBT
                 if (!itemNBT.isEmpty()) {
