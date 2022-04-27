@@ -1475,7 +1475,8 @@ function getNiItem_NI(itemID, player, sender, data) {
             enchantSection.getKeys(false).forEach(function(enchant) {
                 if (enchant != null) {
                     let level = enchantSection.getInt(enchant)
-                    if (enchant = Enchantment.getByName(enchant.toUpperCase())) {
+                    if (level > 0 
+                        && (enchant = Enchantment.getByName(enchant.toUpperCase()))) {
                         itemStack.addUnsafeEnchantment(enchant, level)
                     }
                 }
