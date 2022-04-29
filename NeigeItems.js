@@ -145,8 +145,8 @@ function ItemLoreReplacer_NI() {
         itemStack.setItemMeta(itemMeta)
     }
 
-    let PacketType = Packages.com.comphenix.protocol.PacketType
-    let ListenerPriority = Packages.com.comphenix.protocol.events.ListenerPriority
+    var PacketType = Packages.com.comphenix.protocol.PacketType
+    var ListenerPriority = Packages.com.comphenix.protocol.events.ListenerPriority
     Tool.removePacketListener("ItemLoreReplacer_NI")
     Tool.addPacketListener(
         "ItemLoreReplacer_NI",
