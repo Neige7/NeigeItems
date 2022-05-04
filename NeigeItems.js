@@ -128,21 +128,23 @@ function ItemLoreReplacer_NI() {
         }
     }
     let itemParse = function(itemStack) {
-        let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
-        let itemTag = NMSKt.getItemTag(itemStack)
-        if (itemTag.NeigeItems == undefined) return
-
-        let itemMeta = itemStack.getItemMeta()
-        if (itemMeta.hasLore()) {
-            let lore = itemMeta.getLore()
-            for (let index = 0; index < lore.length; index++) {
-                lore[index] = setPapiWithNoColor_NI(itemTag, lore[index], true)
+        if (itemStack != null) {
+            let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+            let itemTag = NMSKt.getItemTag(itemStack)
+            if (itemTag.NeigeItems == undefined) return
+    
+            let itemMeta = itemStack.getItemMeta()
+            if (itemMeta.hasLore()) {
+                let lore = itemMeta.getLore()
+                for (let index = 0; index < lore.length; index++) {
+                    lore[index] = setPapiWithNoColor_NI(itemTag, lore[index], true)
+                }
+                itemMeta.setLore(lore)
+            } else if (itemMeta.hasDisplayName()) {
+                itemMeta.setDisplayName(setPapiWithNoColor_NI(itemTag, itemMeta.getDisplayName(), true))
             }
-            itemMeta.setLore(lore)
-        } else if (itemMeta.hasDisplayName()) {
-            itemMeta.setDisplayName(setPapiWithNoColor_NI(itemTag, itemMeta.getDisplayName(), true))
+            itemStack.setItemMeta(itemMeta)
         }
-        itemStack.setItemMeta(itemMeta)
     }
 
     var PacketType = Packages.com.comphenix.protocol.PacketType
@@ -547,7 +549,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] (是否反复随机) (物品解析对象) (指向数据) > 于指定位置掉落NI物品
+                    // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] [是否反复随机] [物品解析对象] (指向数据) > 于指定位置掉落NI物品
                     case "drop":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
