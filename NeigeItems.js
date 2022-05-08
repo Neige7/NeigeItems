@@ -1315,9 +1315,8 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                     itemNBT.remove("custommodeldata")
                 }
                 // 设置子ID/损伤值
-                if (itemNBT.containsKey("Damage")) {
-                    itemKeySection.set("damage", parseInt(itemNBT.Damage.slice(6)))
-                    itemNBT.remove("Damage")
+                if (itemStack.getDurability() != 0) {
+                    itemKeySection.set("damage", itemStack.getDurability())
                 }
                 // 设置物品名
                 if (itemMeta.hasDisplayName()) {
