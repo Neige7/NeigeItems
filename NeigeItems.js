@@ -2482,7 +2482,12 @@ function setPapiWithNoColor_NI(target, text, item) {
         if (item == true) {
             placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString]
         } else {
-            placeholder = Tool.getPlugin("PlaceholderAPI").getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+            let placeholderAPI = Tool.getPlugin("PlaceholderAPI")
+            if (placeholderAPI.getLocalExpansionManager != undefined) {
+                placeholder = placeholderAPI.getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+            } else {
+                placeholder = Packages.me.clip.placeholderapi.PlaceholderAPI.getPlaceholders().get(lowercaseIdentifierString)
+            }
         }
         // 如果没获取到
         if (placeholder == undefined) {
