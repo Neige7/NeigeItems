@@ -14,7 +14,7 @@ function loadConfig_NI() {
     // MM物品默认保存路径
     NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
     // 不进行保存的NBT键
-    NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["hideflags","enchantments","VARIABLES_DATA","ench"]))
+    NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags"]))
 
     // 玩家不在线提示
     NeigeItemsData.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
@@ -1350,7 +1350,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                 }
                 // 设置物品颜色
                 if (display && display.containsKey("color")) {
-                    itemKeySection.set("color", parseInt(display.color.slice(6)))
+                    itemKeySection.set("color", parseInt(display.color.slice(6)).toString(16).toUpperCase())
                 }
                 // 设置物品NBT
                 if (!itemNBT.isEmpty()) {
@@ -1514,7 +1514,9 @@ function getNiItem_NI(itemID, player, sender, data) {
         }
         // 设置物品颜色
         if (itemKeySection.contains("color")) {
-            try { itemMeta.setColor(Color.fromRGB(itemKeySection.getInt("color"))) } catch (e) {}
+            let color = itemKeySection.get("color")
+            if (typeof color == "string") color = parseInt(color, 16)
+            try { itemMeta.setColor(Color.fromRGB(color)) } catch (e) {}
         }
         itemStack.setItemMeta(itemMeta)
         // 获取物品NBT
