@@ -235,7 +235,7 @@ function commandRegister_NI() {
                     case "list":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
-                            if (args.length == 1 || incrementingArray_NI(pageAmount).indexOf(parseInt(args[1])) != -1) {
+                            if (args.length == 1 || incrementingArray_NI(pageAmount).indexOf(args[1]) != -1) {
                                 // 获取当前页码
                                 let page = 0
                                 if (args.length > 1) page = parseInt(args[1]) - 1
@@ -2296,6 +2296,10 @@ function dataParse_NI(string, random) {
 function globalSectionParse_NI(Sections, section, random, player) {
     if (Sections != null && Sections.contains(section) && NeigeItemsData.sections[random][section] == undefined) {
         let currentSection = Sections.getConfigurationSection(section)
+        if (currentSection == null) {
+            NeigeItemsData.sections[random][section] = getSection_NI(Sections, Sections.get(section), random, player)
+            return true
+        }
         // 获取节点类型
         let type = currentSection.getString("type")
         switch (type) {
@@ -2567,9 +2571,9 @@ function getItemName_NI(itemStack) {
  */
 function incrementingArray_NI(length) {
     length = parseInt(length)
-    var arr = []
-    for (var i = 1; i <= length; i++) {
-        arr.push(i)
+    let arr = []
+    for (let i = 1; i <= length; i++) {
+        arr.push(i+"")
     }
     return arr
 }
@@ -2579,13 +2583,13 @@ function incrementingArray_NI(length) {
  * @param cmd String 指令内容
  * @param sender CommandSender 默认为后台
  */
-function runCommand_NI(cmd, sender) {
+function runCommand_NI(command, sender) {
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
     let BukkitServer = Bukkit.getServer()
     sender = sender || BukkitServer.getConsoleSender()
     BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
-        BukkitServer.dispatchCommand(sender, cmd)
+        BukkitServer.dispatchCommand(sender, command)
     })
 }
 
