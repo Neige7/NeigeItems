@@ -2058,7 +2058,7 @@ function parseSection_NI(Sections, string, random, player) {
             return result
         case "papi":
             var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
-            return PlaceholderAPI.setPlaceholders(player, `%${args.join("_")}%`)
+            return PlaceholderAPI.setPlaceholders(player, "%"+args.join("_")+"%")
         case "js":
             try {
                 var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
