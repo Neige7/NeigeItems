@@ -2307,8 +2307,8 @@ function globalSectionParse_NI(Sections, section, random, player) {
                 // 如果配置了字符串组
                 if (currentSection.contains("values")) {
                     // 加载字符串组
-                    var strings = getSection_NI(Sections, currentSection.get("values"), random, player)
-                    NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
+                    var strings = currentSection.get("values")
+                    NeigeItemsData.sections[random][section] = getSection_NI(Sections, getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player), random, player)
                 }
                 break
             case "number":
