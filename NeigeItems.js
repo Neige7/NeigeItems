@@ -2307,7 +2307,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                 // 如果配置了字符串组
                 if (currentSection.contains("values")) {
                     // 加载字符串组
-                    var strings = currentSection.get("values")
+                    var strings = getSection_NI(Sections, currentSection.get("values"), random, player)
                     NeigeItemsData.sections[random][section] = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
                 }
                 break
@@ -2342,17 +2342,17 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         let result = eval(getSection_NI(Sections, currentSection.getString("formula"), random, player))
                         // 如果配置了数字范围
                         if (currentSection.contains("min")) {
-                            let min = currentSection.getDouble("min")
+                            let min = parseFloat(getSection_NI(Sections, currentSection.getString("min"), random, player))
                             result = Math.max(min, result)
                         }
                         if (currentSection.contains("max")) {
-                            let max = currentSection.getDouble("max")
+                            let max = parseFloat(getSection_NI(Sections, currentSection.getString("max"), random, player))
                             result = Math.min(max, result)
                         }
                         // 获取取整位数
                         let fixed
                         if (currentSection.contains("fixed")) {
-                            fixed = currentSection.getInt("fixed")
+                            fixed = parseInt(getSection_NI(Sections, currentSection.getString("fixed"), random, player))
                         }
                         if (isNaN(fixed)) fixed = 0
                         // 加载公式结果
@@ -2373,6 +2373,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         // 加载字符串组
                         var strings = []
                         currentSection.get("values").forEach(function(value) {
+                            value = getSection_NI(Sections, value, random, player)
                             let index = value.indexOf("::")
                             let weight = parseInt(value.slice(0, index))
                             let string = value.slice(index+2)
@@ -2392,7 +2393,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                 if (currentSection.contains("path")) {
                     try {
                         let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
-                        var info = currentSection.getString("path").split("::")
+                        var info = getSection_NI(Sections, currentSection.getString("path"), random, player).split("::")
                         var path = info[0]
                         var func = info[1]
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
