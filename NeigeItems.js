@@ -179,7 +179,10 @@ function ItemLoreReplacer_NI() {
 function commandRegister_NI() {
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
+    let ChatColor = Packages.org.bukkit.ChatColor
     let HashMap = Packages.java.util.HashMap
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
+    let Material = Packages.org.bukkit.Material
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
@@ -241,10 +244,14 @@ function commandRegister_NI() {
                                 if (args.length > 1) page = parseInt(args[1]) - 1
                                 // 预构建待发送信息
                                 let listMessage = new TellrawJson()
-                                // 添加信息前缀
-                                listMessage.append(listPrefix)
-                                TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
-                                listMessage = new TellrawJson()
+                                if (sender instanceof Player) {
+                                    // 添加信息前缀
+                                    listMessage.append(listPrefix)
+                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                                    listMessage = new TellrawJson()
+                                } else {
+                                    sender.sendMessage(listPrefix)
+                                }
                                 // 获取当前序号
                                 let prevItemAmount = page*listItemAmount
                                 // 逐个获取物品
@@ -253,6 +260,18 @@ function commandRegister_NI() {
                                     // 替换信息内变量
                                     let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
                                     listItemMessage = listItemMessage.replace(/{ID}/g, NeigeItemsData.itemIDList[index])
+                                    if (!(sender instanceof Player)) {
+                                        let itemKeySection = getItemKeySection_NI(NeigeItemsData.itemIDList[index])
+                                        let itemName = ""
+                                        if (itemKeySection.contains("name")) {
+                                            itemName = itemKeySection.getString("name")
+                                        } else {
+                                            itemName = getItemName_NI(new ItemStack(Material.matchMaterial(itemKeySection.getString("material").toUpperCase())))
+                                        }
+                                        listItemMessage = listItemMessage.replace(/{name}/g, ChatColor.translateAlternateColorCodes("&", itemName))
+                                        sender.sendMessage(listItemMessage)
+                                        continue
+                                    }
                                     listItemMessage = listItemMessage.split("{name}")
                                     // 构建信息及物品
                                     let listItemRaw = new TellrawJson()
@@ -279,18 +298,22 @@ function commandRegister_NI() {
                                 }
                                 let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
                                 listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
-                                listSuffixMessage = listSuffixMessage.split("!@#$%")
-                                listSuffixMessage.forEach(function(value) {
-                                    if (value == "{prev}") {
-                                        listMessage.append(prevRaw)
-                                    }else if (value == "{next}") {
-                                        listMessage.append(nextRaw)
-                                    } else {
-                                        listMessage.append(value)
-                                    }
-                                })
-                                // 向玩家发送信息
-                                TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                                if (sender instanceof Player) {
+                                    listSuffixMessage = listSuffixMessage.split("!@#$%")
+                                    listSuffixMessage.forEach(function(value) {
+                                        if (value == "{prev}") {
+                                            listMessage.append(prevRaw)
+                                        }else if (value == "{next}") {
+                                            listMessage.append(nextRaw)
+                                        } else {
+                                            listMessage.append(value)
+                                        }
+                                    })
+                                    // 向玩家发送信息
+                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
+                                } else {
+                                    sender.sendMessage(listSuffixMessage)
+                                }
                             } else {
                                 // 非法数量提示
                                 sender.sendMessage(invalidAmount)
