@@ -297,8 +297,8 @@ function commandRegister_NI() {
                                     nextRaw.runCommand("/ni list " + (page+2))
                                 }
                                 let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
-                                listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
                                 if (sender instanceof Player) {
+                                    listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
                                     listSuffixMessage = listSuffixMessage.split("!@#$%")
                                     listSuffixMessage.forEach(function(value) {
                                         if (value == "{prev}") {
@@ -312,6 +312,7 @@ function commandRegister_NI() {
                                     // 向玩家发送信息
                                     TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listMessage.toRawMessage())
                                 } else {
+                                    listSuffixMessage = listSuffixMessage.replace(/{prev}/g, listPrev).replace(/{next}/g, listNext)
                                     sender.sendMessage(listSuffixMessage)
                                 }
                             } else {
