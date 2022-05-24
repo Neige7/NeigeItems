@@ -104,6 +104,7 @@ function onEnable_NI() {
         loadMMItem_NI()
     }
     commandRegister_NI()
+    commandRegister_NI()
     ItemLoreReplacer_NI()
     Tool.removeListener("onPlayerInteract_NI")
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
@@ -2164,7 +2165,6 @@ function onlinePlayerNames_NI() {
     })
     return onlinePlayers
 }
-
 
 /**
  * 加载世界列表
