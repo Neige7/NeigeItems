@@ -14,7 +14,8 @@ function loadConfig_NI() {
     // MM物品默认保存路径
     NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
     // 不进行保存的NBT键
-    NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
+    // NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
+    NeigeItemsData.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"])
 
     // 玩家不在线提示
     NeigeItemsData.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
@@ -104,6 +105,7 @@ function onEnable_NI() {
         loadMMItem_NI()
     }
     commandRegister_NI()
+    // commandRegister_NI()
     ItemLoreReplacer_NI()
     Tool.removeListener("onPlayerInteract_NI")
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
@@ -1418,6 +1420,7 @@ function getItemKeySection_NI(itemID) {
  * @return ItemStack
  */
 function getNiItem_NI(itemID, player, sender, data) {
+    let ArrayList = Packages.java.util.ArrayList
     let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
     let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
@@ -1457,13 +1460,22 @@ function getNiItem_NI(itemID, player, sender, data) {
         // 针对每个试图调用的全局节点
         gSectionIDList.forEach(function(gSectionID) {
             // 在每个全局节点文件进行查找
-            NeigeItemsData.globalSections.forEach(function(gSectionIDs) {
-                // 如果当前文件中存在相应节点
-                let index = gSectionIDs[1].indexOf(gSectionID)
-                if (index != -1) {
-                    itemKeySection.set("sections." + gSectionID, getConfigSection_NI(gSectionIDs[0])[index])
+            for (let index = 0; index < NeigeItemsData.globalSections.length; index++) {
+                const gSectionIDs = NeigeItemsData.globalSections[index]
+                // 如果调用的节点名与当前文件名重复, 直接调用文件内所有节点
+                if (NeigeItemsData.globalSectionFileNames[index] == gSectionID) {
+                    for (let index = 0; index < gSectionIDs[1].length; index++) {
+                        const gSectionID = gSectionIDs[1][index]
+                        itemKeySection.set("sections." + gSectionID, getConfigSection_NI(gSectionIDs[0])[index])
+                    }
+                    continue
                 }
-            })
+                // 如果当前文件中存在相应节点
+                let gSectionIndex = gSectionIDs[1].indexOf(gSectionID)
+                if (gSectionIndex != -1) {
+                    itemKeySection.set("sections." + gSectionID, getConfigSection_NI(gSectionIDs[0])[gSectionIndex])
+                }
+            }
         })
     }
     // 获取私有节点配置
@@ -1519,9 +1531,16 @@ function getNiItem_NI(itemID, player, sender, data) {
         }
         // 设置Lore
         if (itemKeySection.contains("lore")) {
-            let lores = itemKeySection.getStringList("lore")
-            lores.replaceAll(function(lore) {return ChatColor.translateAlternateColorCodes('&', lore)})
-            itemMeta.setLore(lores)
+            let originLores = itemKeySection.getStringList("lore")
+            originLores.replaceAll(function(lore) {return ChatColor.translateAlternateColorCodes('&', lore)})
+            let finalLores = new ArrayList()
+            for (let index = 0; index < originLores.length; index++) {
+                const lores = originLores[index].split("\n")
+                for (let index = 0; index < lores.length; index++) {
+                    finalLores.add(lores[index])
+                }
+            }
+            itemMeta.setLore(finalLores)
         }
         // 设置是否无法破坏
         if (itemKeySection.contains("unbreakable")) {
@@ -1628,20 +1647,26 @@ function getActions_NI() {
 function getGlobalSections_NI() {
     let ArrayList = Packages.java.util.ArrayList
 
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/GlobalSections")))
+    let files = getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/GlobalSections"))
+    let configs = getAllConfig_NI(files)
     // [[config, [id]]]
-    NeigeItemsData.globalSections = []
+    NeigeItemsData.globalSections = new ArrayList()
+    // 每个全局节点配置文件的文件名(转为YamlConfiguration后文件路径莫名其妙莫得了, 只能另开记录)
+    NeigeItemsData.globalSectionFileNames = new ArrayList()
     // [id]
-    globalSectionIDList = new ArrayList()
-    configs.forEach(function(config) {
+    NeigeItemsData.globalSectionIDList = new ArrayList()
+    
+    for (let index = 0; index < configs.length; index++) {
+        const config = configs[index]
         let list = new ArrayList()
         let configSections = getConfigSection_NI(config)
         configSections.forEach(function(section) {
             list.add(section.getName())
-            globalSectionIDList.add(section.getName())
+            NeigeItemsData.globalSectionIDList.add(section.getName())
         })
-        NeigeItemsData.globalSections.push(new ArrayList(Arrays.asList([config, list])))
-    })
+        NeigeItemsData.globalSections.add(new ArrayList(Arrays.asList([config, list])))
+        NeigeItemsData.globalSectionFileNames.add(files[index].getName())
+    }
 }
 
 /**
