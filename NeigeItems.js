@@ -2092,7 +2092,7 @@ function parseSection_NI(Sections, string, random, player) {
             }
             break
         case "weight":
-            if (args.length = 1) {
+            if (args.length == 1) {
                 var result = getSection_NI(Sections, args[0].slice(args[0].indexOf("::")+2), random, player)
                 return result
             }
