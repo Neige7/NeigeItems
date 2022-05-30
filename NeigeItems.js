@@ -2116,12 +2116,12 @@ function parseSection_NI(Sections, string, random, player) {
                 let index = string.indexOf("::")
                 let path = string.slice(0, index)
                 let func = string.slice(index+2)
-                let args = []
+                let scriptArgs = []
 
                 index = func.indexOf("_")
                 if (index != -1) {
+                    scriptArgs = func.slice(index+1).split("_")
                     func = func.slice(0, index)
-                    args = string.slice(index+1).split("_")
                 }
 
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
@@ -2129,7 +2129,7 @@ function parseSection_NI(Sections, string, random, player) {
                 global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                 global.getItem = function(itemID, player) {return getNiItem_NI(itemID, player)}
                 global.player = player
-                var result = getSection_NI(Sections, global[func].apply(this, args), random, player)
+                var result = getSection_NI(Sections, global[func].apply(this, scriptArgs), random, player)
                 return result
             } catch (error) {
                 error.printStackTrace()
