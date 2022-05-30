@@ -1495,6 +1495,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     stringSection = loadSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
     stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
     stringSection = setPapiWithNoColor_NI(player, stringSection)
+    // print(stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
@@ -2110,17 +2111,28 @@ function parseSection_NI(Sections, string, random, player) {
             return PlaceholderAPI.setPlaceholders(player, "%"+args.join("_")+"%")
         case "js":
             try {
-                var PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
-                var info = args.join("_").split("::")
-                var path = info[0]
-                var func = info[1]
+                let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
+                let string = args.join("_")
+                let index = string.indexOf("::")
+                let path = string.slice(0, index)
+                let func = string.slice(index+2)
+                let args = []
+
+                index = func.indexOf("_")
+                if (index != -1) {
+                    func = func.slice(0, index)
+                    args = string.slice(index+1).split("_")
+                }
+
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                 global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                global.getItem = function(itemID, player) {return getNiItem_NI(itemID, player)}
                 global.player = player
-                var result = getSection_NI(Sections, global[func](player), random, player)
+                var result = getSection_NI(Sections, global[func].apply(this, args), random, player)
                 return result
             } catch (error) {
+                error.printStackTrace()
                 return "js函数获取失败"
             }
         default:
@@ -2377,6 +2389,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "随机数节点: " + section + " 解析错误"
                         print("随机数节点: " + section + " 解析错误")
+                        error.printStackTrace()
                     }
                 } else {
                     NeigeItemsData.sections[random][section] = "随机数节点: " + section + " 缺少 min 或 max 配置项"
@@ -2408,6 +2421,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "公式节点: " + section + " 解析错误"
                         print("公式节点: " + section + " 解析错误")
+                        error.printStackTrace()
                     }
                 } else {
                     NeigeItemsData.sections[random][section] = "公式节点: " + section + " 缺少 formula 配置项"
@@ -2431,6 +2445,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "权重节点: " + section + " 解析错误"
                         print("权重节点: " + section + " 解析错误")
+                        error.printStackTrace()
                     }
                 } else {
                     NeigeItemsData.sections[random][section] = "权重节点: " + section + " 缺少 values 配置项"
@@ -2444,14 +2459,24 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var info = getSection_NI(Sections, currentSection.getString("path"), random, player).split("::")
                         var path = info[0]
                         var func = info[1]
+
+                        let args = []
+                        if (currentSection.contains("args")) {
+                            args = currentSection.getStringList("args")
+                            args.replaceAll(function(value) {return getSection_NI(Sections, value, random, player)})
+                            args = Java.from(args)
+                        }
+
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                         global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                        global.getItem = function(itemID, player) {return getNiItem_NI(itemID, player)}
                         global.player = player
-                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func](), random, player)
+                        NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func].apply(this, args), random, player)
                     } catch (error) {
                         NeigeItemsData.sections[random][section] = "Js节点: " + section + " 解析错误"
                         print("Js节点: " + section + " 解析错误")
+                        error.printStackTrace()
                     }
                 } else {
                     NeigeItemsData.sections[random][section] = "Js节点: " + section + " 缺少 path 配置项"
