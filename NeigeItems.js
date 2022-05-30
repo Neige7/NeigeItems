@@ -15,7 +15,7 @@ function loadConfig_NI() {
     NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
     // 不进行保存的NBT键
     // NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
-    NeigeItemsData.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"])
+    NeigeItemsData.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable", "CustomModelData"])
 
     // 玩家不在线提示
     NeigeItemsData.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
@@ -1336,9 +1336,8 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                 let display = itemNBT.display
                 itemNBT.remove("display")
                 // 设置CustomModelData
-                if (itemNBT.containsKey("custommodeldata")) {
-                    itemKeySection.set("custommodeldata", parseInt(itemNBT.CustomModelData.slice(6)))
-                    itemNBT.remove("custommodeldata")
+                if (itemMeta.hasCustomModelData()) {
+                    itemKeySection.set("custommodeldata", itemMeta.getCustomModelData())
                 }
                 // 设置子ID/损伤值
                 if (itemStack.getDurability() != 0) {
