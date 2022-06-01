@@ -1443,7 +1443,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     // 进行模板继承
     if (itemKeySection.contains("inherit")) {
         let tempConfigSection = new YamlConfiguration()
-        let inheritInfo = itemKeySection.get("inherit")
+        var inheritInfo = itemKeySection.get("inherit")
         // 检测进行全局继承/部分继承
         if (inheritInfo instanceof MemorySection) {
             /**
@@ -1656,16 +1656,13 @@ function getNiItems_NI() {
     let ArrayList = Packages.java.util.ArrayList
     
     let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/Items")))
-    // [config]
+    // [itemConfig]
     NeigeItemsData.items = new ArrayList()
-    // [id]
+    // [itemID]
     NeigeItemsData.itemIDList = new ArrayList()
     configs.forEach(function(config) {
-        let list = new ArrayList()
-        let configSections = getConfigSection_NI(config)
-        configSections.forEach(function(section) {
-            list.add(section.getName())
-            NeigeItemsData.itemIDList.add(section.getName())
+        config.getKeys(false).forEach(function(itemID) {
+            NeigeItemsData.itemIDList.add(itemID)
         })
         NeigeItemsData.items.add(config)
     })
