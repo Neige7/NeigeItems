@@ -1336,7 +1336,8 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                 let display = itemNBT.display
                 itemNBT.remove("display")
                 // 设置CustomModelData
-                if (itemMeta.hasCustomModelData()) {
+                if (itemMeta.hasCustomModelData != undefined
+                    && itemMeta.hasCustomModelData()) {
                     itemKeySection.set("custommodeldata", itemMeta.getCustomModelData())
                 }
                 // 设置子ID/损伤值
@@ -2659,10 +2660,9 @@ function incrementingArray_NI(length) {
 function runCommand_NI(command, sender) {
     let Bukkit = Packages.org.bukkit.Bukkit
     let BukkitScheduler = Bukkit.getScheduler()
-    let BukkitServer = Bukkit.getServer()
-    sender = sender || BukkitServer.getConsoleSender()
+    sender = sender || Bukkit.getConsoleSender()
     BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
-        BukkitServer.dispatchCommand(sender, command)
+        Bukkit.dispatchCommand(sender, command)
     })
 }
 
