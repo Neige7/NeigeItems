@@ -13,6 +13,7 @@ function loadConfig_NI() {
     NeigeItemsData.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
     // MM物品默认保存路径
     NeigeItemsData.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
+    NeigeItemsData.Debug = getConfigValue_NI(file, "Main.Debug", false)
     // 不进行保存的NBT键
     // NeigeItemsData.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
     NeigeItemsData.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable", "CustomModelData"])
@@ -1542,7 +1543,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     stringSection = loadSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
     stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
     stringSection = setPapiWithNoColor_NI(player, stringSection)
-    // print(stringSection)
+    if (NeigeItemsData.Debug) print(stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
