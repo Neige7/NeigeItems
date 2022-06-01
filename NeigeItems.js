@@ -1400,15 +1400,13 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
  * @return MemorySection
  */
 function getItemKeySection_NI(itemID) {
-    let itemConfig = null
-    NeigeItemsData.items.some(function(itemIDs) {
-        let index = itemIDs[1].indexOf(itemID)
-        if (index != -1) {
-            itemConfig = getConfigSection_NI(itemIDs[0])[index]
-            return true
+    for (let index = 0; index < NeigeItemsData.items.length; index++) {
+        const config = NeigeItemsData.items[index]
+        if (config.contains(itemID)) {
+            return config.getConfigurationSection(itemID)
         }
-    })
-    return itemConfig
+    }
+    return null
 }
 
 /**
@@ -1421,6 +1419,7 @@ function getItemKeySection_NI(itemID) {
  */
 function getNiItem_NI(itemID, player, sender, data) {
     let ArrayList = Packages.java.util.ArrayList
+    let String = Packages.java.lang.String
     let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
     let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
@@ -1431,6 +1430,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     let ItemFlag = Packages.org.bukkit.inventory.ItemFlag
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
     let Material = Packages.org.bukkit.Material
+    let MemorySection = Packages.org.bukkit.configuration.MemorySection
     let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
     let BukkitServer = Bukkit.getServer()
 
@@ -1440,6 +1440,53 @@ function getNiItem_NI(itemID, player, sender, data) {
     // 获取对应物品配置
     let itemKeySection = getItemKeySection_NI(itemID)
     if (itemKeySection == null) return null
+    // 进行模板继承
+    if (itemKeySection.contains("inherit")) {
+        let tempConfigSection = new YamlConfiguration()
+        let inheritInfo = itemKeySection.get("inherit")
+        // 检测进行全局继承/部分继承
+        if (inheritInfo instanceof MemorySection) {
+            /**
+             * 指定多个ID, 进行部分继承
+             * @variable key String 要进行继承的节点ID
+             * @variable value String 用于获取继承值的模板ID
+             */
+            inheritInfo.getKeys(true).forEach(function(key) {
+                let value = inheritInfo.get(key)
+                // 检测当前键是否为末级键
+                if (value instanceof String) {
+                    // 获取模板
+                    let currentSection = getItemKeySection_NI(value)
+                    // 如果模板存在该键, 进行继承
+                    if (currentSection.contains(key)) {
+                        tempConfigSection.set(key, currentSection.get(key))
+                    }
+                }
+            })
+        } else if (inheritInfo instanceof String) {
+            // 仅指定单个模板ID，进行全局继承
+            tempConfigSection = getItemKeySection_NI(inheritInfo)
+        } else if (inheritInfo instanceof ArrayList) {
+            // 顺序继承, 按顺序进行覆盖式继承
+            for (let index = 0; index < inheritInfo.length; index++) {
+                const currentSection = getItemKeySection_NI(inheritInfo[index])
+                currentSection.getKeys(true).forEach(function(key) {
+                    let value = currentSection.get(key)
+                    if (!(value instanceof MemorySection)) {
+                        tempConfigSection.set(key, currentSection.get(key))
+                    }
+                })
+            }
+        }
+        // 覆盖其余物品配置
+        itemKeySection.getKeys(true).forEach(function(key) {
+            let value = itemKeySection.get(key)
+            if (!(value instanceof MemorySection)) {
+                tempConfigSection.set(key, itemKeySection.get(key))
+            }
+        })
+        itemKeySection = tempConfigSection
+    }
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
     NeigeItemsData.sections[random] = {}
@@ -1609,8 +1656,8 @@ function getNiItems_NI() {
     let ArrayList = Packages.java.util.ArrayList
     
     let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/Items")))
-    // [[config, [id]]]
-    NeigeItemsData.items = []
+    // [config]
+    NeigeItemsData.items = new ArrayList()
     // [id]
     NeigeItemsData.itemIDList = new ArrayList()
     configs.forEach(function(config) {
@@ -1620,7 +1667,7 @@ function getNiItems_NI() {
             list.add(section.getName())
             NeigeItemsData.itemIDList.add(section.getName())
         })
-        NeigeItemsData.items.push(new ArrayList(Arrays.asList([config, list])))
+        NeigeItemsData.items.add(config)
     })
     pageAmount = Math.ceil(NeigeItemsData.itemIDList.length/NeigeItemsData.listItemAmount)
 }
@@ -1868,18 +1915,22 @@ function toItemTagNBT_NI(itemNBT) {
             }
         } else {
             if (value instanceof String) {
-                if (value.startsWith("(Byte) ")) {
-                    return new ItemTagData(new Byte(value.slice(7)))
-                } else if (value.startsWith("(Short) ")) {
-                    return new ItemTagData(new Short(value.slice(8)))
-                } else if (value.startsWith("(Int) ")) {
-                    return new ItemTagData(new Integer(value.slice(6)))
-                } else if (value.startsWith("(Long) ")) {
-                    return new ItemTagData(new Long(value.slice(7)))
-                } else if (value.startsWith("(Float) ")) {
-                    return new ItemTagData(new Float(value.slice(8)))
-                } else if (value.startsWith("(Double) ")) {
-                    return new ItemTagData(new Double(value.slice(9)))
+                try {
+                    if (value.startsWith("(Byte) ")) {
+                        return new ItemTagData(new Byte(value.slice(7)))
+                    } else if (value.startsWith("(Short) ")) {
+                        return new ItemTagData(new Short(value.slice(8)))
+                    } else if (value.startsWith("(Int) ")) {
+                        return new ItemTagData(new Integer(value.slice(6)))
+                    } else if (value.startsWith("(Long) ")) {
+                        return new ItemTagData(new Long(value.slice(7)))
+                    } else if (value.startsWith("(Float) ")) {
+                        return new ItemTagData(new Float(value.slice(8)))
+                    } else if (value.startsWith("(Double) ")) {
+                        return new ItemTagData(new Double(value.slice(9)))
+                    }
+                } catch (error) {
+                    print("§e[NI] §f" + value + " §6数据类型转换失败")
                 }
             }
             return new ItemTagData(value)
@@ -2127,7 +2178,7 @@ function parseSection_NI(Sections, string, random, player) {
                 var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                 global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
-                global.getItem = function(itemID, player) {return getNiItem_NI(itemID, player)}
+                global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
                 global.player = player
                 var result = getSection_NI(Sections, global[func].apply(this, scriptArgs), random, player)
                 return result
@@ -2470,7 +2521,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                         var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                         global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
-                        global.getItem = function(itemID, player) {return getNiItem_NI(itemID, player)}
+                        global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
                         global.player = player
                         NeigeItemsData.sections[random][section] = getSection_NI(Sections, global[func].apply(this, args), random, player)
                     } catch (error) {
