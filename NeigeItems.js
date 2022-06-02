@@ -98,6 +98,8 @@ function loadConfig_NI() {
 //@Awake(reload)
 function onEnable_NI() {
     loadConfig_NI()
+    loadAction_NI()
+    loadScripts_NI()
     NeigeItemsData.sections = {}
     getGlobalSections_NI()
     getNiItems_NI()
@@ -1016,6 +1018,10 @@ function commandRegister_NI() {
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 重载配置文件
                             loadConfig_NI()
+                            // 重载物品动作函数
+                            loadAction_NI()
+                            // 重载NI脚本文件
+                            loadScripts_NI()
                             // 创建节点缓存文件
                             NeigeItemsData.sections = {}
                             // 重载全局节点列表
@@ -1262,40 +1268,46 @@ function onPlayerInteract_NI(event) {
  * @param left Boolean 是否执行左键动作
  * @param right Boolean 是否执行右键动作
  */
- function executeNiAction_NI(player, itemNBT, left, right) {
+function executeNiAction_NI(player, itemNBT, left, right) {
     let actions
     if (actions = NeigeItemsData.actions[itemNBT.NeigeItems.id.asString()]) {
-        let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
         if (left && actions.left) {
-            let leftPlayer = actions.left.player || []
-            leftPlayer.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element), player)
-            })
-            let leftConsole = actions.left.console || []
-            leftConsole.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element))
-            })
+            runAction_NI(player, actions.left)
         }
         if (right && actions.right) {
-            let rightPlayer = actions.right.player || []
-            rightPlayer.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element), player)
-            })
-            let rightConsole = actions.right.console || []
-            rightConsole.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element))
-            })
+            runAction_NI(player, actions.right)
         }
         if (actions.all) {
-            let allPlayer = actions.all.player || []
-            allPlayer.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element), player)
-            })
-            let allConsole = actions.all.console || []
-            allConsole.forEach(function(element) {
-                runCommand_NI(PlaceholderAPI.setPlaceholders(player, element))
-            })
+            runAction_NI(player, actions.all)
         }
+    }
+}
+
+/**
+ * 执行动作
+ * @param player Player 物品ID
+ */
+function runAction_NI(player, action) {
+    let ArrayList = Packages.java.util.ArrayList
+    let String = Packages.java.lang.String
+    let MemorySection = Packages.org.bukkit.configuration.MemorySection
+
+    if (action instanceof String) {
+        let index = action.indexOf(": ")
+        let actionType = action.slice(0, index)
+        let actionContent = action.slice(index+2)
+        let actionFunction = NeigeItemsData.action[actionType]
+        if (actionFunction != undefined) {
+            actionFunction(player, actionContent)
+        } else {
+            print("§e[NI] §6未知物品动作: &f" + actionType)
+        }
+    } else if (action instanceof ArrayList) {
+        for (let index = 0; index < action.length; index++) {
+            runAction_NI(player, action[index])
+        }
+    } else if (action instanceof MemorySection) {
+
     }
 }
 
@@ -1668,6 +1680,106 @@ function getNiItems_NI() {
         NeigeItemsData.items.add(config)
     })
     pageAmount = Math.ceil(NeigeItemsData.itemIDList.length/NeigeItemsData.listItemAmount)
+}
+
+/**
+ * 加载NI物品动作
+ */
+function loadAction_NI() {
+    let Thread = Packages.java.lang.Thread
+    let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
+    let NativeJavaPackage = Packages.org.openjdk.nashorn.internal.runtime.NativeJavaPackage
+
+    NeigeItemsData.action = {
+        // 向玩家发送消息
+        tell: function(player, string) {
+            player.sendMessage(PlaceholderAPI.setPlaceholders(player, string))
+            return true
+        },
+        // 向玩家发送消息(不将&解析为颜色符号)
+        tellNoColor: function(player, string) {
+            player.sendMessage(setPapiWithNoColor_NI(player, string))
+            return true
+        },
+        // 强制玩家发送消息
+        chat: function(player, string) {
+            player.chat(setPapiWithNoColor_NI(player, string))
+            return true
+        },
+        // 强制玩家发送消息(将&解析为颜色符号)
+        chatWithColor: function(player, string) {
+            player.chat(PlaceholderAPI.setPlaceholders(player, string))
+            return true
+        },
+        // 强制玩家执行指令
+        command: function(player, string) {
+            runCommand_NI(PlaceholderAPI.setPlaceholders(player, string), player)
+            return true
+        },
+        // 强制玩家执行指令
+        player: function(player, string) {
+            return command(player, string)
+        },
+        // 强制玩家执行指令(不将&解析为颜色符号)
+        commandNoColor: function(player, string) {
+            runCommand_NI(setPapiWithNoColor_NI(player, string), player)
+            return true
+        },
+        // 后台执行指令
+        console: function(player, string) {
+            runCommand_NI(PlaceholderAPI.setPlaceholders(player, string))
+            return true
+        },
+        // 后台执行指令(不将&解析为颜色符号)
+        console: function(player, string) {
+            runCommand_NI(setPapiWithNoColor_NI(player, string))
+            return true
+        },
+        // 给予玩家金钱
+        giveMoney: function(player, string) {
+            let Economy = Packages.net.milkbowl.vault.economy.Economy.class
+            if (!(Economy instanceof NativeJavaPackage)) {
+                let economy = Bukkit.getServicesManager().getRegistration(Economy).getProvider()
+                economy.depositPlayer(player, PlaceholderAPI.setPlaceholders(player, string))
+            } else {
+                print("§e[NI] §6未发现vault经济插件")
+            }
+            return true
+        },
+        // 扣除玩家金钱
+        takeMoney: function(player, string) {
+            let Economy = Packages.net.milkbowl.vault.economy.Economy.class
+            if (!(Economy instanceof NativeJavaPackage)) {
+                let economy = Bukkit.getServicesManager().getRegistration(Economy).getProvider()
+                economy.withdrawPlayer(player, PlaceholderAPI.setPlaceholders(player, string))
+            } else {
+                print("§e[NI] §6未发现vault经济插件")
+            }
+            return true
+        },
+        // 延迟(单位是tick)
+        dalay: function(player, string) {
+            Thread.sleep(parseInt(string)*50)
+            return true
+        },
+        // 终止
+        return: function(player, string) {
+            return false
+        }
+    }
+}
+
+/**
+ * 加载NI脚本
+ */
+function loadScripts_NI() {
+    let files = getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/Scripts"))
+    NeigeItemsData.scripts = {}
+    for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        NeigeItemsData.scripts[file.getName()] = loadWithNewGlobal(file)
+        NeigeItemsData.scripts[file.getPath()] = loadWithNewGlobal(file)
+    }
 }
 
 /**
@@ -2173,7 +2285,7 @@ function parseSection_NI(Sections, string, random, player) {
                     func = func.slice(0, index)
                 }
 
-                var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
+                var global = NeigeItemsData.scripts[path] || NeigeItemsData.scripts["plugins\\" + NeigeItemsData.scriptName + "\\Scripts\\" + path]
                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                 global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                 global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
@@ -2254,7 +2366,7 @@ function onlinePlayerNames_NI() {
 /**
  * 加载世界列表
  */
- function getWorldNames_NI() {
+function getWorldNames_NI() {
     let ArrayList = Packages.java.util.ArrayList
     let Bukkit = Packages.org.bukkit.Bukkit
 
@@ -2516,7 +2628,7 @@ function globalSectionParse_NI(Sections, section, random, player) {
                             args = Java.from(args)
                         }
 
-                        var global = loadWithNewGlobal("plugins/" + NeigeItemsData.scriptName + "/Scripts/" + path)
+                        var global = NeigeItemsData.scripts[path] || NeigeItemsData.scripts["plugins\\" + NeigeItemsData.scriptName + "\\Scripts\\" + path]
                         global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                         global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                         global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
