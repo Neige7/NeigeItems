@@ -1293,18 +1293,24 @@ function runAction_NI(player, action) {
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
 
     if (action instanceof String) {
+        let actionType = action
+        let actionContent = ""
         let index = action.indexOf(": ")
-        let actionType = action.slice(0, index)
-        let actionContent = action.slice(index+2)
+        if (index != -1) {
+            actionType = action.slice(0, index)
+            actionContent = action.slice(index+2)
+        }
         let actionFunction = NeigeItemsData.action[actionType]
         if (actionFunction != undefined) {
-            actionFunction(player, actionContent)
+            return actionFunction(player, actionContent)
         } else {
             print("§e[NI] §6未知物品动作: &f" + actionType)
         }
     } else if (action instanceof ArrayList) {
         for (let index = 0; index < action.length; index++) {
-            runAction_NI(player, action[index])
+            if (!runAction_NI(player, action[index])) {
+                return
+            }
         }
     } else if (action instanceof MemorySection) {
 
