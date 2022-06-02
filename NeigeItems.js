@@ -1718,7 +1718,7 @@ function loadAction_NI() {
         },
         // 强制玩家执行指令
         player: function(player, string) {
-            return command(player, string)
+            return command(player, PlaceholderAPI.setPlaceholders(player, string))
         },
         // 强制玩家执行指令(不将&解析为颜色符号)
         commandNoColor: function(player, string) {
@@ -1759,7 +1759,7 @@ function loadAction_NI() {
         },
         // 延迟(单位是tick)
         dalay: function(player, string) {
-            Thread.sleep(parseInt(string)*50)
+            Thread.sleep(parseInt(PlaceholderAPI.setPlaceholders(player, string))*50)
             return true
         },
         // 终止
