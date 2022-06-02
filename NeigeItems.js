@@ -1304,7 +1304,7 @@ function runAction_NI(player, action) {
         if (actionFunction != undefined) {
             return actionFunction(player, actionContent)
         } else {
-            print("§e[NI] §6未知物品动作: &f" + actionType)
+            print("§e[NI] §6未知物品动作: §f" + actionType)
         }
     } else if (action instanceof ArrayList) {
         for (let index = 0; index < action.length; index++) {
@@ -1764,7 +1764,7 @@ function loadAction_NI() {
             return true
         },
         // 延迟(单位是tick)
-        dalay: function(player, string) {
+        delay: function(player, string) {
             Thread.sleep(parseInt(PlaceholderAPI.setPlaceholders(player, string))*50)
             return true
         },
