@@ -1293,11 +1293,11 @@ function runAction_NI(player, action) {
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
 
     if (action instanceof String) {
-        let actionType = action
+        let actionType = action.toLowerCase()
         let actionContent = ""
         let index = action.indexOf(": ")
         if (index != -1) {
-            actionType = action.slice(0, index)
+            actionType = action.slice(0, index).toLowerCase()
             actionContent = action.slice(index+2)
         }
         let actionFunction = NeigeItemsData.action[actionType]
@@ -1707,6 +1707,9 @@ function loadAction_NI() {
             player.sendMessage(setPapiWithNoColor_NI(player, string))
             return true
         },
+        tellnocolor: function(player, string) {
+            return tellNoColor(player, string)
+        },
         // 强制玩家发送消息
         chat: function(player, string) {
             player.chat(setPapiWithNoColor_NI(player, string))
@@ -1717,6 +1720,9 @@ function loadAction_NI() {
             player.chat(PlaceholderAPI.setPlaceholders(player, string))
             return true
         },
+        chatwithcolor: function(player, string) {
+            return chatWithColor(player, string)
+        },
         // 强制玩家执行指令
         command: function(player, string) {
             runCommand_NI(PlaceholderAPI.setPlaceholders(player, string), player)
@@ -1724,12 +1730,15 @@ function loadAction_NI() {
         },
         // 强制玩家执行指令
         player: function(player, string) {
-            return command(player, PlaceholderAPI.setPlaceholders(player, string))
+            return command(player, string)
         },
         // 强制玩家执行指令(不将&解析为颜色符号)
         commandNoColor: function(player, string) {
             runCommand_NI(setPapiWithNoColor_NI(player, string), player)
             return true
+        },
+        commandnocolor: function(player, string) {
+            return commandNoColor(player, string)
         },
         // 后台执行指令
         console: function(player, string) {
@@ -1740,6 +1749,9 @@ function loadAction_NI() {
         consoleNoColor: function(player, string) {
             runCommand_NI(setPapiWithNoColor_NI(player, string))
             return true
+        },
+        consolenocolor: function(player, string) {
+            return consoleNoColor(player, string)
         },
         // 给予玩家金钱
         giveMoney: function(player, string) {
@@ -1752,6 +1764,9 @@ function loadAction_NI() {
             }
             return true
         },
+        givemoney: function(player, string) {
+            return giveMoney(player, string)
+        },
         // 扣除玩家金钱
         takeMoney: function(player, string) {
             let Economy = Packages.net.milkbowl.vault.economy.Economy.class
@@ -1762,6 +1777,9 @@ function loadAction_NI() {
                 print("§e[NI] §6未发现vault经济插件")
             }
             return true
+        },
+        takemoney: function(player, string) {
+            return takeMoney(player, string)
         },
         // 延迟(单位是tick)
         delay: function(player, string) {
