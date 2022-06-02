@@ -1696,7 +1696,7 @@ function loadAction_NI() {
     let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
     let NativeJavaPackage = Packages.org.openjdk.nashorn.internal.runtime.NativeJavaPackage
 
-    NeigeItemsData.action = {
+    let action = {
         // 向玩家发送消息
         tell: function(player, string) {
             player.sendMessage(PlaceholderAPI.setPlaceholders(player, string))
@@ -1707,9 +1707,6 @@ function loadAction_NI() {
             player.sendMessage(setPapiWithNoColor_NI(player, string))
             return true
         },
-        tellnocolor: function(player, string) {
-            return tellNoColor(player, string)
-        },
         // 强制玩家发送消息
         chat: function(player, string) {
             player.chat(setPapiWithNoColor_NI(player, string))
@@ -1719,9 +1716,6 @@ function loadAction_NI() {
         chatWithColor: function(player, string) {
             player.chat(PlaceholderAPI.setPlaceholders(player, string))
             return true
-        },
-        chatwithcolor: function(player, string) {
-            return chatWithColor(player, string)
         },
         // 强制玩家执行指令
         command: function(player, string) {
@@ -1737,9 +1731,6 @@ function loadAction_NI() {
             runCommand_NI(setPapiWithNoColor_NI(player, string), player)
             return true
         },
-        commandnocolor: function(player, string) {
-            return commandNoColor(player, string)
-        },
         // 后台执行指令
         console: function(player, string) {
             runCommand_NI(PlaceholderAPI.setPlaceholders(player, string))
@@ -1749,9 +1740,6 @@ function loadAction_NI() {
         consoleNoColor: function(player, string) {
             runCommand_NI(setPapiWithNoColor_NI(player, string))
             return true
-        },
-        consolenocolor: function(player, string) {
-            return consoleNoColor(player, string)
         },
         // 给予玩家金钱
         giveMoney: function(player, string) {
@@ -1764,9 +1752,6 @@ function loadAction_NI() {
             }
             return true
         },
-        givemoney: function(player, string) {
-            return giveMoney(player, string)
-        },
         // 扣除玩家金钱
         takeMoney: function(player, string) {
             let Economy = Packages.net.milkbowl.vault.economy.Economy.class
@@ -1778,9 +1763,6 @@ function loadAction_NI() {
             }
             return true
         },
-        takemoney: function(player, string) {
-            return takeMoney(player, string)
-        },
         // 延迟(单位是tick)
         delay: function(player, string) {
             Thread.sleep(parseInt(PlaceholderAPI.setPlaceholders(player, string))*50)
@@ -1791,6 +1773,10 @@ function loadAction_NI() {
             return false
         }
     }
+    NeigeItemsData.action = {}
+    Object.keys(action).forEach(function(key) {
+        NeigeItemsData.action[key.toLowerCase()] = action[key]
+    })
 }
 
 /**
