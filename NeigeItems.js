@@ -2015,31 +2015,32 @@ function toItemTagNBT_NI(itemNBT) {
         if (value instanceof Map) {
             return new ItemTagData(toItemTag(value))
         } else if (value instanceof ArrayList) {
-            if (value[0] instanceof Integer) {
-                return new ItemTagData(Java.to(Java.from(value), "int[]"))
-            } else if (value[0] instanceof String && value[0].startsWith("(Int) ")){
-                for (let index = 0; index < value.length; index++) {
-                    if (value[index] instanceof String && value[index].startsWith("(Int) ")) {
-                        value[index] = parseInt(value[index].slice(6))
+            if (value.length > 0) {
+                if (value[0] instanceof Integer) {
+                    return new ItemTagData(Java.to(Java.from(value), "int[]"))
+                } else if (value[0] instanceof String && value[0].startsWith("(Int) ")){
+                    for (let index = 0; index < value.length; index++) {
+                        if (value[index] instanceof String && value[index].startsWith("(Int) ")) {
+                            value[index] = parseInt(value[index].slice(6))
+                        }
                     }
-                }
-                return new ItemTagData(Java.to(Java.from(value), "int[]"))
-            } else if (value[0] instanceof Byte) {
-                return new ItemTagData(Java.to(Java.from(value), "byte[]"))
-            } else if (value[0] instanceof String && value[0].startsWith("(Byte) ")){
-                for (let index = 0; index < value.length; index++) {
-                    if (value[index] instanceof String && value[index].startsWith("(Byte) ")) {
-                        value[index] = parseInt(value[index].slice(7))
+                    return new ItemTagData(Java.to(Java.from(value), "int[]"))
+                } else if (value[0] instanceof Byte) {
+                    return new ItemTagData(Java.to(Java.from(value), "byte[]"))
+                } else if (value[0] instanceof String && value[0].startsWith("(Byte) ")){
+                    for (let index = 0; index < value.length; index++) {
+                        if (value[index] instanceof String && value[index].startsWith("(Byte) ")) {
+                            value[index] = parseInt(value[index].slice(7))
+                        }
                     }
+                    return new ItemTagData(Java.to(Java.from(value), "int[]"))
                 }
-                return new ItemTagData(Java.to(Java.from(value), "int[]"))
-            } else {
-                let itemTagList = new ItemTagList()
-                value.forEach(function(it) {
-                    itemTagList.add(HashMapValueParse(it))
-                })
-                return new ItemTagData(itemTagList)
             }
+            let itemTagList = new ItemTagList()
+            value.forEach(function(it) {
+                itemTagList.add(HashMapValueParse(it))
+            })
+            return new ItemTagData(itemTagList)
         } else {
             if (value instanceof String) {
                 try {
