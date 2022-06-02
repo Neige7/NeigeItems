@@ -97,13 +97,21 @@ function loadConfig_NI() {
 //@Awake(enable)
 //@Awake(reload)
 function onEnable_NI() {
+    // 加载配置文件
     loadConfig_NI()
+    // 加载物品动作函数
     loadAction_NI()
+    // 加载NI脚本文件
     loadScripts_NI()
+    // 创建节点缓存对象
     NeigeItemsData.sections = {}
+    // 加载全局节点列表
     getGlobalSections_NI()
+    // 加载NI物品列表
     getNiItems_NI()
+    // 加载NI物品动作列表
     getActions_NI()
+    // 加载MM物品列表
     if (Tool.isPluginEnabled("MythicMobs")) {
         loadMMItem_NI()
     }
@@ -1022,7 +1030,7 @@ function commandRegister_NI() {
                             loadAction_NI()
                             // 重载NI脚本文件
                             loadScripts_NI()
-                            // 创建节点缓存文件
+                            // 创建节点缓存对象
                             NeigeItemsData.sections = {}
                             // 重载全局节点列表
                             getGlobalSections_NI()
@@ -1799,7 +1807,7 @@ function getActions_NI() {
     let HashMap = Packages.java.util.HashMap
     
     let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItemsData.scriptName + "/ItemActions")))
-    // {id: {left: {console: [], player: []}, right: {console: [], player: []}}}
+    // {id: {left: [], right: [], all: []}}
     NeigeItemsData.actions = new HashMap()
     configs.forEach(function(config) {
         let configSections = getConfigSection_NI(config)
@@ -1982,10 +1990,9 @@ function toItemTagNBT_NI(itemNBT) {
     let Byte = Packages.java.lang.Byte
     let Double = Packages.java.lang.Double
     let Float = Packages.java.lang.Float
-    let HashMap = Packages.java.util.HashMap
     let Integer = Packages.java.lang.Integer
-    let LinkedHashMap = Packages.java.util.LinkedHashMap
     let Long = Packages.java.lang.Long
+    let Map = Packages.java.util.Map
     let Short = Packages.java.lang.Short
     let String = Packages.java.lang.String
 
@@ -2005,7 +2012,7 @@ function toItemTagNBT_NI(itemNBT) {
      * NBT值解析
      */
     HashMapValueParse = function(value) {
-        if (value instanceof LinkedHashMap || value instanceof HashMap) {
+        if (value instanceof Map) {
             return new ItemTagData(toItemTag(value))
         } else if (value instanceof ArrayList) {
             if (value[0] instanceof Integer) {
@@ -2116,23 +2123,38 @@ function getConfigSection_NI(configs) {
 }
 
 /**
- * 将ConfigSection转化为HashMap
- * @param configSection MemorySection
+ * 将MemorySection转化为HashMap
+ * @param memorySection MemorySection
  * @return HashMap
  */
-function toHashMap_NI(configSection){
+function toHashMap_NI(memorySection){
     let HashMap = Packages.java.util.HashMap
+    let Map = Packages.java.util.Map
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
+    let ArrayList = Packages.java.util.ArrayList
+    let AbstractList = Packages.java.util.AbstractList
 
-    let hashMapNBT = new HashMap()
-    configSection.getKeys(false).forEach(function(key) {
-        if (configSection.get(key) instanceof MemorySection) {
-            hashMapNBT[key] = toHashMap_NI(configSection.get(key))
-        } else {
-            hashMapNBT[key] = configSection.get(key)
-        }
-    })
-    return hashMapNBT
+    if (memorySection instanceof MemorySection) {
+        let hashMap = new HashMap()
+        memorySection.getKeys(false).forEach(function(key) {
+            hashMap.put(key, toHashMap_NI(memorySection.get(key)))
+        })
+        return hashMap
+    } else if (memorySection instanceof Map) {
+        let hashMap = new HashMap()
+        memorySection.entrySet().forEach(function(entry) {
+            hashMap.put(entry.getKey(), toHashMap_NI(entry.getValue()))
+        })
+        return hashMap
+    } else if (memorySection instanceof AbstractList) {
+        let list = new ArrayList()
+        memorySection.forEach(function(value) {
+            list.add(toHashMap_NI(value))
+        })
+        return list
+    }
+
+    return memorySection
 }
 
 /**
