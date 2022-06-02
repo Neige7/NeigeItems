@@ -1731,7 +1731,7 @@ function loadAction_NI() {
             return true
         },
         // 后台执行指令(不将&解析为颜色符号)
-        console: function(player, string) {
+        consoleNoColor: function(player, string) {
             runCommand_NI(setPapiWithNoColor_NI(player, string))
             return true
         },
