@@ -1468,6 +1468,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     // 获取对应物品配置
     let itemKeySection = getItemKeySection_NI(itemID)
     if (itemKeySection == null) return null
+
     // 进行模板继承
     if (itemKeySection.contains("inherit")) {
         let tempConfigSection = new YamlConfiguration()
@@ -1515,6 +1516,7 @@ function getNiItem_NI(itemID, player, sender, data) {
         })
         itemKeySection = tempConfigSection
     }
+
     // 获取随机数, 用于代表当前物品
     let random = Math.random()
     NeigeItems.sections[random] = {}
@@ -1536,19 +1538,21 @@ function getNiItem_NI(itemID, player, sender, data) {
         gSectionIDList.forEach(function(gSectionID) {
             // 在每个全局节点文件进行查找
             for (let index = 0; index < NeigeItems.globalSections.length; index++) {
+                // 获取[config, [id]]
                 const gSectionIDs = NeigeItems.globalSections[index]
                 // 如果调用的节点名与当前文件名重复, 直接调用文件内所有节点
                 if (NeigeItems.globalSectionFileNames[index] == gSectionID) {
                     for (let index = 0; index < gSectionIDs[1].length; index++) {
                         const gSectionID = gSectionIDs[1][index]
-                        itemKeySection.set("sections." + gSectionID, getConfigSection_NI(gSectionIDs[0])[index])
+                        itemKeySection.set("sections." + gSectionID, gSectionIDs[0].getConfigurationSection(index))
                     }
-                    continue
+                    break
                 }
                 // 如果当前文件中存在相应节点
                 let gSectionIndex = gSectionIDs[1].indexOf(gSectionID)
                 if (gSectionIndex != -1) {
-                    itemKeySection.set("sections." + gSectionID, getConfigSection_NI(gSectionIDs[0])[gSectionIndex])
+                    itemKeySection.set("sections." + gSectionID, gSectionIDs[0].getConfigurationSection(gSectionID))
+                    break
                 }
             }
         })
@@ -1825,6 +1829,7 @@ function getGlobalSections_NI() {
     let ArrayList = Packages.java.util.ArrayList
 
     let files = getAllFile_NI(getDir_NI(NeigeItems.scriptName + "/GlobalSections"))
+    // 获取所有全局节点配置文件
     let configs = getAllConfig_NI(files)
     // [[config, [id]]]
     NeigeItems.globalSections = new ArrayList()
@@ -1833,10 +1838,14 @@ function getGlobalSections_NI() {
     // [id]
     NeigeItems.globalSectionIDList = new ArrayList()
     
+    // 遍历所有全局节点配置文件
     for (let index = 0; index < configs.length; index++) {
+        // 获取当前全局节点配置文件
         const config = configs[index]
         let list = new ArrayList()
+        // 获取当前文件内所有全局节点
         let configSections = getConfigSection_NI(config)
+        // 记录节点ID
         configSections.forEach(function(section) {
             list.add(section.getName())
             NeigeItems.globalSectionIDList.add(section.getName())
@@ -2561,8 +2570,8 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
     let parse = function(Sections, section, random, player, overrideSection) {
         if (Sections != null
             && Sections.contains(section)
-            && (NeigeItems.sections[random][overrideSection
-                || section] == undefined || temp)) {
+            && (NeigeItems.sections[random][overrideSection || section] == undefined
+                || temp === true)) {
             let currentSection = Sections.getConfigurationSection(section)
             // 简单节点解析
             if (currentSection == null) {
@@ -2571,19 +2580,19 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
             }
             // 获取节点类型
             let type = currentSection.getString("type")
+            let result = false
             switch (type) {
                 case "strings": {
                     // 如果配置了字符串组
                     if (currentSection.contains("values")) {
                         // 加载字符串组
                         let strings = currentSection.get("values")
-                        let result = getSection_NI(Sections, getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player), random, player)
-                        return result
+                        result = getSection_NI(Sections, getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player), random, player)
                     } else {
-                        let result = "字符串节点: " + section + " 缺少 values 配置项"
+                        result = "字符串节点: " + section + " 缺少 values 配置项"
                         print(result)
-                        return result
                     }
+                    break
                 } case "number": {
                     // 如果配置了数字范围
                     if (currentSection.contains("min") && currentSection.contains("max")) {
@@ -2598,25 +2607,23 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             }
                             if (isNaN(fixed)) fixed = 0
                             // 加载随机数
-                            let result = ((Math.random()*(max-min))+min).toFixed(fixed)
-                            return result
+                            result = ((Math.random()*(max-min))+min).toFixed(fixed)
                         } catch (error) {
-                            let result = "随机数节点: " + section + " 解析错误"
+                            result = "随机数节点: " + section + " 解析错误"
                             NeigeItems.sections[random][overrideSection || section] = 
                             print(result)
                             error.printStackTrace()
-                            return result
                         }
                     } else {
-                        let result = "随机数节点: " + section + " 缺少 min 或 max 配置项"
+                        result = "随机数节点: " + section + " 缺少 min 或 max 配置项"
                         print(result)
-                        return result
                     }
+                    break
                 } case "calculation": {
                     if (currentSection.contains("formula")) {
                         try {
                             // 获取公式结果
-                            let result = eval(getSection_NI(Sections, currentSection.getString("formula"), random, player))
+                            result = eval(getSection_NI(Sections, currentSection.getString("formula"), random, player))
                             // 如果配置了数字范围
                             if (currentSection.contains("min")) {
                                 let min = parseFloat(getSection_NI(Sections, currentSection.getString("min"), random, player))
@@ -2634,18 +2641,16 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             if (isNaN(fixed)) fixed = 0
                             // 加载公式结果
                             result = result.toFixed(fixed)
-                            return result
                         } catch (error) {
-                            let result = "公式节点: " + section + " 解析错误"
+                            result = "公式节点: " + section + " 解析错误"
                             print(result)
                             error.printStackTrace()
-                            return result
                         }
                     } else {
-                        let result = "公式节点: " + section + " 缺少 formula 配置项"
+                        result = "公式节点: " + section + " 缺少 formula 配置项"
                         print(result)
-                        return result
                     }
+                    break
                 } case "weight": {
                     // 如果配置了字符串组
                     if (currentSection.contains("values")) {
@@ -2659,19 +2664,17 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                                 let string = value.slice(index+2)
                                 for (let index = 0; index < weight; index++) strings.push(string)
                             })
-                            let result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
-                            return result
+                            result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
                         } catch (error) {
-                            let result = "权重节点: " + section + " 解析错误"
+                            result = "权重节点: " + section + " 解析错误"
                             print(result)
                             error.printStackTrace()
-                            return result
                         }
                     } else {
-                        let result = "权重节点: " + section + " 缺少 values 配置项"
+                        result = "权重节点: " + section + " 缺少 values 配置项"
                         print(result)
-                        return result
                     }
+                    break
                 } case "js": {
                     if (currentSection.contains("path")) {
                         try {
@@ -2692,39 +2695,37 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                             global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
                             global.player = player
-                            let result = getSection_NI(Sections, global[func].apply(this, args), random, player)
-                            return result
+                            result = getSection_NI(Sections, global[func].apply(this, args), random, player)
                         } catch (error) {
-                            let result = "Js节点: " + section + " 解析错误"
+                            result = "Js节点: " + section + " 解析错误"
                             print(result)
                             error.printStackTrace()
-                            return result
                         }
                     } else {
-                        let result = "Js节点: " + section + " 缺少 path 配置项"
+                        result = "Js节点: " + section + " 缺少 path 配置项"
                         print(result)
-                        return result
                     }
+                    break
                 } case "inherit": {
                     if (currentSection.contains("template")) {
                         let template = getSection_NI(Sections, currentSection.getString("template"), random, player)
-                        let result = globalSectionParse_NI(Sections, template, random, player, false, section)
-                        return result
+                        result = globalSectionParse_NI(Sections, template, random, player, false, section)
                     } else {
-                        let result = "继承节点: " + section + " 缺少 template 配置项"
+                        result = "继承节点: " + section + " 缺少 template 配置项"
                         print(result)
-                        return result
                     }
-                } default: {
-                    return false
-                }
+                    break
+                } default:
             }
+            return result
         } else {
             return false
         }
     }
     let result = parse(Sections, section, random, player, overrideSection)
-    if (!temp) NeigeItems.sections[random][overrideSection || section] = result
+    if (temp !== true && result !== false) {
+        NeigeItems.sections[random][overrideSection || section] = result
+    }
     return result
 }
 
