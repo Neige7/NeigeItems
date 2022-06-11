@@ -1544,7 +1544,7 @@ function getNiItem_NI(itemID, player, sender, data) {
                 if (NeigeItems.globalSectionFileNames[index] == gSectionID) {
                     for (let index = 0; index < gSectionIDs[1].length; index++) {
                         const gSectionID = gSectionIDs[1][index]
-                        itemKeySection.set("sections." + gSectionID, gSectionIDs[0].getConfigurationSection(index))
+                        itemKeySection.set("sections." + gSectionID, gSectionIDs[0].getConfigurationSection(gSectionID))
                     }
                     break
                 }
