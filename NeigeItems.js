@@ -1179,7 +1179,7 @@ function onPlayerInteract_NI(event) {
     // 获取物品NBT
     var itemTag = NMSKt.getItemTag(itemStack)
     // 如果为非NI物品则终止操作
-    if (itemTag.NeigeItems == undefined) return
+    if (!itemTag.containsKey("NeigeItems")) return
     // 获取物品消耗信息
     let itemAction = NeigeItems.actions[itemTag.NeigeItems.id.asString()]
     if (itemAction == undefined) return
@@ -1281,13 +1281,13 @@ function executeNiAction_NI(player, itemNBT, left, right) {
     let actions
     if (actions = NeigeItems.actions[itemNBT.NeigeItems.id.asString()]) {
         if (left && actions.left) {
-            runAction_NI(player, actions.left)
+            runAction_NI(player, actions.left, itemNBT)
         }
         if (right && actions.right) {
-            runAction_NI(player, actions.right)
+            runAction_NI(player, actions.right, itemNBT)
         }
         if (actions.all) {
-            runAction_NI(player, actions.all)
+            runAction_NI(player, actions.all, itemNBT)
         }
     }
 }
@@ -1295,13 +1295,18 @@ function executeNiAction_NI(player, itemNBT, left, right) {
 /**
  * 执行动作
  * @param player Player 物品ID
+ * @param action String/ArrayList 物品动作
+ * @param itemNBT ItemTag 物品NBT
  */
-function runAction_NI(player, action) {
+function runAction_NI(player, action, itemNBT) {
     let ArrayList = Packages.java.util.ArrayList
     let String = Packages.java.lang.String
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
 
     if (action instanceof String) {
+        if (itemNBT != undefined) {
+            action = getSection_NI(null, action, null, null, itemNBT)
+        }
         let actionType = action.toLowerCase()
         let actionContent = ""
         let index = action.indexOf(": ")
@@ -1317,7 +1322,7 @@ function runAction_NI(player, action) {
         }
     } else if (action instanceof ArrayList) {
         for (let index = 0; index < action.length; index++) {
-            if (!runAction_NI(player, action[index])) {
+            if (!runAction_NI(player, action[index], itemNBT)) {
                 return
             }
         }
@@ -2174,8 +2179,9 @@ function toHashMap_NI(memorySection){
  * @param string String 待解析文本
  * @param random number 随机数
  * @param player Player 待解析玩家
+ * @param itemNBT ItemTag 物品NBT, 可留空, 用于解析物品动作变量
  */
-function getSection_NI(Sections, string, random, player) {
+function getSection_NI(Sections, string, random, player, itemNBT) {
     let ArrayList = Packages.java.util.ArrayList
     let LinkedList = Packages.java.util.LinkedList
 
@@ -2222,7 +2228,11 @@ function getSection_NI(Sections, string, random, player) {
     // 针对目标文本
     for (let index = 1; index < listString.length; index+=2) {
         // 键值解析
-        listString[index] = parseSection_NI(Sections, listString[index], random, player)
+        if (itemNBT == undefined) {
+            listString[index] = parseSection_NI(Sections, listString[index], random, player)
+        } else {
+            listString[index] = parseActionPlaceholder_NI(listString[index], itemNBT)
+        }
     }
     return listString.join("")
 }
@@ -2367,6 +2377,54 @@ function parseSection_NI(Sections, string, random, player) {
                     }
                 }
             }
+            return "<" + string + ">"
+        }
+    }
+}
+
+/**
+ * 解析物品动作内变量
+ * @param string String 待解析文本
+ * @param itemNBT ItemTag 物品NBT
+ */
+function parseActionPlaceholder_NI(string, itemNBT) {
+    let name = string
+    let index = string.indexOf("::")
+    let args
+    if (index != -1) {
+        name = string.slice(0, index)
+        args = string.slice(index+2).split(".")
+    } else {
+        args = []
+    }
+    switch (name.toLowerCase()) {
+        case "nbt": {
+            let result = "<" + string + ">"
+            let data = itemNBT
+            let value
+            for (let index = 0; index < args.length; index++) {
+                const key = args[index]
+                value = data[key]
+                data = value
+            }
+            if (value != null) {
+                result = value.asString()
+            }
+            return result
+        } case "data": {
+            let result = "<" + string + ">"
+            let data = JSON.parse(itemNBT.NeigeItems.data.asString())
+            let value
+            for (let index = 0; index < args.length; index++) {
+                const key = args[index]
+                value = data[key]
+                data = value
+            }
+            if (value != null) {
+                result = value
+            }
+            return result
+        } default: {
             return "<" + string + ">"
         }
     }
