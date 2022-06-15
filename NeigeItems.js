@@ -1781,6 +1781,36 @@ function loadAction_NI() {
             }
             return true
         },
+        // 给予玩家经验
+        giveExp: function(player, string) {
+            player.giveExp(parseInt(PlaceholderAPI.setPlaceholders(player, string)))
+            return true
+        },
+        // 扣除玩家经验
+        takeExp: function(player, string) {
+            player.giveExp(parseInt(PlaceholderAPI.setPlaceholders(player, string))*-1)
+            return true
+        },
+        // 设置玩家经验
+        setExp: function(player, string) {
+            player.setExp(parseInt(PlaceholderAPI.setPlaceholders(player, string)))
+            return true
+        },
+        // 给予玩家经验等级
+        giveLevel: function(player, string) {
+            player.giveExpLevels(parseInt(PlaceholderAPI.setPlaceholders(player, string)))
+            return true
+        },
+        // 扣除玩家经验等级
+        takeLevel: function(player, string) {
+            player.giveExpLevels(parseInt(PlaceholderAPI.setPlaceholders(player, string))*-1)
+            return true
+        },
+        // 设置玩家经验等级
+        setLevel: function(player, string) {
+            player.setLevel(parseInt(PlaceholderAPI.setPlaceholders(player, string)))
+            return true
+        },
         // 延迟(单位是tick)
         delay: function(player, string) {
             Thread.sleep(parseInt(PlaceholderAPI.setPlaceholders(player, string))*50)
