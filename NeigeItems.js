@@ -1837,6 +1837,8 @@ function loadScripts_NI() {
     NeigeItems.scripts = {}
     for (let index = 0; index < files.length; index++) {
         const file = files[index]
+        print(file.getName())
+        print(file.getPath())
         NeigeItems.scripts[file.getName()] = loadWithNewGlobal(file)
         NeigeItems.scripts[file.getPath()] = loadWithNewGlobal(file)
     }
@@ -2373,12 +2375,16 @@ function parseSection_NI(Sections, string, random, player) {
                 }
 
                 var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
-                global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
-                global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
-                global.player = player
-                let result = getSection_NI(Sections, global[func].apply(this, scriptArgs), random, player)
-                return result
+                if (global != undefined) {
+                    global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
+                    global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                    global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
+                    global.player = player
+                    let result = getSection_NI(Sections, global[func].apply(this, scriptArgs), random, player)
+                    return result
+                }
+                print("§e[NI] §6不存在名为" + path + "的脚本文件")
+                return "<" + string + ">"
             } catch (error) {
                 error.printStackTrace()
                 return "js函数获取失败"
@@ -2650,6 +2656,8 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
             // 简单节点解析
             if (currentSection == null) {
                 let result = getSection_NI(Sections, Sections.get(section), random, player)
+                if (result.indexOf("false") != -1) {
+                }
                 return result
             }
             // 获取节点类型
@@ -2663,8 +2671,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                         let strings = currentSection.get("values")
                         result = getSection_NI(Sections, getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player), random, player)
                     } else {
-                        result = "字符串节点: " + section + " 缺少 values 配置项"
-                        print(result)
+                        print("字符串节点: " + section + " 缺少 values 配置项")
                     }
                     break
                 } case "number": {
@@ -2683,14 +2690,12 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             // 加载随机数
                             result = ((Math.random()*(max-min))+min).toFixed(fixed)
                         } catch (error) {
-                            result = "随机数节点: " + section + " 解析错误"
                             NeigeItems.sections[random][overrideSection || section] = 
-                            print(result)
+                            print("随机数节点: " + section + " 解析错误")
                             error.printStackTrace()
                         }
                     } else {
-                        result = "随机数节点: " + section + " 缺少 min 或 max 配置项"
-                        print(result)
+                        print("随机数节点: " + section + " 缺少 min 或 max 配置项")
                     }
                     break
                 } case "calculation": {
@@ -2716,13 +2721,11 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             // 加载公式结果
                             result = result.toFixed(fixed)
                         } catch (error) {
-                            result = "公式节点: " + section + " 解析错误"
-                            print(result)
+                            print("公式节点: " + section + " 解析错误")
                             error.printStackTrace()
                         }
                     } else {
-                        result = "公式节点: " + section + " 缺少 formula 配置项"
-                        print(result)
+                        print("公式节点: " + section + " 缺少 formula 配置项")
                     }
                     break
                 } case "weight": {
@@ -2740,13 +2743,11 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             })
                             result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
                         } catch (error) {
-                            result = "权重节点: " + section + " 解析错误"
-                            print(result)
+                            print("权重节点: " + section + " 解析错误")
                             error.printStackTrace()
                         }
                     } else {
-                        result = "权重节点: " + section + " 缺少 values 配置项"
-                        print(result)
+                        print("权重节点: " + section + " 缺少 values 配置项")
                     }
                     break
                 } case "js": {
@@ -2765,19 +2766,22 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             }
     
                             var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
-                            global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                            global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
-                            global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
-                            global.player = player
-                            result = getSection_NI(Sections, global[func].apply(this, args), random, player)
+                            if (global != undefined) {
+                                global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
+                                global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                                global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
+                                global.player = player
+                                result = getSection_NI(Sections, global[func].apply(this, args), random, player)
+                                break
+                            }
+                            print("§e[NI] §6不存在名为" + path + "的脚本文件")
+                            result  = "<" + string + ">"
                         } catch (error) {
-                            result = "Js节点: " + section + " 解析错误"
-                            print(result)
+                            print("Js节点: " + section + " 解析错误")
                             error.printStackTrace()
                         }
                     } else {
-                        result = "Js节点: " + section + " 缺少 path 配置项"
-                        print(result)
+                        print("Js节点: " + section + " 缺少 path 配置项")
                     }
                     break
                 } case "inherit": {
@@ -2785,8 +2789,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                         let template = getSection_NI(Sections, currentSection.getString("template"), random, player)
                         result = globalSectionParse_NI(Sections, template, random, player, false, section)
                     } else {
-                        result = "继承节点: " + section + " 缺少 template 配置项"
-                        print(result)
+                        print("继承节点: " + section + " 缺少 template 配置项")
                     }
                     break
                 } default:
