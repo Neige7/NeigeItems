@@ -1576,7 +1576,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set(itemID, itemKeySection)
     let itemHashCode = tempItemKeySection.saveToString().hashCode()
-    stringSection = loadSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
+    stringSection = getSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
     stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
     stringSection = setPapiWithNoColor_NI(player, stringSection)
     if (NeigeItems.config.Debug) print(stringSection)
@@ -2458,22 +2458,6 @@ function parseActionPlaceholder_NI(string, itemNBT) {
             return "<" + string + ">"
         }
     }
-}
-
-/**
- * 迭代解析所有节点
- * @param Sections ConfigurationSection 物品配置
- * @param string String 待解析文本
- * @param random number 随机数
- * @param player Player 待解析玩家
- */
-function loadSection_NI(Sections, string, random, player) {
-    let result, length
-    while (length != Object.keys(NeigeItems.sections[random]).length) {
-        length = Object.keys(NeigeItems.sections[random]).length
-        result = getSection_NI(Sections, string, random, player)
-    }
-    return result
 }
 
 /**
