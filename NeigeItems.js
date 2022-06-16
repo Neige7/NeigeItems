@@ -1594,15 +1594,17 @@ function getNiItem_NI(itemID, player, sender, data) {
         // 设置物品附魔
         if (itemKeySection.contains("enchantments")) {
             let enchantSection = itemKeySection.getConfigurationSection("enchantments")
-            enchantSection.getKeys(false).forEach(function(enchant) {
-                if (enchant != null) {
-                    let level = enchantSection.getInt(enchant)
-                    if (level > 0 
-                        && (enchant = Enchantment.getByName(enchant.toUpperCase()))) {
-                        itemStack.addUnsafeEnchantment(enchant, level)
+            if (enchantSection instanceof MemorySection) {
+                enchantSection.getKeys(false).forEach(function(enchant) {
+                    if (enchant != null) {
+                        let level = enchantSection.getInt(enchant)
+                        if (level > 0 
+                            && (enchant = Enchantment.getByName(enchant.toUpperCase()))) {
+                            itemStack.addUnsafeEnchantment(enchant, level)
+                        }
                     }
-                }
-            })
+                })
+            }
         }
         // 获取ItemMeta
         let itemMeta = itemStack.getItemMeta()
