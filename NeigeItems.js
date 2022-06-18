@@ -1837,8 +1837,6 @@ function loadScripts_NI() {
     NeigeItems.scripts = {}
     for (let index = 0; index < files.length; index++) {
         const file = files[index]
-        print(file.getName())
-        print(file.getPath())
         NeigeItems.scripts[file.getName()] = loadWithNewGlobal(file)
         NeigeItems.scripts[file.getPath()] = loadWithNewGlobal(file)
     }
