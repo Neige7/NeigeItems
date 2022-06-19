@@ -116,9 +116,11 @@ function onEnable_NI() {
     if (Tool.isPluginEnabled("MythicMobs")) {
         loadMMItem_NI()
     }
-    commandRegister_NI()
-    // commandRegister_NI()
+    // 加载物品变量监听器
     ItemLoreReplacer_NI()
+    // 注册指令
+    commandRegister_NI()
+    // 加载物品动作监听器
     Tool.removeListener("onPlayerInteract_NI")
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
         onPlayerInteract_NI(event)
@@ -128,15 +130,49 @@ function onEnable_NI() {
 // 发包替换
 function ItemLoreReplacer_NI() {
     NeigeItems.holderExpansion = {
-        neigeitems: function(itemTag, param) {
-            switch (param) {
-                case "charge":
-                    if (itemTag.NeigeItems.charge == null) return
+        neigeitems: function(itemStack, itemTag, param) {
+            param = param.split("_")
+            switch (param[0].toLowerCase()) {
+                case "charge": {
+                    if (!itemTag.containsKey("NeigeItems")
+                        || !itemTag.NeigeItems.containsKey("charge")) return
                     return itemTag.NeigeItems.charge.asInt().toFixed(0)
-                case "maxCharge":
-                    if (itemTag.NeigeItems.maxCharge == null) return
+                } case "maxcharge": {
+                    if (!itemTag.containsKey("NeigeItems")
+                        || !itemTag.NeigeItems.containsKey("maxCharge")) return
                     return itemTag.NeigeItems.maxCharge.asInt().toFixed(0)
-                default:
+                } case "nbt": {
+                    param.shift()
+                    param = param.join("_").split(".")
+                    let data = itemTag
+                    let value
+                    for (let index = 0; index < param.length; index++) {
+                        const key = param[index]
+                        value = data[key]
+                        if (value == undefined) {
+                            return
+                        }
+                        data = value
+                    }
+                    return value.asString()
+                } case "nbtnumber": {
+                    print(param)
+                    param.shift()
+                    let fixed = param[0]
+                    param.shift()
+                    param = param.join("_").split(".")
+                    let data = itemTag
+                    let value
+                    for (let index = 0; index < param.length; index++) {
+                        const key = param[index]
+                        value = data[key]
+                        if (value == undefined) {
+                            return
+                        }
+                        data = value
+                    }
+                    return value.asDouble().toFixed(fixed)
+                } default:
                     break
             }
         }
@@ -145,17 +181,17 @@ function ItemLoreReplacer_NI() {
         if (itemStack != null) {
             let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
             let itemTag = NMSKt.getItemTag(itemStack)
-            if (itemTag.NeigeItems == undefined) return
     
             let itemMeta = itemStack.getItemMeta()
+            if (itemMeta.hasDisplayName()) {
+                itemMeta.setDisplayName(setPapiWithNoColor_NI(itemStack, itemMeta.getDisplayName(), itemTag))
+            }
             if (itemMeta.hasLore()) {
                 let lore = itemMeta.getLore()
                 for (let index = 0; index < lore.length; index++) {
-                    lore[index] = setPapiWithNoColor_NI(itemTag, lore[index], true)
+                    lore[index] = setPapiWithNoColor_NI(itemStack, lore[index], itemTag)
                 }
                 itemMeta.setLore(lore)
-            } else if (itemMeta.hasDisplayName()) {
-                itemMeta.setDisplayName(setPapiWithNoColor_NI(itemTag, itemMeta.getDisplayName(), true))
             }
             itemStack.setItemMeta(itemMeta)
         }
@@ -274,29 +310,37 @@ function commandRegister_NI() {
                                     // 替换信息内变量
                                     let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
                                     listItemMessage = listItemMessage.replace(/{ID}/g, NeigeItems.itemIDList[index])
-                                    if (!(sender instanceof Player)) {
-                                        let itemKeySection = getItemKeySection_NI(NeigeItems.itemIDList[index])
-                                        let itemName = ""
-                                        if (itemKeySection.contains("name")) {
-                                            itemName = itemKeySection.getString("name")
-                                        } else {
-                                            itemName = getItemName_NI(new ItemStack(Material.matchMaterial(itemKeySection.getString("material").toUpperCase())))
-                                        }
-                                        listItemMessage = listItemMessage.replace(/{name}/g, ChatColor.translateAlternateColorCodes("&", itemName))
-                                        sender.sendMessage(listItemMessage)
-                                        continue
-                                    }
-                                    listItemMessage = listItemMessage.split("{name}")
                                     // 构建信息及物品
-                                    let listItemRaw = new TellrawJson()
-                                    let itemStack = getNiItem_NI(NeigeItems.itemIDList[index], sender, sender)
-                                    for (let i = 0; i < listItemMessage.length; i++) {
-                                        let tempRaw = new TellrawJson()
-                                        tempRaw.append(listItemMessage[i]).runCommand("/ni get " + NeigeItems.itemIDList[index]).hoverText(clickGiveMessage)
-                                        listItemRaw.append(tempRaw)
-                                        if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItems.itemIDList[index]))
+                                    if (sender instanceof Player) {
+                                        let itemStack = getNiItem_NI(NeigeItems.itemIDList[index], sender, sender)
+                                        listItemMessage = listItemMessage.split("{name}")
+                                        let listItemRaw = new TellrawJson()
+                                        for (let i = 0; i < listItemMessage.length; i++) {
+                                            let tempRaw = new TellrawJson()
+                                            tempRaw.append(listItemMessage[i]).runCommand("/ni get " + NeigeItems.itemIDList[index]).hoverText(clickGiveMessage)
+                                            listItemRaw.append(tempRaw)
+                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItems.itemIDList[index]))
+                                        }
+                                        TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listItemRaw.toRawMessage())
+                                    } else {
+                                        // 在不传入玩家变量的情况下尝试构建物品获取物品名
+                                        // 如果对于当前脚本而言, player是不可缺少的, 就直接获取配置里写的name
+                                        // 如果配置里没有编写自定义名称, 就获取当前material的本地化名称
+                                        try {
+                                            let itemStack = getNiItem_NI(NeigeItems.itemIDList[index], sender, sender)
+                                            sender.sendMessage(listItemMessage.replace(/{name}/g, getItemName_NI(itemStack)))
+                                        } catch (error) {
+                                            let itemKeySection = getItemKeySection_NI(NeigeItems.itemIDList[index])
+                                            let itemName = ""
+                                            if (itemKeySection.contains("name")) {
+                                                itemName = itemKeySection.getString("name")
+                                            } else {
+                                                itemName = getItemName_NI(new ItemStack(Material.matchMaterial(itemKeySection.getString("material").toUpperCase())))
+                                            }
+                                            listItemMessage = listItemMessage.replace(/{name}/g, ChatColor.translateAlternateColorCodes("&", itemName))
+                                            sender.sendMessage(listItemMessage)
+                                        }
                                     }
-                                    TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listItemRaw.toRawMessage())
                                 }
                                 let prevRaw = new TellrawJson()
                                 prevRaw.append(listPrev)
@@ -1464,6 +1508,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
     let Material = Packages.org.bukkit.Material
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
+    let Player = Packages.org.bukkit.entity.Player
     let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
     let BukkitServer = Bukkit.getServer()
 
@@ -1531,7 +1576,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     let tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.set(itemID, itemKeySection)
     let stringSection = tempItemKeySection.saveToString()
-    stringSection = setPapiWithNoColor_NI(player, stringSection)
+    if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
@@ -1578,7 +1623,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     let itemHashCode = tempItemKeySection.saveToString().hashCode()
     stringSection = getSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
     stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
-    stringSection = setPapiWithNoColor_NI(player, stringSection)
+    if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
     if (NeigeItems.config.Debug) print(stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
@@ -2279,6 +2324,7 @@ function getSection_NI(Sections, string, random, player, itemNBT) {
 function parseSection_NI(Sections, string, random, player) {
     let Color = Packages.java.awt.Color
     let ChatColor = Packages.net.md_5.bungee.api.ChatColor
+    let Player = Packages.org.bukkit.entity.Player
 
     let name = string
     let index = string.indexOf("::")
@@ -2355,15 +2401,19 @@ function parseSection_NI(Sections, string, random, player) {
             let result = getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player)
             return result
         } case "papi": {
-            let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
-            return PlaceholderAPI.setPlaceholders(player, "%"+args.join("_")+"%")
+            if (player instanceof Player) {
+                let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
+                return PlaceholderAPI.setPlaceholders(player, "%"+args.join("_")+"%")
+            } else {
+                return "<" + string + ">"
+            }
         } case "js": {
             try {
                 let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
-                let string = args.join("_")
-                let index = string.indexOf("::")
-                let path = string.slice(0, index)
-                let func = string.slice(index+2)
+                let param = args.join("_")
+                let index = param.indexOf("::")
+                let path = param.slice(0, index)
+                let func = param.slice(index+2)
                 let scriptArgs = []
 
                 index = func.indexOf("_")
@@ -2375,9 +2425,9 @@ function parseSection_NI(Sections, string, random, player) {
                 var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
                 if (global != undefined) {
                     global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                    global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                    if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                     global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
-                    global.player = player
+                    if (player instanceof Player) global.player = player
                     let result = getSection_NI(Sections, global[func].apply(this, scriptArgs), random, player)
                     return result
                 }
@@ -2435,31 +2485,29 @@ function parseActionPlaceholder_NI(string, itemNBT) {
     }
     switch (name.toLowerCase()) {
         case "nbt": {
-            let result = "<" + string + ">"
             let data = itemNBT
             let value
             for (let index = 0; index < args.length; index++) {
                 const key = args[index]
                 value = data[key]
+                if (value == undefined) {
+                    return "<" + string + ">"
+                }
                 data = value
             }
-            if (value != null) {
-                result = value.asString()
-            }
-            return result
+            return value.asString()
         } case "data": {
-            let result = "<" + string + ">"
             let data = JSON.parse(itemNBT.NeigeItems.data.asString())
             let value
             for (let index = 0; index < args.length; index++) {
                 const key = args[index]
                 value = data[key]
+                if (value == undefined) {
+                    return "<" + string + ">"
+                }
                 data = value
             }
-            if (value != null) {
-                result = value
-            }
-            return result
+            return value
         } default: {
             return "<" + string + ">"
         }
@@ -2645,6 +2693,8 @@ function dataParse_NI(string, random) {
  * @return String/Boolean 不包含相应节点则返回false，否则返回对应值
  */
 function globalSectionParse_NI(Sections, section, random, player, temp, overrideSection) {
+    let Player = Packages.org.bukkit.entity.Player
+    
     let parse = function(Sections, section, random, player, overrideSection) {
         if (Sections != null
             && Sections.contains(section)
@@ -2766,9 +2816,9 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
                             if (global != undefined) {
                                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
-                                global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
+                                if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
                                 global.getItem = function(itemID, player, data) {return getNiItem_NI(itemID, player, null, data)}
-                                global.player = player
+                                if (player instanceof Player) global.player = player
                                 result = getSection_NI(Sections, global[func].apply(this, args), random, player)
                                 break
                             }
@@ -2807,12 +2857,13 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
 /**
  * 解析PAPI变量, 但不解析颜色字符
  * @author clip
- * @param target OfflinePlayer/ItemTag
+ * @param target OfflinePlayer/ItemStack
  * @param text String 待解析文本
- * @param item Boolean 是否为物品占位符
+ * @param itemTag ItemTag 物品NBT
  * @return String 是否包含相应节点
  */
-function setPapiWithNoColor_NI(target, text, item) {
+function setPapiWithNoColor_NI(target, text, itemTag) {
+    let ItemStack = Packages.org.bukkit.inventory.ItemStack
     // 新建字符串
     let builder = ""
     // 新建命名空间字符串/参数字符串
@@ -2872,8 +2923,8 @@ function setPapiWithNoColor_NI(target, text, item) {
         }
         // 匹配到了就获取一下对应的附属
         let placeholder
-        if (item == true) {
-            placeholder = NeigeItems.holderExpansion[lowercaseIdentifierString]
+        if (target instanceof ItemStack) {
+            placeholder = NeigeItems.holderExpansion[lowercaseIdentifierString.replace(/§+[a-z0-9]/g, "")]
         } else {
             let placeholderAPI = Tool.getPlugin("PlaceholderAPI")
             if (placeholderAPI.getLocalExpansionManager != undefined) {
@@ -2892,8 +2943,8 @@ function setPapiWithNoColor_NI(target, text, item) {
         }
         // 获取一下结果
         let replacement
-        if (item == true) {
-            replacement = placeholder(target, parametersString)
+        if (target instanceof ItemStack) {
+            replacement = placeholder(target, itemTag, parametersString)
         } else {
             replacement = placeholder.onRequest(target, parametersString)
         }
