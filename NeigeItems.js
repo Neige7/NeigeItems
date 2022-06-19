@@ -1,100 +1,3 @@
-// 配置文件
-function loadConfig_NI() {
-    
-    NeigeItems = {}
-    NeigeItems.config = {}
-    // 配置文件名
-    NeigeItems.scriptName = "NeigeItems"
-    // 创建文件夹
-    getDir_NI(NeigeItems.scriptName + "/Items")
-    getDir_NI(NeigeItems.scriptName + "/Scripts")
-    getDir_NI(NeigeItems.scriptName + "/GlobalSections")
-    let file = getFile_NI(getDir_NI(NeigeItems.scriptName), "config.yml")
-    // 物品管理指令
-    NeigeItems.config.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
-    // MM物品默认保存路径
-    NeigeItems.config.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
-    NeigeItems.config.Debug = getConfigValue_NI(file, "Main.Debug", false)
-    // 不进行保存的NBT键
-    // NeigeItems.config.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
-    NeigeItems.config.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable", "CustomModelData"])
-
-    // 玩家不在线提示
-    NeigeItems.config.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
-    // 给予成功提示
-    NeigeItems.config.successInfo = getConfigValue_NI(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
-    // 被给予成功提示(设置为""则不进行提示)
-    NeigeItems.config.givenInfo = getConfigValue_NI(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
-    // 给予成功提示
-    NeigeItems.config.dropSuccessInfo = getConfigValue_NI(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
-    // 未知物品提示
-    NeigeItems.config.unknownItem = getConfigValue_NI(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
-    // 对应ID物品已存在提示
-    NeigeItems.config.existedKey = getConfigValue_NI(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
-    // 未知解析对象提示
-    NeigeItems.config.invalidParser = getConfigValue_NI(file, "Messages.invalidParser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
-    // 保存成功提示
-    NeigeItems.config.successSaveInfo = getConfigValue_NI(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
-    // MM物品转换完毕提示
-    NeigeItems.config.mMImportSuccessInfo = getConfigValue_NI(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
-    // 点击获取物品提示
-    NeigeItems.config.clickGiveMessage = getConfigValue_NI(file, "Messages.clickGiveMessage", "§e点击获取该物品")
-    // 不要保存空气提示
-    NeigeItems.config.airItem = getConfigValue_NI(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
-    // 输入无效数字提示
-    NeigeItems.config.invalidAmount = getConfigValue_NI(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
-    // 输入无效世界提示
-    NeigeItems.config.invalidWorld = getConfigValue_NI(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
-    // 输入无效坐标提示
-    NeigeItems.config.invalidLocation = getConfigValue_NI(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
-    // 权限不足提示
-    NeigeItems.config.insufficientPermissions = getConfigValue_NI(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
-    // 权限不足提示
-    NeigeItems.config.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
-    // 权限不足提示
-    NeigeItems.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
-    // 重载完毕提示
-    NeigeItems.config.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
-
-    // 无效NBT提示
-    NeigeItems.config.invalidNBT = getConfigValue_NI(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
-    // 错误物品提示
-    NeigeItems.config.invalidItem = getConfigValue_NI(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
-    // 给予失败提示
-    NeigeItems.config.failureInfo = getConfigValue_NI(file, "Messages.failureInfo", "§e[NI] §6物品给予失败, 可能原因: 物品未配置材质/玩家已下线")
-
-    // 帮助信息
-    NeigeItems.config.helpMessages = getConfigValue_NI(file, "Messages.helpMessages", Arrays.asList([
-        "§6====================§eNeigeItems§6====================",
-        "§6==================[]为必填, ()为选填==================",
-        "§e/ni §flist (页码) §7> 查看所有NI物品",
-        "§e/ni §fget [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID获取NI物品",
-        "§e/ni §fgive [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予NI物品",
-        "§e/ni §fgiveAll [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予所有人NI物品",
-        "§e/ni §fdrop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] [是否反复随机] [物品解析对象] (指向数据) §7> 于指定位置掉落NI物品",
-        "§e/ni §fsave [物品ID] (保存路径) §7> 将手中物品以对应ID保存至对应路径",
-        "§e/ni §fcover [物品ID] (保存路径) §7> 将手中物品以对应ID覆盖至对应路径",
-        "§e/ni §fmm load [物品ID] (保存路径) §7> 将对应ID的MM物品保存为NI物品",
-        "§e/ni §fmm cover [物品ID] (保存路径) §7> 将对应ID的MM物品覆盖为NI物品",
-        "§e/ni §fmm loadAll (保存路径) §7> 将全部MM物品转化为NI物品",
-        "§e/ni §fmm get [物品ID] (数量) §7> 根据ID获取MM物品",
-        "§e/ni §fmm give [玩家ID] [物品ID] (数量) §7> 根据ID给予MM物品",
-        "§e/ni §fmm giveAll [物品ID] (数量) §7> 根据ID给予所有人MM物品",
-        "§e/ni §freload §7> 重新加载NI物品",
-        "§e/ni §fhelp §7> 查看帮助信息",
-        "§6================================================="]))
-
-    // 物品列表格式
-    NeigeItems.config.listPrefix = getConfigValue_NI(file, "ItemList.Prefix", "§6===========§eNeigeItems§6===========")
-    NeigeItems.config.listSuffix = getConfigValue_NI(file, "ItemList.Suffix", "§6======<< §e{prev} §f{current}§e/§f{total} §e{next} §6>>======")
-    NeigeItems.config.listItemAmount = getConfigValue_NI(file, "ItemList.ItemAmount", 10)
-    NeigeItems.config.listItemFormat = getConfigValue_NI(file, "ItemList.ItemFormat", "§6{index}. §a{ID} §6- §f{name}")
-    NeigeItems.config.listPrev = getConfigValue_NI(file, "ItemList.Prev", "上一页")
-    NeigeItems.config.listNext = getConfigValue_NI(file, "ItemList.Next", "下一页")
-        
-}
-
-// 数据预载
 //@Awake(enable)
 //@Awake(reload)
 function onEnable_NI() {
@@ -125,6 +28,116 @@ function onEnable_NI() {
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
         onPlayerInteract_NI(event)
     })
+}
+
+/**
+ * 加载配置文件
+ * @data NeigeItems Object 所有缓存变量均存储于NeigeItems对象
+ * @data scriptName_NI String 插件名
+ * @data config_NI {key: value} 所有配置内容
+ * @data NeigeItems.sections {random: data} 所有节点缓存内容
+ * @data NeigeItems.itemIDList [] 所有物品ID
+ * @data NeigeItems.itemConfigs [] 所有物品配置
+ * @data NeigeItems.action {action: function} 所有物品动作函数
+ * @data NeigeItems.actions {id: {left: [], right: [], all: []}} 所有物品动作内容
+ * @data NeigeItems.scripts {path: scriptObject} 所有物品脚本
+ * @data NeigeItems.globalSectionIDList [] 所有全局节点ID
+ * @data NeigeItems.globalSectionFileNames [] 所有全局节点文件名
+ * @data NeigeItems.globalSections [[config, [id]]] 所有全局节点文件及对应ID
+ */
+function loadConfig_NI() {
+    
+    NeigeItems = {}
+    config_NI = {}
+    // 配置文件名
+    scriptName_NI = "NeigeItems"
+    // 创建文件夹
+    getDir_NI(scriptName_NI + java.io.File.separator + "Items")
+    getDir_NI(scriptName_NI + java.io.File.separator + "Scripts")
+    getDir_NI(scriptName_NI + java.io.File.separator + "GlobalSections")
+    let file = getFile_NI(getDir_NI(scriptName_NI), "config.yml")
+    // 物品管理指令
+    config_NI.NeigeItemManagerCommand = getConfigValue_NI(file, "Main.NeigeItemManagerCommand", "ni")
+    // MM物品默认保存路径
+    config_NI.MMItemsPath = getConfigValue_NI(file, "Main.MMItemsPath", "MMItems.yml")
+    config_NI.Debug = getConfigValue_NI(file, "Main.Debug", false)
+    // 不进行保存的NBT键
+    // config_NI.ignoreKeys = getConfigValue_NI(file, "Main.ignoreKeys", Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable"]))
+    config_NI.ignoreKeys = Arrays.asList(["Enchantments","VARIABLES_DATA","ench","Damage","HideFlags","Unbreakable", "CustomModelData"])
+
+    // 玩家不在线提示
+    config_NI.invalidPlayer = getConfigValue_NI(file, "Messages.invalidPlayer", "§e[NI] §6玩家不在线或不存在")
+    // 给予成功提示
+    config_NI.successInfo = getConfigValue_NI(file, "Messages.successInfo", "§e[NI] §6成功给予 §f{player} §a{amount} §6个 §f{name}")
+    // 被给予成功提示(设置为""则不进行提示)
+    config_NI.givenInfo = getConfigValue_NI(file, "Messages.givenInfo", "§e[NI] §6你得到了 §a{amount} §6个 §f{name}")
+    // 给予成功提示
+    config_NI.dropSuccessInfo = getConfigValue_NI(file, "Messages.dropSuccessInfo", "§e[NI] §6成功在 §a{world} §6的 §a{x},{y},{z} §6掉落了 §a{amount} §6个 §f{name}")
+    // 未知物品提示
+    config_NI.unknownItem = getConfigValue_NI(file, "Messages.unknownItem", "§e[NI] §6找不到ID为 §a{itemID} §6的物品")
+    // 对应ID物品已存在提示
+    config_NI.existedKey = getConfigValue_NI(file, "Messages.existedKey", "§e[NI] §6已存在ID为 §a{itemID} §6的物品")
+    // 未知解析对象提示
+    config_NI.invalidParser = getConfigValue_NI(file, "Messages.invalidParser", "§e[NI] §6不能针对后台解析物品, 请指定一个玩家")
+    // 保存成功提示
+    config_NI.successSaveInfo = getConfigValue_NI(file, "Messages.successSaveInfo", "§e[NI] §6成功将 §f{name} §6以ID §a{itemID} §6保存至 §a{path}")
+    // MM物品转换完毕提示
+    config_NI.mMImportSuccessInfo = getConfigValue_NI(file, "Messages.mMImportSuccessInfo", "§e[NI] §6成功将所有MM物品保存至 §a{path}")
+    // 点击获取物品提示
+    config_NI.clickGiveMessage = getConfigValue_NI(file, "Messages.clickGiveMessage", "§e点击获取该物品")
+    // 不要保存空气提示
+    config_NI.airItem = getConfigValue_NI(file, "Messages.airItem", "§e[NI] §6请不要试图保存空气, 谢谢合作")
+    // 输入无效数字提示
+    config_NI.invalidAmount = getConfigValue_NI(file, "Messages.invalidAmount", "§e[NI] §6无效数字")
+    // 输入无效世界提示
+    config_NI.invalidWorld = getConfigValue_NI(file, "Messages.invalidWorld", "§e[NI] §6无效世界")
+    // 输入无效坐标提示
+    config_NI.invalidLocation = getConfigValue_NI(file, "Messages.invalidLocation", "§e[NI] §6无效坐标")
+    // 权限不足提示
+    config_NI.insufficientPermissions = getConfigValue_NI(file, "Messages.insufficientPermissions", "§e[NI] §6权限不足")
+    // 权限不足提示
+    config_NI.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
+    // 权限不足提示
+    NeigeItems.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
+    // 重载完毕提示
+    config_NI.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
+
+    // 无效NBT提示
+    config_NI.invalidNBT = getConfigValue_NI(file, "Messages.invalidNBT", "§6[NI] §cNBT加载失败, 请勿在列表型NBT中混用键值对, 数字及字符串")
+    // 错误物品提示
+    config_NI.invalidItem = getConfigValue_NI(file, "Messages.invalidItem", "§6[NI] §c物品加载失败, 物品可能缺损数据, 物品ID: §6{itemID}")
+    // 给予失败提示
+    config_NI.failureInfo = getConfigValue_NI(file, "Messages.failureInfo", "§e[NI] §6物品给予失败, 可能原因: 物品未配置材质/玩家已下线")
+
+    // 帮助信息
+    config_NI.helpMessages = getConfigValue_NI(file, "Messages.helpMessages", Arrays.asList([
+        "§6====================§eNeigeItems§6====================",
+        "§6==================[]为必填, ()为选填==================",
+        "§e/ni §flist (页码) §7> 查看所有NI物品",
+        "§e/ni §fget [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID获取NI物品",
+        "§e/ni §fgive [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予NI物品",
+        "§e/ni §fgiveAll [物品ID] (数量) (是否反复随机) (指向数据) §7> 根据ID给予所有人NI物品",
+        "§e/ni §fdrop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] [是否反复随机] [物品解析对象] (指向数据) §7> 于指定位置掉落NI物品",
+        "§e/ni §fsave [物品ID] (保存路径) §7> 将手中物品以对应ID保存至对应路径",
+        "§e/ni §fcover [物品ID] (保存路径) §7> 将手中物品以对应ID覆盖至对应路径",
+        "§e/ni §fmm load [物品ID] (保存路径) §7> 将对应ID的MM物品保存为NI物品",
+        "§e/ni §fmm cover [物品ID] (保存路径) §7> 将对应ID的MM物品覆盖为NI物品",
+        "§e/ni §fmm loadAll (保存路径) §7> 将全部MM物品转化为NI物品",
+        "§e/ni §fmm get [物品ID] (数量) §7> 根据ID获取MM物品",
+        "§e/ni §fmm give [玩家ID] [物品ID] (数量) §7> 根据ID给予MM物品",
+        "§e/ni §fmm giveAll [物品ID] (数量) §7> 根据ID给予所有人MM物品",
+        "§e/ni §freload §7> 重新加载NI物品",
+        "§e/ni §fhelp §7> 查看帮助信息",
+        "§6================================================="]))
+
+    // 物品列表格式
+    config_NI.listPrefix = getConfigValue_NI(file, "ItemList.Prefix", "§6===========§eNeigeItems§6===========")
+    config_NI.listSuffix = getConfigValue_NI(file, "ItemList.Suffix", "§6======<< §e{prev} §f{current}§e/§f{total} §e{next} §6>>======")
+    config_NI.listItemAmount = getConfigValue_NI(file, "ItemList.ItemAmount", 10)
+    config_NI.listItemFormat = getConfigValue_NI(file, "ItemList.ItemFormat", "§6{index}. §a{ID} §6- §f{name}")
+    config_NI.listPrev = getConfigValue_NI(file, "ItemList.Prev", "上一页")
+    config_NI.listNext = getConfigValue_NI(file, "ItemList.Next", "下一页")
+        
 }
 
 // 发包替换
@@ -234,38 +247,38 @@ function commandRegister_NI() {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
     let Material = Packages.org.bukkit.Material
     let Player = Packages.org.bukkit.entity.Player
-    let BukkitAdapter = Packages.io.lumine.xikage.mythicmobs.adapters.bukkit.BukkitAdapter
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
     let TLibBukkitAdapter = new BukkitAdapterClass()
 
-    let NeigeItemManagerCommand = NeigeItems.config.NeigeItemManagerCommand
-    let MMItemsPath = NeigeItems.config.MMItemsPath
-    let invalidPlayer = NeigeItems.config.invalidPlayer
-    let successInfo = NeigeItems.config.successInfo
-    let givenInfo = NeigeItems.config.givenInfo
-    let dropSuccessInfo = NeigeItems.config.dropSuccessInfo
-    let unknownItem = NeigeItems.config.unknownItem
-    let existedKey = NeigeItems.config.existedKey
-    let invalidPaser = NeigeItems.config.invalidParser
-    let successSaveInfo = NeigeItems.config.successSaveInfo
-    let mMImportSuccessInfo = NeigeItems.config.mMImportSuccessInfo
-    let clickGiveMessage = NeigeItems.config.clickGiveMessage
-    let airItem = NeigeItems.config.airItem
-    let invalidAmount = NeigeItems.config.invalidAmount
-    let invalidWorld = NeigeItems.config.invalidWorld
-    let invalidLocation = NeigeItems.config.invalidLocation
-    let insufficientPermissions = NeigeItems.config.insufficientPermissions
-    let invalidPlugin = NeigeItems.config.invalidPlugin
-    let reloadedMessage = NeigeItems.config.reloadedMessage
-    let failureInfo = NeigeItems.config.failureInfo
-    let helpMessages = NeigeItems.config.helpMessages
-    let listPrefix = NeigeItems.config.listPrefix
-    let listSuffix = NeigeItems.config.listSuffix
-    let listItemAmount = NeigeItems.config.listItemAmount
-    let listItemFormat = NeigeItems.config.listItemFormat
-    let listPrev = NeigeItems.config.listPrev
-    let listNext = NeigeItems.config.listNext
+    let NeigeItemManagerCommand = config_NI.NeigeItemManagerCommand
+    let MMItemsPath = config_NI.MMItemsPath
+    let invalidPlayer = config_NI.invalidPlayer
+    let successInfo = config_NI.successInfo
+    let givenInfo = config_NI.givenInfo
+    let dropSuccessInfo = config_NI.dropSuccessInfo
+    let unknownItem = config_NI.unknownItem
+    let existedKey = config_NI.existedKey
+    let invalidPaser = config_NI.invalidParser
+    let successSaveInfo = config_NI.successSaveInfo
+    let mMImportSuccessInfo = config_NI.mMImportSuccessInfo
+    let clickGiveMessage = config_NI.clickGiveMessage
+    let airItem = config_NI.airItem
+    let invalidAmount = config_NI.invalidAmount
+    let invalidWorld = config_NI.invalidWorld
+    let invalidLocation = config_NI.invalidLocation
+    let insufficientPermissions = config_NI.insufficientPermissions
+    let invalidPlugin = config_NI.invalidPlugin
+    let reloadedMessage = config_NI.reloadedMessage
+    let failureInfo = config_NI.failureInfo
+    let helpMessages = config_NI.helpMessages
+    let listPrefix = config_NI.listPrefix
+    let listSuffix = config_NI.listSuffix
+    let listItemAmount = config_NI.listItemAmount
+    let listItemFormat = config_NI.listItemFormat
+    let listPrev = config_NI.listPrev
+    let listNext = config_NI.listNext
+    let mmIds = NeigeItems.mmIds
 
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
@@ -858,9 +871,8 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let mmItem = itemManager.getItem(args[2])
-                                            if (mmItem.isPresent()){
-                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                            let itemStack = itemManager.getItemStack(args[2])
+                                            if (itemStack != null){
                                                 // 获取保存路径
                                                 let path
                                                 args.length > 3 ? path = args[3] : path = MMItemsPath
@@ -898,19 +910,21 @@ function commandRegister_NI() {
                                         let path
                                         args.length > 2 ? path = args[2] : path = MMItemsPath
                                         // 获取全部MM物品并操作
-                                        itemManager.getItems().stream().forEach(function(item) {
-                                            let saveResult
+                                        for (let index = 0; index < mmIds.length; index++) {
+                                            let mmId = mmIds[index]
+                                            let itemStack = itemManager.getItemStack(mmId)
+                                            let saveResult = saveNiItem_NI(itemStack, mmId, path, false)
                                             // 保存物品
-                                            if (!(saveResult = saveNiItem_NI(BukkitAdapter.adapt(item.generateItemStack(1)), item.getInternalName(), path, false))) {
+                                            if (saveResult == 0) {
                                                 // 替换提示信息中的占位符
-                                                let existedKeyMessage = existedKey.replace(/{itemID}/g, item.getInternalName())
+                                                let existedKeyMessage = existedKey.replace(/{itemID}/g, mmId)
                                                 // 物品ID已存在提示
                                                 sender.sendMessage(existedKeyMessage)
                                             } else if (saveResult == 2) {
                                                 // 空气提示
                                                 sender.sendMessage(airItem)
                                             }
-                                        })
+                                        }
                                         // 重载物品列表
                                         getNiItems_NI()
                                         // 替换提示信息中的占位符
@@ -927,9 +941,8 @@ function commandRegister_NI() {
                                             // 检测指令长度
                                             if (args.length > 2) {
                                                 // 获取MM物品
-                                                let mmItem = itemManager.getItem(args[2])
-                                                if (mmItem.isPresent()) {
-                                                    let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                let itemStack = itemManager.getItemStack(args[2])
+                                                if (itemStack != null){
                                                     let itemAmt
                                                     // 获取数量
                                                     if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
@@ -970,9 +983,8 @@ function commandRegister_NI() {
                                             // 获取对应在线玩家
                                             if (player = Bukkit.getPlayer(args[2])) {
                                                 // 获取MM物品
-                                                let mmItem = itemManager.getItem(args[3])
-                                                if (mmItem.isPresent()) {
-                                                    let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                                let itemStack = itemManager.getItemStack(args[3])
+                                                if (itemStack != null){
                                                     let itemAmt
                                                     // 获取数量
                                                     if (args.length == 4 || ((itemAmt = parseInt(args[4])) && itemAmt > 0)) {
@@ -1017,9 +1029,8 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let mmItem = itemManager.getItem(args[2])
-                                            if (mmItem.isPresent()) {
-                                                let itemStack = BukkitAdapter.adapt(mmItem.get().generateItemStack(1))
+                                            let itemStack = itemManager.getItemStack(args[2])
+                                            if (itemStack != null){
                                                 let itemAmt
                                                 // 获取数量
                                                 if (args.length == 3 || ((itemAmt = parseInt(args[3])) && itemAmt > 0)) {
@@ -1136,15 +1147,15 @@ function commandRegister_NI() {
                         case "mm":
                             switch(args[1].toLowerCase()) {
                                 case "load":
-                                    return MMIDs
+                                    return NeigeItems.mmIds
                                 case "cover":
-                                    return MMIDs
+                                    return NeigeItems.mmIds
                                 case "get":
-                                    return MMIDs
+                                    return NeigeItems.mmIds
                                 case "give":
                                     return onlinePlayerNames_NI()
                                 case "giveall":
-                                    return MMIDs
+                                    return NeigeItems.mmIds
                                 default:
                                     return emptyList
                             }
@@ -1160,7 +1171,7 @@ function commandRegister_NI() {
                         case "mm":
                             switch(args[1].toLowerCase()) {
                                 case "give":
-                                    return MMIDs
+                                    return NeigeItems.mmIds
                                 default:
                                     return emptyList
                             }
@@ -1381,7 +1392,7 @@ function runAction_NI(player, action, itemNBT) {
  * @param itemKey String 物品ID
  * @param path String 保存路径
  * @param cover Boolean 是否覆盖
- * @return Boolean 是否保存成功
+ * @return 0: 已存在对应ID物品, 1: 成功保存, 2: 物品为空
  */
 function saveNiItem_NI(itemStack, itemKey, path, cover) {
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
@@ -1393,7 +1404,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
     // 检测是否为空气
     if (itemStack != null && itemStack.getType() != Material.AIR) {
         // 获取路径文件
-        let dir = getDir_NI(NeigeItems.scriptName + "/Items")
+        let dir = getDir_NI(scriptName_NI + java.io.File.separator + "Items")
         file = getFile_NI(dir, path)
         let config = YamlConfiguration.loadConfiguration(file)
         // 检测节点是否存在
@@ -1477,8 +1488,8 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
  * @return MemorySection
  */
 function getItemKeySection_NI(itemID) {
-    for (let index = 0; index < NeigeItems.items.length; index++) {
-        const config = NeigeItems.items[index]
+    for (let index = 0; index < NeigeItems.itemConfigs.length; index++) {
+        const config = NeigeItems.itemConfigs[index]
         if (config.contains(itemID)) {
             return config.getConfigurationSection(itemID)
         }
@@ -1512,8 +1523,8 @@ function getNiItem_NI(itemID, player, sender, data) {
     let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
     let BukkitServer = Bukkit.getServer()
 
-    let invalidNBT = NeigeItems.config.invalidNBT
-    let invalidItem = NeigeItems.config.invalidItem
+    let invalidNBT = config_NI.invalidNBT
+    let invalidItem = config_NI.invalidItem
 
     // 获取对应物品配置
     let itemKeySection = getItemKeySection_NI(itemID)
@@ -1624,7 +1635,7 @@ function getNiItem_NI(itemID, player, sender, data) {
     stringSection = getSection_NI(Sections, tempItemKeySection.saveToString(), random, player)
     stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
     if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
-    if (NeigeItems.config.Debug) print(stringSection)
+    if (config_NI.Debug) print(stringSection)
     tempItemKeySection = new YamlConfiguration()
     tempItemKeySection.loadFromString(stringSection)
     itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
@@ -1737,18 +1748,18 @@ function getNiItem_NI(itemID, player, sender, data) {
 function getNiItems_NI() {
     let ArrayList = Packages.java.util.ArrayList
     
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItems.scriptName + "/Items")))
-    // [itemConfig]
-    NeigeItems.items = new ArrayList()
+    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Items")))
     // [itemID]
     NeigeItems.itemIDList = new ArrayList()
+    // [itemConfig]
+    NeigeItems.itemConfigs = new ArrayList()
     configs.forEach(function(config) {
         config.getKeys(false).forEach(function(itemID) {
             NeigeItems.itemIDList.add(itemID)
         })
-        NeigeItems.items.add(config)
+        NeigeItems.itemConfigs.add(config)
     })
-    pageAmount = Math.ceil(NeigeItems.itemIDList.length/NeigeItems.config.listItemAmount)
+    pageAmount = Math.ceil(NeigeItems.itemIDList.length/config_NI.listItemAmount)
 }
 
 /**
@@ -1876,7 +1887,7 @@ function loadAction_NI() {
  * 加载NI脚本
  */
 function loadScripts_NI() {
-    let files = getAllFile_NI(getDir_NI(NeigeItems.scriptName + "/Scripts"))
+    let files = getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Scripts"))
     NeigeItems.scripts = {}
     for (let index = 0; index < files.length; index++) {
         const file = files[index]
@@ -1891,7 +1902,7 @@ function loadScripts_NI() {
 function getActions_NI() {
     let HashMap = Packages.java.util.HashMap
     
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(NeigeItems.scriptName + "/ItemActions")))
+    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "ItemActions")))
     // {id: {left: [], right: [], all: []}}
     NeigeItems.actions = new HashMap()
     configs.forEach(function(config) {
@@ -1908,7 +1919,7 @@ function getActions_NI() {
 function getGlobalSections_NI() {
     let ArrayList = Packages.java.util.ArrayList
 
-    let files = getAllFile_NI(getDir_NI(NeigeItems.scriptName + "/GlobalSections"))
+    let files = getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "GlobalSections"))
     // 获取所有全局节点配置文件
     let configs = getAllConfig_NI(files)
     // [[config, [id]]]
@@ -1942,9 +1953,9 @@ function loadMMItem_NI(){
     let ArrayList = Packages.java.util.ArrayList
     let itemManager = Tool.getPlugin("MythicMobs").getItemManager()
 
-    MMIDs = new ArrayList()
-    itemManager.getItems().stream().forEach(function(item) {
-        MMIDs.add(item.getInternalName())
+    NeigeItems.mmIds = new ArrayList()
+    itemManager.getItemNames().stream().forEach(function(itemName) {
+        NeigeItems.mmIds.add(itemName)
     })
 }
 
@@ -1956,7 +1967,7 @@ function loadMMItem_NI(){
 function getDir_NI(scriptName){
     let File = Packages.java.io.File
 
-    let dir = new File(Tool.getPlugin("Pouvoir").getDataFolder().getParent(),"/" + scriptName)
+    let dir = new File(Tool.getPlugin("Pouvoir").getDataFolder().getParent(),java.io.File.separator + scriptName)
     if (!dir.exists()) dir.mkdirs()
     return dir
 }
@@ -1970,7 +1981,7 @@ function getDir_NI(scriptName){
 function getFile_NI(dir, fileName){
     let File = Packages.java.io.File
 
-    let file = new File(dir, "/" + fileName)
+    let file = new File(dir, java.io.File.separator + fileName)
     if(!file.exists()) {
         try {
             file.createNewFile()
@@ -2025,7 +2036,7 @@ function toHashMapNBT_NI(itemTag) {
     let ItemTagList = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagList
     let ArrayList = Packages.java.util.ArrayList
     let HashMap = Packages.java.util.HashMap
-    let ignoreKeys = NeigeItems.config.ignoreKeys
+    let ignoreKeys = config_NI.ignoreKeys
 
     /**
      * 获取HashMap形式物品NBT
@@ -2451,7 +2462,7 @@ function parseSection_NI(Sections, string, random, player) {
                     func = func.slice(0, index)
                 }
 
-                var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
+                var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
                 if (global != undefined) {
                     global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                     if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
@@ -2842,7 +2853,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                                 args = Java.from(args)
                             }
     
-                            var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins\\" + NeigeItems.scriptName + "\\Scripts\\" + path]
+                            var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
                             if (global != undefined) {
                                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                                 if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
