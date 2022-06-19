@@ -8,7 +8,7 @@ function onEnable_NI() {
     // 加载NI脚本文件
     loadScripts_NI()
     // 创建节点缓存对象
-    NeigeItems.sections = {}
+    NeigeItemsData.sections = {}
     // 加载全局节点列表
     getGlobalSections_NI()
     // 加载NI物品列表
@@ -35,19 +35,21 @@ function onEnable_NI() {
  * @data NeigeItems Object 所有缓存变量均存储于NeigeItems对象
  * @data scriptName_NI String 插件名
  * @data config_NI {key: value} 所有配置内容
- * @data NeigeItems.sections {random: data} 所有节点缓存内容
- * @data NeigeItems.itemIDList [] 所有物品ID
- * @data NeigeItems.itemConfigs [] 所有物品配置
- * @data NeigeItems.action {action: function} 所有物品动作函数
- * @data NeigeItems.actions {id: {left: [], right: [], all: []}} 所有物品动作内容
- * @data NeigeItems.scripts {path: scriptObject} 所有物品脚本
- * @data NeigeItems.globalSectionIDList [] 所有全局节点ID
- * @data NeigeItems.globalSectionFileNames [] 所有全局节点文件名
- * @data NeigeItems.globalSections [[config, [id]]] 所有全局节点文件及对应ID
+ * @data NeigeItemsData.sections {random: data} 所有节点缓存内容
+ * @data NeigeItemsData.itemIDList [] 所有物品ID
+ * @data NeigeItemsData.itemConfigs [] 所有物品配置
+ * @data NeigeItemsData.mmIds ArrayList 所有MM物品ID
+ * @data NeigeItemsData.action {action: function} 所有物品动作函数
+ * @data NeigeItemsData.actions {id: {left: [], right: [], all: []}} 所有物品动作内容
+ * @data NeigeItemsData.holderExpansion {key: function} 所有物品变量解析式
+ * @data NeigeItemsData.scripts {path: scriptObject} 所有物品脚本
+ * @data NeigeItemsData.globalSectionIDList [] 所有全局节点ID
+ * @data NeigeItemsData.globalSectionFileNames [] 所有全局节点文件名
+ * @data NeigeItemsData.globalSections [[config, [id]]] 所有全局节点文件及对应ID
  */
 function loadConfig_NI() {
     
-    NeigeItems = {}
+    NeigeItemsData = {}
     config_NI = {}
     // 配置文件名
     scriptName_NI = "NeigeItems"
@@ -98,7 +100,7 @@ function loadConfig_NI() {
     // 权限不足提示
     config_NI.invalidPlugin = getConfigValue_NI(file, "Messages.invalidPlugin", "§e[NI] §6未发现前置插件: {plugin}")
     // 权限不足提示
-    NeigeItems.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
+    config_NI.itemCooldown = getConfigValue_NI(file, "Messages.itemCooldown", "§e物品冷却中! 请等待{time}秒")
     // 重载完毕提示
     config_NI.reloadedMessage = getConfigValue_NI(file, "Messages.reloadedMessage", "§e[NI] §6重载完毕")
 
@@ -142,7 +144,7 @@ function loadConfig_NI() {
 
 // 发包替换
 function ItemLoreReplacer_NI() {
-    NeigeItems.holderExpansion = {
+    NeigeItemsData.holderExpansion = {
         neigeitems: function(itemStack, itemTag, param) {
             param = param.split("_")
             switch (param[0].toLowerCase()) {
@@ -278,7 +280,7 @@ function commandRegister_NI() {
     let listItemFormat = config_NI.listItemFormat
     let listPrev = config_NI.listPrev
     let listNext = config_NI.listNext
-    let mmIds = NeigeItems.mmIds
+    let mmIds = NeigeItemsData.mmIds
 
     // 卸载指令
     Tool.unRegCommand(NeigeItemManagerCommand)
@@ -319,20 +321,20 @@ function commandRegister_NI() {
                                 let prevItemAmount = page*listItemAmount
                                 // 逐个获取物品
                                 for (let index = prevItemAmount; index < prevItemAmount + listItemAmount; index++) {
-                                    if (index == NeigeItems.itemIDList.length) break
+                                    if (index == NeigeItemsData.itemIDList.length) break
                                     // 替换信息内变量
                                     let listItemMessage = listItemFormat.replace(/{index}/g, index+1)
-                                    listItemMessage = listItemMessage.replace(/{ID}/g, NeigeItems.itemIDList[index])
+                                    listItemMessage = listItemMessage.replace(/{ID}/g, NeigeItemsData.itemIDList[index])
                                     // 构建信息及物品
                                     if (sender instanceof Player) {
-                                        let itemStack = getNiItem_NI(NeigeItems.itemIDList[index], sender, sender)
+                                        let itemStack = getNiItem_NI(NeigeItemsData.itemIDList[index], sender, sender)
                                         listItemMessage = listItemMessage.split("{name}")
                                         let listItemRaw = new TellrawJson()
                                         for (let i = 0; i < listItemMessage.length; i++) {
                                             let tempRaw = new TellrawJson()
-                                            tempRaw.append(listItemMessage[i]).runCommand("/ni get " + NeigeItems.itemIDList[index]).hoverText(clickGiveMessage)
+                                            tempRaw.append(listItemMessage[i]).runCommand("/ni get " + NeigeItemsData.itemIDList[index]).hoverText(clickGiveMessage)
                                             listItemRaw.append(tempRaw)
-                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItems.itemIDList[index]))
+                                            if (i+1 != listItemMessage.length) listItemRaw.append(itemToTellrawJson_NI(itemStack).runCommand("/ni get " + NeigeItemsData.itemIDList[index]))
                                         }
                                         TLibBukkitAdapter.adaptCommandSender(sender).sendRawMessage(listItemRaw.toRawMessage())
                                     } else {
@@ -340,10 +342,10 @@ function commandRegister_NI() {
                                         // 如果对于当前脚本而言, player是不可缺少的, 就直接获取配置里写的name
                                         // 如果配置里没有编写自定义名称, 就获取当前material的本地化名称
                                         try {
-                                            let itemStack = getNiItem_NI(NeigeItems.itemIDList[index], sender, sender)
+                                            let itemStack = getNiItem_NI(NeigeItemsData.itemIDList[index], sender, sender)
                                             sender.sendMessage(listItemMessage.replace(/{name}/g, getItemName_NI(itemStack)))
                                         } catch (error) {
-                                            let itemKeySection = getItemKeySection_NI(NeigeItems.itemIDList[index])
+                                            let itemKeySection = getItemKeySection_NI(NeigeItemsData.itemIDList[index])
                                             let itemName = ""
                                             if (itemKeySection.contains("name")) {
                                                 itemName = itemKeySection.getString("name")
@@ -400,7 +402,7 @@ function commandRegister_NI() {
                                 // 检测指令长度
                                 if (args.length > 1) {
                                     // 检测是否存在对应ID的NI物品
-                                    if (NeigeItems.itemIDList.indexOf(args[1]) != -1) {
+                                    if (NeigeItemsData.itemIDList.indexOf(args[1]) != -1) {
                                         let data = null
                                         if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                         let itemAmt
@@ -477,7 +479,7 @@ function commandRegister_NI() {
                                 // 获取对应在线玩家
                                 if (player = Bukkit.getPlayer(args[1])) {
                                     // 检测是否存在对应ID的NI物品
-                                    if (NeigeItems.itemIDList.indexOf(args[2]) != -1) {
+                                    if (NeigeItemsData.itemIDList.indexOf(args[2]) != -1) {
                                         let data = null
                                         if (args.length > 5) data = Java.from(args).slice(5).join(" ")
                                         let itemAmt
@@ -562,7 +564,7 @@ function commandRegister_NI() {
                             // 检测指令长度
                             if (args.length > 1) {
                                 // 检测是否存在对应ID的NI物品
-                                if (NeigeItems.itemIDList.indexOf(args[1]) != -1) {
+                                if (NeigeItemsData.itemIDList.indexOf(args[1]) != -1) {
                                     let data = null
                                     if (args.length > 4) data = Java.from(args).slice(4).join(" ")
                                     let itemAmt
@@ -658,7 +660,7 @@ function commandRegister_NI() {
                                         player = sender
                                     }
                                     // 检测是否存在对应ID的NI物品
-                                    if (NeigeItems.itemIDList.indexOf(args[1]) != -1) {
+                                    if (NeigeItemsData.itemIDList.indexOf(args[1]) != -1) {
                                         let data = null
                                         if (args.length > 9) data = Java.from(args).slice(9).join(" ")
                                         let itemAmt
@@ -1087,7 +1089,7 @@ function commandRegister_NI() {
                             // 重载NI脚本文件
                             loadScripts_NI()
                             // 创建节点缓存对象
-                            NeigeItems.sections = {}
+                            NeigeItemsData.sections = {}
                             // 重载全局节点列表
                             getGlobalSections_NI()
                             // 重载NI物品列表
@@ -1128,13 +1130,13 @@ function commandRegister_NI() {
                         case "list":
                             return incrementingArray_NI(pageAmount)
                         case "get":
-                            return NeigeItems.itemIDList
+                            return NeigeItemsData.itemIDList
                         case "give":
                             return onlinePlayerNames_NI()
                         case "giveall":
-                            return NeigeItems.itemIDList
+                            return NeigeItemsData.itemIDList
                         case "drop":
-                            return NeigeItems.itemIDList
+                            return NeigeItemsData.itemIDList
                         case "mm":
                             return Arrays.asList(["load", "cover", "loadAll", "get", "give"])
                         default:
@@ -1143,19 +1145,19 @@ function commandRegister_NI() {
                 case 3:
                     switch(args[0].toLowerCase()) {
                         case "give":
-                            return NeigeItems.itemIDList
+                            return NeigeItemsData.itemIDList
                         case "mm":
                             switch(args[1].toLowerCase()) {
                                 case "load":
-                                    return NeigeItems.mmIds
+                                    return NeigeItemsData.mmIds
                                 case "cover":
-                                    return NeigeItems.mmIds
+                                    return NeigeItemsData.mmIds
                                 case "get":
-                                    return NeigeItems.mmIds
+                                    return NeigeItemsData.mmIds
                                 case "give":
                                     return onlinePlayerNames_NI()
                                 case "giveall":
-                                    return NeigeItems.mmIds
+                                    return NeigeItemsData.mmIds
                                 default:
                                     return emptyList
                             }
@@ -1171,7 +1173,7 @@ function commandRegister_NI() {
                         case "mm":
                             switch(args[1].toLowerCase()) {
                                 case "give":
-                                    return NeigeItems.mmIds
+                                    return NeigeItemsData.mmIds
                                 default:
                                     return emptyList
                             }
@@ -1236,7 +1238,7 @@ function onPlayerInteract_NI(event) {
     // 如果为非NI物品则终止操作
     if (!itemTag.containsKey("NeigeItems")) return
     // 获取物品消耗信息
-    let itemAction = NeigeItems.actions[itemTag.NeigeItems.id.asString()]
+    let itemAction = NeigeItemsData.actions[itemTag.NeigeItems.id.asString()]
     if (itemAction == undefined) return
     let consume =  itemAction.consume
     // 如果物品配置了消耗事件
@@ -1265,7 +1267,7 @@ function onPlayerInteract_NI(event) {
                     let lastTime = getMetadata_NI(player, "NeigeItems-Consume-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                     // 如果仍处于冷却时间
                     if ((lastTime + cooldown) > time) {
-                        PlayerUtils.sendActionBar(player, NeigeItems.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
+                        PlayerUtils.sendActionBar(player, config_NI.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                         // 终止操作
                         return
                     }
@@ -1299,12 +1301,12 @@ function onPlayerInteract_NI(event) {
                 })
             }
         }
-    } else if (NeigeItems.actions[itemTag.NeigeItems.id.asString()]) {
+    } else if (NeigeItemsData.actions[itemTag.NeigeItems.id.asString()]) {
         // 取消交互事件
         event.setCancelled(true)
         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
             // 获取冷却
-            let cooldown = parseInt(NeigeItems.actions[itemTag.NeigeItems.id.asString()].cooldown)
+            let cooldown = parseInt(NeigeItemsData.actions[itemTag.NeigeItems.id.asString()].cooldown)
             // 如果冷却存在且大于0
             if (cooldown != undefined && cooldown > 0) {
                 // 获取当前时间
@@ -1313,7 +1315,7 @@ function onPlayerInteract_NI(event) {
                 let lastTime = getMetadata_NI(player, "NeigeItems-Cooldown-" + itemTag.NeigeItems.id, "Double", 0)
                 // 如果仍处于冷却时间
                 if ((lastTime + cooldown) > time) {
-                    PlayerUtils.sendActionBar(player, NeigeItems.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
+                    PlayerUtils.sendActionBar(player, config_NI.itemCooldown.replace(/{time}/g, ((lastTime + cooldown - time)/1000).toFixed(1)))
                     // 终止操作
                     return
                 }
@@ -1334,7 +1336,7 @@ function onPlayerInteract_NI(event) {
  */
 function executeNiAction_NI(player, itemNBT, left, right) {
     let actions
-    if (actions = NeigeItems.actions[itemNBT.NeigeItems.id.asString()]) {
+    if (actions = NeigeItemsData.actions[itemNBT.NeigeItems.id.asString()]) {
         if (left && actions.left) {
             runAction_NI(player, actions.left, itemNBT)
         }
@@ -1369,7 +1371,7 @@ function runAction_NI(player, action, itemNBT) {
             actionType = action.slice(0, index).toLowerCase()
             actionContent = action.slice(index+2)
         }
-        let actionFunction = NeigeItems.action[actionType]
+        let actionFunction = NeigeItemsData.action[actionType]
         if (actionFunction != undefined) {
             return actionFunction(player, actionContent)
         } else {
@@ -1408,7 +1410,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
         file = getFile_NI(dir, path)
         let config = YamlConfiguration.loadConfiguration(file)
         // 检测节点是否存在
-        if ((NeigeItems.itemIDList.indexOf(itemKey) == -1) || cover) {
+        if ((NeigeItemsData.itemIDList.indexOf(itemKey) == -1) || cover) {
             // 创建物品节点
             config.createSection(itemKey)
             let itemKeySection = config.getConfigurationSection(itemKey)
@@ -1472,7 +1474,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
                 }
             }
             config.save(file)
-            if (NeigeItems.itemIDList.indexOf(itemKey) == -1) return 1
+            if (NeigeItemsData.itemIDList.indexOf(itemKey) == -1) return 1
             return 0
         } else {
             return 0
@@ -1488,8 +1490,8 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
  * @return MemorySection
  */
 function getItemKeySection_NI(itemID) {
-    for (let index = 0; index < NeigeItems.itemConfigs.length; index++) {
-        const config = NeigeItems.itemConfigs[index]
+    for (let index = 0; index < NeigeItemsData.itemConfigs.length; index++) {
+        const config = NeigeItemsData.itemConfigs[index]
         if (config.contains(itemID)) {
             return config.getConfigurationSection(itemID)
         }
@@ -1508,6 +1510,7 @@ function getItemKeySection_NI(itemID) {
 function getNiItem_NI(itemID, player, sender, data) {
     let ArrayList = Packages.java.util.ArrayList
     let String = Packages.java.lang.String
+    let ThreadLocalRandom = java.util.concurrent.ThreadLocalRandom
     let ItemTag = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTag
     let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
@@ -1579,8 +1582,8 @@ function getNiItem_NI(itemID, player, sender, data) {
     }
 
     // 获取随机数, 用于代表当前物品
-    let random = Math.random()
-    NeigeItems.sections[random] = {}
+    let random = ThreadLocalRandom.current().nextFloat()
+    NeigeItemsData.sections[random] = {}
     // 加载指向数据
     if (data) dataParse_NI(data, random)
     // 对文本化配置进行全局PAPI解析
@@ -1598,11 +1601,11 @@ function getNiItem_NI(itemID, player, sender, data) {
         // 针对每个试图调用的全局节点
         gSectionIDList.forEach(function(gSectionID) {
             // 在每个全局节点文件进行查找
-            for (let index = 0; index < NeigeItems.globalSections.length; index++) {
+            for (let index = 0; index < NeigeItemsData.globalSections.length; index++) {
                 // 获取[config, [id]]
-                const gSectionIDs = NeigeItems.globalSections[index]
+                const gSectionIDs = NeigeItemsData.globalSections[index]
                 // 如果调用的节点名与当前文件名重复, 直接调用文件内所有节点
-                if (NeigeItems.globalSectionFileNames[index] == gSectionID) {
+                if (NeigeItemsData.globalSectionFileNames[index] == gSectionID) {
                     for (let index = 0; index < gSectionIDs[1].length; index++) {
                         const gSectionID = gSectionIDs[1][index]
                         itemKeySection.set("sections." + gSectionID, gSectionIDs[0].getConfigurationSection(gSectionID))
@@ -1709,7 +1712,7 @@ function getNiItem_NI(itemID, player, sender, data) {
         let itemTag = NMSKt.getItemTag(itemStack)
         itemTag.NeigeItems = new ItemTag()
         itemTag.NeigeItems.id = new ItemTagData(itemID)
-        itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NeigeItems.sections[random]))
+        itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NeigeItemsData.sections[random]))
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
         if (itemKeySection.contains("options.charge")) {
             itemTag.NeigeItems.charge = new ItemTagData(itemKeySection.get("options.charge"))
@@ -1734,10 +1737,10 @@ function getNiItem_NI(itemID, player, sender, data) {
             }
         }
         // 删除节点缓存
-        delete NeigeItems.sections[random]
+        delete NeigeItemsData.sections[random]
         return itemStack
     } else {
-        delete NeigeItems.sections[random]
+        delete NeigeItemsData.sections[random]
         return null
     }
 }
@@ -1750,16 +1753,16 @@ function getNiItems_NI() {
     
     let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Items")))
     // [itemID]
-    NeigeItems.itemIDList = new ArrayList()
+    NeigeItemsData.itemIDList = new ArrayList()
     // [itemConfig]
-    NeigeItems.itemConfigs = new ArrayList()
+    NeigeItemsData.itemConfigs = new ArrayList()
     configs.forEach(function(config) {
         config.getKeys(false).forEach(function(itemID) {
-            NeigeItems.itemIDList.add(itemID)
+            NeigeItemsData.itemIDList.add(itemID)
         })
-        NeigeItems.itemConfigs.add(config)
+        NeigeItemsData.itemConfigs.add(config)
     })
-    pageAmount = Math.ceil(NeigeItems.itemIDList.length/config_NI.listItemAmount)
+    pageAmount = Math.ceil(NeigeItemsData.itemIDList.length/config_NI.listItemAmount)
 }
 
 /**
@@ -1877,9 +1880,9 @@ function loadAction_NI() {
             return false
         }
     }
-    NeigeItems.action = {}
+    NeigeItemsData.action = {}
     Object.keys(action).forEach(function(key) {
-        NeigeItems.action[key.toLowerCase()] = action[key]
+        NeigeItemsData.action[key.toLowerCase()] = action[key]
     })
 }
 
@@ -1888,11 +1891,11 @@ function loadAction_NI() {
  */
 function loadScripts_NI() {
     let files = getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Scripts"))
-    NeigeItems.scripts = {}
+    NeigeItemsData.scripts = {}
     for (let index = 0; index < files.length; index++) {
         const file = files[index]
-        NeigeItems.scripts[file.getName()] = loadWithNewGlobal(file)
-        NeigeItems.scripts[file.getPath()] = loadWithNewGlobal(file)
+        NeigeItemsData.scripts[file.getName()] = loadWithNewGlobal(file)
+        NeigeItemsData.scripts[file.getPath()] = loadWithNewGlobal(file)
     }
 }
 
@@ -1904,11 +1907,11 @@ function getActions_NI() {
     
     let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "ItemActions")))
     // {id: {left: [], right: [], all: []}}
-    NeigeItems.actions = new HashMap()
+    NeigeItemsData.actions = new HashMap()
     configs.forEach(function(config) {
         let configSections = getConfigSection_NI(config)
         configSections.forEach(function(section) {
-            NeigeItems.actions[section.getName()] = toHashMap_NI(section)
+            NeigeItemsData.actions[section.getName()] = toHashMap_NI(section)
         })
     })
 }
@@ -1923,11 +1926,11 @@ function getGlobalSections_NI() {
     // 获取所有全局节点配置文件
     let configs = getAllConfig_NI(files)
     // [[config, [id]]]
-    NeigeItems.globalSections = new ArrayList()
+    NeigeItemsData.globalSections = new ArrayList()
     // 每个全局节点配置文件的文件名(转为YamlConfiguration后文件路径莫名其妙莫得了, 只能另开记录)
-    NeigeItems.globalSectionFileNames = new ArrayList()
+    NeigeItemsData.globalSectionFileNames = new ArrayList()
     // [id]
-    NeigeItems.globalSectionIDList = new ArrayList()
+    NeigeItemsData.globalSectionIDList = new ArrayList()
     
     // 遍历所有全局节点配置文件
     for (let index = 0; index < configs.length; index++) {
@@ -1939,10 +1942,10 @@ function getGlobalSections_NI() {
         // 记录节点ID
         configSections.forEach(function(section) {
             list.add(section.getName())
-            NeigeItems.globalSectionIDList.add(section.getName())
+            NeigeItemsData.globalSectionIDList.add(section.getName())
         })
-        NeigeItems.globalSections.add(new ArrayList(Arrays.asList([config, list])))
-        NeigeItems.globalSectionFileNames.add(files[index].getName())
+        NeigeItemsData.globalSections.add(new ArrayList(Arrays.asList([config, list])))
+        NeigeItemsData.globalSectionFileNames.add(files[index].getName())
     }
 }
 
@@ -1953,9 +1956,9 @@ function loadMMItem_NI(){
     let ArrayList = Packages.java.util.ArrayList
     let itemManager = Tool.getPlugin("MythicMobs").getItemManager()
 
-    NeigeItems.mmIds = new ArrayList()
+    NeigeItemsData.mmIds = new ArrayList()
     itemManager.getItemNames().stream().forEach(function(itemName) {
-        NeigeItems.mmIds.add(itemName)
+        NeigeItemsData.mmIds.add(itemName)
     })
 }
 
@@ -2462,7 +2465,7 @@ function parseSection_NI(Sections, string, random, player) {
                     func = func.slice(0, index)
                 }
 
-                var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
+                var global = NeigeItemsData.scripts[path] || NeigeItemsData.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
                 if (global != undefined) {
                     global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                     if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
@@ -2483,13 +2486,13 @@ function parseSection_NI(Sections, string, random, player) {
             return result
         } default: {
             // 如果已解析对应ID节点
-            if (NeigeItems.sections[random][name] != undefined) {
+            if (NeigeItemsData.sections[random][name] != undefined) {
                 // 直接返回对应节点值
-                return NeigeItems.sections[random][name]
+                return NeigeItemsData.sections[random][name]
             // 如果尚未解析对应ID节点
             } else {
                 // 尝试解析并返回对应节点值
-                if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItems.sections[random][name]
+                if (globalSectionParse_NI(Sections, name, random, player)) return NeigeItemsData.sections[random][name]
                 if (string.startsWith("#")) {
                     try {
                         let hex = parseInt(string.replace("#", "0x"))
@@ -2715,7 +2718,7 @@ function dataParse_NI(string, random) {
             let obj=JSON.parse(string)
             if (typeof obj == "object" && obj ){
                 for (let key in obj) {
-                    NeigeItems.sections[random][key] = obj[key]
+                    NeigeItemsData.sections[random][key] = obj[key]
                 }
             }
         } catch(e) {}
@@ -2738,7 +2741,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
     let parse = function(Sections, section, random, player, overrideSection) {
         if (Sections != null
             && Sections.contains(section)
-            && (NeigeItems.sections[random][overrideSection || section] == undefined
+            && (NeigeItemsData.sections[random][overrideSection || section] == undefined
                 || temp === true)) {
             let currentSection = Sections.getConfigurationSection(section)
             // 简单节点解析
@@ -2778,7 +2781,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                             // 加载随机数
                             result = ((Math.random()*(max-min))+min).toFixed(fixed)
                         } catch (error) {
-                            NeigeItems.sections[random][overrideSection || section] = 
+                            NeigeItemsData.sections[random][overrideSection || section] = 
                             print("随机数节点: " + section + " 解析错误")
                             error.printStackTrace()
                         }
@@ -2853,7 +2856,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                                 args = Java.from(args)
                             }
     
-                            var global = NeigeItems.scripts[path] || NeigeItems.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
+                            var global = NeigeItemsData.scripts[path] || NeigeItemsData.scripts["plugins" + java.io.File.separator + scriptName_NI + java.io.File.separator + "Scripts" + java.io.File.separator + path]
                             if (global != undefined) {
                                 global.vars = function(string) {return parseSection_NI(Sections, string, random, player)}
                                 if (player instanceof Player) global.papi = function(string) {return PlaceholderAPI.setPlaceholders(player, string)}
@@ -2889,7 +2892,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
     }
     let result = parse(Sections, section, random, player, overrideSection)
     if (temp !== true && result !== false) {
-        NeigeItems.sections[random][overrideSection || section] = result
+        NeigeItemsData.sections[random][overrideSection || section] = result
     }
     return result
 }
@@ -2964,7 +2967,7 @@ function setPapiWithNoColor_NI(target, text, itemTag) {
         // 匹配到了就获取一下对应的附属
         let placeholder
         if (target instanceof ItemStack) {
-            placeholder = NeigeItems.holderExpansion[lowercaseIdentifierString.replace(/§+[a-z0-9]/g, "")]
+            placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString.replace(/§+[a-z0-9]/g, "")]
         } else {
             let placeholderAPI = Tool.getPlugin("PlaceholderAPI")
             if (placeholderAPI.getLocalExpansionManager != undefined) {
