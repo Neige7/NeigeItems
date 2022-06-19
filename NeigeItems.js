@@ -1707,10 +1707,8 @@ function getNiItem_NI(itemID, player, sender, data) {
         // 设置物品NBT
         if (itemKeySection.contains("nbt")) {
             // 获取配置NBT
-            var itemNBT = toItemTagNBT_NI(toHashMap_NI(itemKeySection.get("nbt")))
-            for (let key in itemNBT) {
-                if (key != "NeigeItems") itemTag[key] = itemNBT[key]
-            }
+            let itemNBT = toItemTagNBT_NI(toHashMap_NI(itemKeySection.get("nbt")))
+            itemTag = mergeItemTag(itemTag, itemNBT)
         }
         try {
             itemTag.saveTo(itemStack)
@@ -1983,6 +1981,37 @@ function getFile_NI(dir, fileName){
         }
     }
     return file
+}
+
+/**
+ * 进行NBT覆盖
+ * @param itemTag1 ItemTag 源NBT
+ * @param itemTag2 ItemTag 附加NBT
+ * @return ItemTag
+ */
+function mergeItemTag(itemTag1, itemTag2){
+    const ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
+    const ItemTagType = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagType
+
+    // 遍历附加NBT
+    itemTag2.forEach(function(key, value) {
+        // 如果二者包含相同键
+        if (itemTag1.containsKey(key)) {
+            // 如果二者均为COMPOUND
+            if (itemTag1[key].type === ItemTagType.COMPOUND
+                && value.type === ItemTagType.COMPOUND) {
+                // 合并
+                itemTag1.put(key, new ItemTagData(mergeItemTag(itemTag1[key].asCompound(), value.asCompound())))
+            } else {
+                // 覆盖
+                itemTag1.put(key, value)
+            }
+        } else {
+            // 添加
+            itemTag1.put(key, value)
+        }
+    })
+    return itemTag1
 }
 
 /**
