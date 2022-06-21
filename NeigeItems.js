@@ -18,9 +18,15 @@ function onEnable_NI() {
     // 加载MM物品列表
     if (Tool.isPluginEnabled("MythicMobs")) {
         loadMMItem_NI()
+    } else {
+        sender.sendMessage(config_NI.invalidPlugin.replace(/{plugin}/g, "MythicMobs"))
     }
     // 加载物品变量监听器
-    ItemLoreReplacer_NI()
+    if (Tool.isPluginEnabled("ProtocolLib")) {
+        ItemLoreReplacer_NI()
+    } else {
+        sender.sendMessage(config_NI.invalidPlugin.replace(/{plugin}/g, "ProtocolLib"))
+    }
     // 注册指令
     commandRegister_NI()
     // 加载物品动作监听器
@@ -212,10 +218,18 @@ function ItemLoreReplacer_NI() {
         }
     }
 
+    let removePacketListener = Tool.removePacketListener
+    let addPacketListener = Tool.addPacketListener
+    if (Tool.removePacketListener == undefined) {
+        const ProtocolTool = Packages.com.skillw.pouvoir.api.script.ProtocolTool
+        removePacketListener = ProtocolTool.removePacketListener
+        addPacketListener = ProtocolTool.addPacketListener
+    }
+
     var PacketType = Packages.com.comphenix.protocol.PacketType
     var ListenerPriority = Packages.com.comphenix.protocol.events.ListenerPriority
-    Tool.removePacketListener("ItemLoreReplacer_NI")
-    Tool.addPacketListener(
+    removePacketListener("ItemLoreReplacer_NI")
+    addPacketListener(
         "ItemLoreReplacer_NI",
         ListenerPriority.NORMAL,
         [PacketType.Play.Server.WINDOW_ITEMS, PacketType.Play.Server.SET_SLOT],
