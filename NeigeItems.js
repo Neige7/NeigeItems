@@ -19,13 +19,13 @@ function onEnable_NI() {
     if (Tool.isPluginEnabled("MythicMobs")) {
         loadMMItem_NI()
     } else {
-        sender.sendMessage(config_NI.invalidPlugin.replace(/{plugin}/g, "MythicMobs"))
+        print(config_NI.invalidPlugin.replace(/{plugin}/g, "MythicMobs"))
     }
     // 加载物品变量监听器
     if (Tool.isPluginEnabled("ProtocolLib")) {
         ItemLoreReplacer_NI()
     } else {
-        sender.sendMessage(config_NI.invalidPlugin.replace(/{plugin}/g, "ProtocolLib"))
+        print(config_NI.invalidPlugin.replace(/{plugin}/g, "ProtocolLib"))
     }
     // 注册指令
     commandRegister_NI()
