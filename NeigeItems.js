@@ -1581,19 +1581,6 @@ function getNiItem_NI(itemID, player, sender, data) {
         itemKeySection = tempConfigSection
     }
 
-    // 获取随机数, 用于代表当前物品
-    let random = ThreadLocalRandom.current().nextFloat()
-    NeigeItemsData.sections[random] = {}
-    // 加载指向数据
-    if (data) dataParse_NI(data, random)
-    // 对文本化配置进行全局PAPI解析
-    let tempItemKeySection = new YamlConfiguration()
-    tempItemKeySection.set(itemID, itemKeySection)
-    let stringSection = tempItemKeySection.saveToString()
-    if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
-    tempItemKeySection = new YamlConfiguration()
-    tempItemKeySection.loadFromString(stringSection)
-    itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
     // 如果调用了全局节点
     if (itemKeySection.contains("globalsections")) {
         // 获取全局节点ID
@@ -1621,6 +1608,22 @@ function getNiItem_NI(itemID, player, sender, data) {
             }
         })
     }
+    
+    // 对文本化配置进行全局PAPI解析
+    let tempItemKeySection = new YamlConfiguration()
+    tempItemKeySection.set(itemID, itemKeySection)
+    let stringSection = tempItemKeySection.saveToString()
+    if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
+    tempItemKeySection = new YamlConfiguration()
+    tempItemKeySection.loadFromString(stringSection)
+    itemKeySection = tempItemKeySection.getConfigurationSection(itemID)
+    
+    // 获取随机数, 用于代表当前物品
+    let random = ThreadLocalRandom.current().nextFloat() + ""
+    NeigeItemsData.sections[random] = {}
+    // 加载指向数据
+    if (data) dataParse_NI(data, random)
+
     // 获取私有节点配置
     if (itemKeySection.contains("sections")) var Sections = itemKeySection.getConfigurationSection("sections")
     // 如果当前物品包含预声明节点
@@ -1712,7 +1715,7 @@ function getNiItem_NI(itemID, player, sender, data) {
         let itemTag = NMSKt.getItemTag(itemStack)
         itemTag.NeigeItems = new ItemTag()
         itemTag.NeigeItems.id = new ItemTagData(itemID)
-        itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(NeigeItemsData.sections[random]))
+        itemTag.NeigeItems.data = new ItemTagData(new String(JSON.stringify(NeigeItemsData.sections[random])))
         itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
         if (itemKeySection.contains("options.charge")) {
             itemTag.NeigeItems.charge = new ItemTagData(itemKeySection.get("options.charge"))
@@ -2278,8 +2281,8 @@ function toHashMap_NI(memorySection){
         return hashMap
     } else if (memorySection instanceof Map) {
         let hashMap = new HashMap()
-        memorySection.entrySet().forEach(function(entry) {
-            hashMap.put(entry.getKey(), toHashMap_NI(entry.getValue()))
+        memorySection.forEach(function(key, value) {
+            hashMap.put(key, toHashMap_NI(value))
         })
         return hashMap
     } else if (memorySection instanceof AbstractList) {
