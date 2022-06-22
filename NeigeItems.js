@@ -1246,6 +1246,7 @@ function onPlayerInteract_NI(event) {
     let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let ItemTagData = Packages.com.skillw.pouvoir.taboolib.module.nms.ItemTagData
     let Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
+    let PlayerUtils = Packages.com.skillw.pouvoir.util.PlayerUtils
 
     // 获取玩家
     var player = event.player
