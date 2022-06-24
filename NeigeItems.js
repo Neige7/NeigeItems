@@ -2415,12 +2415,10 @@ function parseSection_NI(Sections, string, random, player) {
 
     let name = string
     let index = string.indexOf("::")
-    let args
+    let args = []
     if (index != -1) {
         name = string.slice(0, index)
         args = string.slice(index+2).split("_")
-    } else {
-        args = []
     }
     switch (name) {
         case "strings": {
