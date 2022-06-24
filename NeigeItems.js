@@ -851,7 +851,10 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let itemStack = itemManager.getItemStack(args[2])
+                                            
+                                            let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                return itemManager.getItemStack(args[2])
+                                            }).get()
                                             if (itemStack != null){
                                                 // 获取保存路径
                                                 let path
@@ -894,7 +897,9 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let itemStack = itemManager.getItemStack(args[2])
+                                            let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                return itemManager.getItemStack(args[2])
+                                            }).get()
                                             if (itemStack != null){
                                                 // 获取保存路径
                                                 let path
@@ -935,7 +940,9 @@ function commandRegister_NI() {
                                         // 获取全部MM物品并操作
                                         for (let index = 0; index < mmIds.length; index++) {
                                             let mmId = mmIds[index]
-                                            let itemStack = itemManager.getItemStack(mmId)
+                                            let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                return itemManager.getItemStack(mmId)
+                                            }).get()
                                             let saveResult = saveNiItem_NI(itemStack, mmId, path, false)
                                             // 保存物品
                                             if (saveResult == 0) {
@@ -964,7 +971,9 @@ function commandRegister_NI() {
                                             // 检测指令长度
                                             if (args.length > 2) {
                                                 // 获取MM物品
-                                                let itemStack = itemManager.getItemStack(args[2])
+                                                let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                    return itemManager.getItemStack(args[2])
+                                                }).get()
                                                 if (itemStack != null){
                                                     let itemAmt
                                                     // 获取数量
@@ -1006,7 +1015,9 @@ function commandRegister_NI() {
                                             // 获取对应在线玩家
                                             if (player = Bukkit.getPlayer(args[2])) {
                                                 // 获取MM物品
-                                                let itemStack = itemManager.getItemStack(args[3])
+                                                let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                    return itemManager.getItemStack(args[3])
+                                                }).get()
                                                 if (itemStack != null){
                                                     let itemAmt
                                                     // 获取数量
@@ -1052,7 +1063,9 @@ function commandRegister_NI() {
                                         // 检测指令长度
                                         if (args.length > 2) {
                                             // 获取MM物品
-                                            let itemStack = itemManager.getItemStack(args[2])
+                                            let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                return itemManager.getItemStack(args[2])
+                                            }).get()
                                             if (itemStack != null){
                                                 let itemAmt
                                                 // 获取数量
