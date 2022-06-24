@@ -2415,10 +2415,11 @@ function parseSection_NI(Sections, string, random, player) {
 
     let name = string
     let index = string.indexOf("::")
-    let args = []
     if (index != -1) {
         name = string.slice(0, index)
-        args = string.slice(index+2).split("_")
+        var args = string.slice(index+2).split("_")
+    } else {
+        var args = []
     }
     switch (name) {
         case "strings": {
@@ -2476,7 +2477,7 @@ function parseSection_NI(Sections, string, random, player) {
                 let result = getSection_NI(Sections, args[0].slice(args[0].indexOf("::")+2), random, player)
                 return result
             }
-            let strings = []
+            var strings = []
             args.forEach(function(value) {
                 let index = value.indexOf("::")
                 let weight = parseInt(value.slice(0, index))
@@ -2803,7 +2804,7 @@ function globalSectionParse_NI(Sections, section, random, player, temp, override
                     // 如果配置了字符串组
                     if (currentSection.contains("values")) {
                         // 加载字符串组
-                        let strings = currentSection.get("values")
+                        var strings = currentSection.get("values")
                         result = getSection_NI(Sections, getSection_NI(Sections, strings[parseInt(Math.random()*(strings.length))], random, player), random, player)
                     } else {
                         print("字符串节点: " + section + " 缺少 values 配置项")
