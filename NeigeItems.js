@@ -3015,11 +3015,15 @@ function setPapiWithNoColor_NI(target, text, itemTag) {
         if (target instanceof ItemStack) {
             placeholder = NeigeItemsData.holderExpansion[lowercaseIdentifierString.replace(/§+[a-z0-9]/g, "")]
         } else {
-            let placeholderAPI = Tool.getPlugin("PlaceholderAPI")
-            if (placeholderAPI.getLocalExpansionManager != undefined) {
-                placeholder = placeholderAPI.getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+            if (Tool.isPluginEnabled("PlaceholderAPI")) {
+                let placeholderAPI = Tool.getPlugin("PlaceholderAPI")
+                if (placeholderAPI.getLocalExpansionManager != undefined) {
+                    placeholder = placeholderAPI.getLocalExpansionManager().getExpansion(lowercaseIdentifierString)
+                } else {
+                    placeholder = Packages.me.clip.placeholderapi.PlaceholderAPI.getPlaceholders().get(lowercaseIdentifierString)
+                }
             } else {
-                placeholder = Packages.me.clip.placeholderapi.PlaceholderAPI.getPlaceholders().get(lowercaseIdentifierString)
+                print(config_NI.invalidPlugin.replace(/{plugin}/g, "PlaceholderAPI"))
             }
         }
         // 如果没获取到
