@@ -38,6 +38,19 @@ function onEnable_NI() {
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
         onPlayerInteract_NI(event)
     })
+    // 我跟你讲, 没事儿改包名的人都没妈
+    try {
+        Java.type("io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobDeathEvent")
+        Tool.removeListener("onMythicMobDeath_NI")
+        Tool.addListener("onMythicMobDeath_NI", "io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobDeathEvent", "NORMAL", false, function(event) {
+            onMythicMobDeath_NI(event)
+        })
+    } catch (error) {
+        Tool.removeListener("onMythicMobDeath_NI")
+        Tool.addListener("onMythicMobDeath_NI", "io.lumine.mythic.bukkit.events.MythicMobDeathEvent", "NORMAL", false, function(event) {
+            onMythicMobDeath_NI(event)
+        })
+    }
 }
 
 /**
@@ -267,6 +280,7 @@ function commandRegister_NI() {
     let ChatColor = Packages.org.bukkit.ChatColor
     let HashMap = Packages.java.util.HashMap
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
+    let Location = Packages.org.bukkit.Location
     let Material = Packages.org.bukkit.Material
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
@@ -702,7 +716,7 @@ function commandRegister_NI() {
                                                         if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
                                                             let itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
                                                             // 掉落物品
-                                                            dropItems_NI(world, x, y, z, itemStack, itemAmt)
+                                                            dropItems_NI(itemStack, itemAmt, world, x, y, z)
                                                             // 替换提示信息中的占位符
                                                             let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
@@ -728,7 +742,7 @@ function commandRegister_NI() {
                                                                     amtMap[itemName] ++
                                                                 }
                                                                 // 掉落物品
-                                                                dropItems_NI(world, x, y, z, itemStack, itemAmt)
+                                                                dropItem_NI(itemStack, new Location(world, x, y, z))
                                                             }
                                                             for (let key in amtMap) {
                                                                 // 替换提示信息中的占位符
@@ -1564,15 +1578,21 @@ function loadClass_NI() {
     }
     
     NeigeItemManager.prototype.getItemStack = function(id, player, data, sender) {
-        return this.items[id].getItemStack(player, data, sender)
+        if (this.items.containsKey(id)) {
+            return this.items[id].getItemStack(player, data, sender)
+        }
     }
     
     NeigeItemManager.prototype.getConfig = function(id) {
-        return this.items[id].getConfig()
+        if (this.items.containsKey(id)) {
+            return this.items[id].getConfig()
+        }
     }
     
     NeigeItemManager.prototype.getfile = function(id) {
-        return this.items[id].getfile()
+        if (this.items.containsKey(id)) {
+            return this.items[id].getfile()
+        }
     }
     
     NeigeItemManager.prototype.getItemIds = function() {
@@ -1586,10 +1606,78 @@ function loadClass_NI() {
     NeigeItemManager.prototype.getItemFiles = function() {
         return this.files
     }
+    
+    NeigeItemManager.prototype.hasItem = function(id) {
+        return this.items.containsKey(id)
+    }
 
     neigeItemManager = new NeigeItemManager()
     neigeItemManager.loadItemConfigs()
     neigeItemManager.loadItems()
+}
+
+/**
+ * MM怪物死亡事件
+ * @param event MythicMobDeathEvent MM怪物死亡事件
+ */
+function onMythicMobDeath_NI(event) {
+    const Bukkit = Packages.org.bukkit.Bukkit
+    const BukkitScheduler = Bukkit.getScheduler()
+    const Player = Packages.org.bukkit.entity.Player
+    const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
+
+    BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
+        const player = event.getKiller()
+    
+        // 判断是否是玩家击杀
+        if (player instanceof Player) {
+            const entity = event.getEntity()
+            const config = event.getMobType().getConfig().getNestedConfig("NeigeItems")
+    
+            // 物品掉落
+            const drops = config.getStringList("Drops")
+
+            for (let index = 0; index < drops.length; index++) {
+                const args = drops[index].split(" ")
+
+                let data = null
+                if (args.length > 4) data = args.slice(4).join(" ")
+
+                // 概率判断
+                if (!neigeItemManager.hasItem(args[0])
+                    || (args.length > 2
+                        && !isNaN(parseFloat(args[2]))
+                        && Math.random() > parseFloat(args[2]))) {
+                    continue
+                }
+                // 数量判断
+                let amount = 1
+                if (args.length > 1) {
+                    if (args[1].contains("-")) {
+                        const index = args[1].indexOf("-")
+                        const min = parseInt(args[1].slice(0, index))
+                        const max = parseInt(args[1].slice(index+1))
+                        if (!isNaN(min) && !isNaN(max)) {
+                            amount = min + Math.round(Math.random()*(max-min))
+                        }
+                    } else {
+                        if (!isNaN(parseInt(args[1]))) {
+                            amount = parseInt(args[1])
+                        }
+                    }
+                }
+                if (args.length > 2 && args[3] == "false") {
+                    const itemStack = neigeItemManager.getItemStack(args[0], player, data)
+                    dropItems_NI(itemStack, amount, entity.getLocation())
+                } else {
+                    for (let index = 0; index < amount; index++) {
+                        const itemStack = neigeItemManager.getItemStack(args[0], player, data)
+                        dropItem_NI(itemStack, entity.getLocation())
+                    }
+                }
+            }
+        }
+    })
 }
 
 /**
@@ -2759,25 +2847,30 @@ function giveItem_NI(player, itemStack) {
 
 /**
  * 于指定位置掉落指定数量物品
- * @param world World 世界
+ * @param world World/Location 世界
  * @param x Double x坐标
  * @param y Double y坐标
  * @param z Double z坐标
  * @param itemStack ItemStack
  * @param amount Int
  */
-function dropItems_NI(world, x, y, z, itemStack, amount) {
+function dropItems_NI(itemStack, amount, world, x, y, z) {
     let ItemStack = Packages.org.bukkit.inventory.ItemStack
 
     if (itemStack instanceof ItemStack) {
         let Location = Packages.org.bukkit.Location
         let stackSize = itemStack.getMaxStackSize()
-        let location = new Location(world, x, y, z)
+        let location
+        if (world instanceof Location) {
+            location = world
+        } else {
+            location = new Location(world, x, y, z)
+        }
         itemStack.setAmount(stackSize)
-        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) { dropItem_NI(world, location, itemStack) }
+        for (var givenAmt = 0; (givenAmt + stackSize) <= amount; givenAmt += stackSize) dropItem_NI(itemStack, location)
         if (givenAmt < amount) {
             itemStack.setAmount(amount - givenAmt)
-            dropItem_NI(world, location, itemStack)
+            dropItem_NI(itemStack, location)
         }
         return true
     }
@@ -2790,13 +2883,12 @@ function dropItems_NI(world, x, y, z, itemStack, amount) {
  * @param location Location 位置
  * @param itemStack ItemStack
  */
-function dropItem_NI(world, location, itemStack){
+function dropItem_NI(itemStack, location) {
     let Bukkit = Packages.org.bukkit.Bukkit
     let Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
 
-    let BukkitScheduler = Bukkit.getScheduler()
-    BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
-        world.dropItem(location, itemStack)
+    Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+        location.getWorld().dropItem(location, itemStack)
     })
 }
 
