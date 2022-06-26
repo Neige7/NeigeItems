@@ -45,10 +45,18 @@ function onEnable_NI() {
         Tool.addListener("onMythicMobDeath_NI", "io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobDeathEvent", "NORMAL", false, function(event) {
             onMythicMobDeath_NI(event)
         })
+        Tool.removeListener("onMythicMobSpawn_NI")
+        Tool.addListener("onMythicMobSpawn_NI", "io.lumine.xikage.mythicmobs.api.bukkit.events.MythicMobSpawnEvent", "NORMAL", false, function(event) {
+            onMythicMobSpawn_NI(event)
+        })
     } catch (error) {
         Tool.removeListener("onMythicMobDeath_NI")
         Tool.addListener("onMythicMobDeath_NI", "io.lumine.mythic.bukkit.events.MythicMobDeathEvent", "NORMAL", false, function(event) {
             onMythicMobDeath_NI(event)
+        })
+        Tool.removeListener("onMythicMobSpawn_NI")
+        Tool.addListener("onMythicMobSpawn_NI", "io.lumine.mythic.bukkit.events.MythicMobSpawnEvent", "NORMAL", false, function(event) {
+            onMythicMobSpawn_NI(event)
         })
     }
 }
@@ -1632,10 +1640,7 @@ function onMythicMobDeath_NI(event) {
         // 判断是否是玩家击杀
         if (player instanceof Player) {
             const entity = event.getEntity()
-            const config = event.getMobType().getConfig().getNestedConfig("NeigeItems")
-    
-            // 物品掉落
-            const drops = config.getStringList("Drops")
+            const drops = event.getMobType().getConfig().getNestedConfig("NeigeItems").getStringList("Drops")
 
             for (let index = 0; index < drops.length; index++) {
                 const args = drops[index].split(" ")
@@ -1677,6 +1682,64 @@ function onMythicMobDeath_NI(event) {
                 }
             }
         }
+    })
+}
+
+/**
+ * MM怪物出生事件
+ * @param event MythicMobSpawnEvent MM怪物出生事件
+ */
+ function onMythicMobSpawn_NI(event) {
+    const Bukkit = Packages.org.bukkit.Bukkit
+    const BukkitScheduler = Bukkit.getScheduler()
+
+    BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
+        const entity = event.getEntity()
+        const equipment = event.getMobType().getConfig().getNestedConfig("NeigeItems").getStringList("Equipment")
+        const entityEquipment = entity.getEquipment()
+        for (let i = 0; i < equipment.length; i++) {
+            const value = equipment[i]
+            if (value.indexOf(": ") != -1) {
+                let index = value.indexOf(": ")
+                const slot = value.slice(0, index).toLowerCase()
+                const info = value.slice(index+2)
+                let id = info
+                let data = null
+                index = info.indexOf(" ")
+                if (index != -1) {
+                    id = info.slice(0, index)
+                    data = info.slice(index+1)
+                }
+                try {
+                    const itemStack = neigeItemManager.getItemStack(id, null, data)
+        
+                    switch (slot) {
+                        case "helmet": {
+                            entityEquipment.setHelmet(itemStack)
+                            continue
+                        } case "chestplate": {
+                            entityEquipment.setChestplate(itemStack)
+                            continue
+                        } case "leggins": {
+                            entityEquipment.setLeggings(itemStack)
+                            continue
+                        } case "boots": {
+                            entityEquipment.setBoots(itemStack)
+                            continue
+                        } case "mainhand": {
+                            entityEquipment.setItemInHand(itemStack)
+                            continue
+                        } case "offhand": {
+                            entityEquipment.setItemInOffHand(itemStack)
+                            continue
+                        }
+                    }
+                } catch (error) {
+                    print("§e[NI] §6你正在尝试给ID为 §f" + event.getMobType().getInternalName() + "§6 的MM怪物穿戴ID为 §f" + id + "§6 的NI物品, 但该物品无法在不指定玩家的情况下生成. 请检查你的物品配置, 以适配相关情况.")
+                }
+            }
+        }
+        
     })
 }
 
