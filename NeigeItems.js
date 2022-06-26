@@ -2698,7 +2698,7 @@ function parseSection_NI(Sections, string, sectionData, player) {
     }
     switch (name) {
         case "strings": {
-            let result = ""
+            let result = "<" + string + ">"
             if (args.length > 1) {
                 result = getSection_NI(Sections, args[parseInt(Math.random()*(args.length))], sectionData, player)
             } else {
@@ -2766,7 +2766,7 @@ function parseSection_NI(Sections, string, sectionData, player) {
                 let PlaceholderAPI = Packages.me.clip.placeholderapi.PlaceholderAPI
                 return PlaceholderAPI.setPlaceholders(player, "%"+args.join("_")+"%")
             } else {
-                return ""
+                return "<" + string + ">"
             }
         } case "js": {
             try {
@@ -2793,7 +2793,7 @@ function parseSection_NI(Sections, string, sectionData, player) {
                     return result
                 }
                 print("§e[NI] §6不存在名为" + path + "的脚本文件")
-                return ""
+                return "<" + string + ">"
             } catch (error) {
                 error.printStackTrace()
                 return "js函数获取失败"
@@ -2824,7 +2824,7 @@ function parseSection_NI(Sections, string, sectionData, player) {
                     }
                 }
             }
-            return ""
+            return "<" + string + ">"
         }
     }
 }
@@ -2852,7 +2852,7 @@ function parseActionPlaceholder_NI(string, itemNBT) {
                 const key = args[index]
                 value = data[key]
                 if (value == undefined) {
-                    return ""
+                    return "<" + string + ">"
                 }
                 data = value
             }
@@ -2864,13 +2864,13 @@ function parseActionPlaceholder_NI(string, itemNBT) {
                 const key = args[index]
                 value = data[key]
                 if (value == undefined) {
-                    return ""
+                    return "<" + string + ">"
                 }
                 data = value
             }
             return value
         } default: {
-            return ""
+            return "<" + string + ">"
         }
     }
 }
@@ -3191,7 +3191,7 @@ function globalSectionParse_NI(Sections, section, sectionData, player, temp, ove
                                 break
                             }
                             print("§e[NI] §6不存在名为" + path + "的脚本文件")
-                            result  = ""
+                            result  = "<" + string + ">"
                         } catch (error) {
                             print("Js节点: " + section + " 解析错误")
                             error.printStackTrace()
