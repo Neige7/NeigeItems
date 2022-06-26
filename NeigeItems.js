@@ -1150,10 +1150,12 @@ function commandRegister_NI() {
                             NeigeItemsData.sections = {}
                             // 重载全局节点列表
                             getGlobalSections_NI()
-                            // 重载NI物品列表
-                            getNiItems_NI()
                             // 重载NI物品动作列表
                             getActions_NI()
+                            // 重载NI物品管理器
+                            loadClass_NI()
+                            // 加载NI物品列表
+                            getNiItems_NI()
                             // 重载MM物品列表
                             if (Tool.isPluginEnabled("MythicMobs")) {
                                 loadMMItem_NI()
