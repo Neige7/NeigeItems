@@ -1630,6 +1630,7 @@ function loadClass_NI() {
  * @param event MythicMobDeathEvent MM怪物死亡事件
  */
 function onMythicMobDeath_NI(event) {
+    const ArrayList = Packages.java.util.ArrayList
     const Bukkit = Packages.org.bukkit.Bukkit
     const BukkitScheduler = Bukkit.getScheduler()
     const Player = Packages.org.bukkit.entity.Player
@@ -1639,16 +1640,21 @@ function onMythicMobDeath_NI(event) {
     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
         const entity = event.getEntity()
         const player = event.getKiller()
-        const entityEquipment = entity.getEquipment()
-        const armorContents = Java.from(entityEquipment.getArmorContents())
-        armorContents.push(entityEquipment.getItemInMainHand())
-        armorContents.push(entityEquipment.getItemInOffHand())
+        const equipments = new ArrayList([
+            event.getHelmet().clone(),
+            event.getChestplate().clone(),
+            event.getLeggings().clone(),
+            event.getBoots().clone(),
+            event.getItemInMainHand().clone(),
+            event.getItemInOffHand().clone()
+        ])
 
-        for (let index = 0; index < armorContents.length; index++) {
-            const itemStack = armorContents[index]
+        for (let index = 0; index < equipments.length; index++) {
+            const itemStack = equipments[index]
 
             if (itemStack != null && !itemStack.getType().isAir()) {
                 const itemTag = NMSKt.getItemTag(itemStack)
+                
                 if (itemTag.containsKey("NeigeItems")) {
                     const neigeItems = itemTag["NeigeItems"]
                     if (neigeItems.containsKey("dropChance")) {
