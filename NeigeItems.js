@@ -1640,7 +1640,9 @@ function onMythicMobDeath_NI(event) {
         const entity = event.getEntity()
         const player = event.getKiller()
         const entityEquipment = entity.getEquipment()
-        const armorContents = entityEquipment.getArmorContents()
+        const armorContents = Java.from(entityEquipment.getArmorContents())
+        armorContents.push(entityEquipment.getItemInMainHand())
+        armorContents.push(entityEquipment.getItemInOffHand())
 
         for (let index = 0; index < armorContents.length; index++) {
             const itemStack = armorContents[index]
