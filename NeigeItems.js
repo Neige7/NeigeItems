@@ -1640,13 +1640,14 @@ function onMythicMobDeath_NI(event) {
     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
         const entity = event.getEntity()
         const player = event.getKiller()
+        const entityEquipment = entity.getEquipment()
         const equipments = new ArrayList([
-            event.getHelmet().clone(),
-            event.getChestplate().clone(),
-            event.getLeggings().clone(),
-            event.getBoots().clone(),
-            event.getItemInMainHand().clone(),
-            event.getItemInOffHand().clone()
+            entityEquipment.getHelmet().clone(),
+            entityEquipment.getChestplate().clone(),
+            entityEquipment.getLeggings().clone(),
+            entityEquipment.getBoots().clone(),
+            entityEquipment.getItemInMainHand().clone(),
+            entityEquipment.getItemInOffHand().clone()
         ])
 
         for (let index = 0; index < equipments.length; index++) {
