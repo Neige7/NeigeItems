@@ -13,8 +13,6 @@ function onEnable_NI() {
     NeigeItemsData.sections = {}
     // 加载全局节点列表
     getGlobalSections_NI()
-    // 加载NI物品列表
-    getNiItems_NI()
     // 加载NI物品动作列表
     getActions_NI()
     // 加载MM物品列表
@@ -25,6 +23,8 @@ function onEnable_NI() {
     }
     // 加载类文件
     loadClass_NI()
+    // 加载NI物品列表
+    getNiItems_NI()
     // 加载物品变量监听器
     if (Tool.isPluginEnabled("ProtocolLib")) {
         ItemLoreReplacer_NI()
@@ -46,7 +46,6 @@ function onEnable_NI() {
  * @data scriptName_NI String 插件名
  * @data config_NI {key: value} 所有配置内容
  * @data NeigeItemsData.sections {random: data} 所有节点缓存内容
- * @data NeigeItemsData.itemIDList [] 所有物品ID
  * @data NeigeItemsData.mmIds ArrayList 所有MM物品ID
  * @data NeigeItemsData.action {action: function} 所有物品动作函数
  * @data NeigeItemsData.actions {id: {left: [], right: [], all: []}} 所有物品动作内容
@@ -681,83 +680,86 @@ function commandRegister_NI() {
                                     } else {
                                         player = sender
                                     }
-                                    // 检测是否存在对应ID的NI物品
-                                    if (neigeItemManager.getItemIds().indexOf(args[1]) != -1) {
-                                        let data = null
-                                        if (args.length > 9) data = Java.from(args).slice(9).join(" ")
-                                        let itemAmt
-                                        // 获取数量
-                                        if ((itemAmt = parseInt(args[2])) && itemAmt > 0) {
-                                            // 获取世界
-                                            let world = Bukkit.getWorld(args[3])
-                                            let x = parseFloat(args[4])
-                                            let y = parseFloat(args[5])
-                                            let z = parseFloat(args[6])
-                                            // 如果存在世界
-                                            if (world != null) {
-                                                // 如果坐标合法
-                                                if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-                                                    // 如果仅需一样的物品
-                                                    if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
-                                                        let itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
-                                                        // 掉落物品
-                                                        dropItems_NI(world, x, y, z, itemStack, itemAmt)
-                                                        // 替换提示信息中的占位符
-                                                        let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
-                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
-                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
-                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
-                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, itemAmt)
-                                                        dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, getItemName_NI(itemStack))
-                                                        // 给予成功提示
-                                                        sender.sendMessage(dropSuccessInfoMessage)
-                                                    // 如果需要反复构建
-                                                    } else {
-                                                        // {物品名: 产出次数}
-                                                        let amtMap = new HashMap()
-                                                        // 循环构建物品
-                                                        for (let index = 0; index < itemAmt; index++) {
-                                                            // 构建物品
+                                    // 检测获取到的这个玩家玩没玩过游戏
+                                    if (player.hasPlayedBefore()) {
+                                        // 检测是否存在对应ID的NI物品
+                                        if (neigeItemManager.getItemIds().indexOf(args[1]) != -1) {
+                                            let data = null
+                                            if (args.length > 9) data = Java.from(args).slice(9).join(" ")
+                                            let itemAmt
+                                            // 获取数量
+                                            if ((itemAmt = parseInt(args[2])) && itemAmt > 0) {
+                                                // 获取世界
+                                                let world = Bukkit.getWorld(args[3])
+                                                let x = parseFloat(args[4])
+                                                let y = parseFloat(args[5])
+                                                let z = parseFloat(args[6])
+                                                // 如果存在世界
+                                                if (world != null) {
+                                                    // 如果坐标合法
+                                                    if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                                                        // 如果仅需一样的物品
+                                                        if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
                                                             let itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
-                                                            // 记录物品名及次数
-                                                            var itemName = getItemName_NI(itemStack)
-                                                            if (amtMap[itemName] == null) {
-                                                                amtMap[itemName] = 1
-                                                            } else {
-                                                                amtMap[itemName] ++
-                                                            }
                                                             // 掉落物品
                                                             dropItems_NI(world, x, y, z, itemStack, itemAmt)
-                                                        }
-                                                        for (let key in amtMap) {
                                                             // 替换提示信息中的占位符
                                                             let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
-                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, amtMap[key])
-                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, key)
+                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, itemAmt)
+                                                            dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, getItemName_NI(itemStack))
                                                             // 给予成功提示
                                                             sender.sendMessage(dropSuccessInfoMessage)
+                                                        // 如果需要反复构建
+                                                        } else {
+                                                            // {物品名: 产出次数}
+                                                            let amtMap = new HashMap()
+                                                            // 循环构建物品
+                                                            for (let index = 0; index < itemAmt; index++) {
+                                                                // 构建物品
+                                                                let itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
+                                                                // 记录物品名及次数
+                                                                var itemName = getItemName_NI(itemStack)
+                                                                if (amtMap[itemName] == null) {
+                                                                    amtMap[itemName] = 1
+                                                                } else {
+                                                                    amtMap[itemName] ++
+                                                                }
+                                                                // 掉落物品
+                                                                dropItems_NI(world, x, y, z, itemStack, itemAmt)
+                                                            }
+                                                            for (let key in amtMap) {
+                                                                // 替换提示信息中的占位符
+                                                                let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
+                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
+                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{y}/g, args[5])
+                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{z}/g, args[6])
+                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{amount}/g, amtMap[key])
+                                                                dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{name}/g, key)
+                                                                // 给予成功提示
+                                                                sender.sendMessage(dropSuccessInfoMessage)
+                                                            }
                                                         }
+                                                    } else {
+                                                        // 非法坐标提示
+                                                        sender.sendMessage(invalidLocation)
                                                     }
                                                 } else {
-                                                    // 非法坐标提示
-                                                    sender.sendMessage(invalidLocation)
+                                                    // 非法世界提示
+                                                    sender.sendMessage(invalidWorld)
                                                 }
                                             } else {
-                                                // 非法世界提示
-                                                sender.sendMessage(invalidWorld)
+                                                // 非法数量提示
+                                                sender.sendMessage(invalidAmount)
                                             }
                                         } else {
-                                            // 非法数量提示
-                                            sender.sendMessage(invalidAmount)
+                                            // 替换提示信息中的占位符
+                                            let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
+                                            // 未知物品提示
+                                            sender.sendMessage(unknownItemMessage)
                                         }
-                                    } else {
-                                        // 替换提示信息中的占位符
-                                        let unknownItemMessage = unknownItem.replace(/{itemID}/, args[1])
-                                        // 未知物品提示
-                                        sender.sendMessage(unknownItemMessage)
                                     }
                                 } else {
                                     // 无效解析对象提示
@@ -1275,13 +1277,12 @@ function loadClass_NI() {
     }
 
     // 物品加载
-    NeigeItem.prototype.load = function(configSection) {
+    NeigeItem.prototype.load = function() {
         this.configSection = this.loadGlobalSections(this.inherit(this.originalConfigSection))
         const tempConfigSection = new YamlConfiguration()
-        this.configSection.getValues(false).forEach(function(key, value) {
-            tempConfigSection.set(key, value)
-        })
+        tempConfigSection.set(this.id, this.configSection)
         this.configString = tempConfigSection.saveToString()
+        this.hashCode = this.configString.hashCode()
     }
 
     // 物品继承
@@ -1369,12 +1370,14 @@ function loadClass_NI() {
 
     // 物品获取
     NeigeItem.prototype.getItemStack = function(player, data, sender) {
+        let configString = this.configString
+
         // 进行一次papi解析
-        if (player instanceof Player) this.configString = setPapiWithNoColor_NI(player, this.configString)
+        if (player instanceof Player) configString = setPapiWithNoColor_NI(player, configString)
         // 加载回YamlConfiguration
         let tempConfigSection = new YamlConfiguration()
-        tempConfigSection.loadFromString(this.configString)
-        let configSection = tempConfigSection
+        tempConfigSection.loadFromString(configString)
+        let configSection = tempConfigSection.getConfigurationSection(this.id)
 
         // 获取随机数, 用于代表当前物品
         let sectionData = {}
@@ -1392,16 +1395,15 @@ function loadClass_NI() {
             })
         }
         // 对文本化配置进行全局节点解析
-        tempItemKeySection = new YamlConfiguration()
-        tempItemKeySection.set(this.id, configSection)
-        let itemHashCode = tempItemKeySection.saveToString().hashCode()
-        stringSection = getSection_NI(Sections, tempItemKeySection.saveToString(), sectionData, player)
-        stringSection = stringSection.replace(/\\</g, "<").replace(/\\>/g, ">")
-        if (player instanceof Player) stringSection = setPapiWithNoColor_NI(player, stringSection)
-        if (config_NI.Debug) print(stringSection)
-        tempItemKeySection = new YamlConfiguration()
-        tempItemKeySection.loadFromString(stringSection)
-        configSection = tempItemKeySection.getConfigurationSection(this.id)
+        tempConfigSection = new YamlConfiguration()
+        tempConfigSection.set(this.id, configSection)
+        configString = getSection_NI(Sections, tempConfigSection.saveToString(), sectionData, player)
+        configString = configString.replace(/\\</g, "<").replace(/\\>/g, ">")
+        if (player instanceof Player) configString = setPapiWithNoColor_NI(player, configString)
+        if (config_NI.Debug) print(configString)
+        configSection = new YamlConfiguration()
+        configSection.loadFromString(configString)
+        configSection = configSection.getConfigurationSection(this.id)
         // 构建物品
         let material
         if (configSection.contains("material") && configSection.getString("material") && (material = Material.matchMaterial(configSection.getString("material").toUpperCase()))) {
@@ -1473,7 +1475,7 @@ function loadClass_NI() {
             itemTag.NeigeItems = new ItemTag()
             itemTag.NeigeItems.id = new ItemTagData(this.id)
             itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(sectionData))
-            itemTag.NeigeItems.hashCode = new ItemTagData(itemHashCode)
+            itemTag.NeigeItems.hashCode = new ItemTagData(this.hashCode)
             if (configSection.contains("options.charge")) {
                 itemTag.NeigeItems.charge = new ItemTagData(configSection.get("options.charge"))
                 itemTag.NeigeItems.maxCharge = new ItemTagData(configSection.get("options.charge"))
@@ -1868,17 +1870,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
  * 加载NI物品列表
  */
 function getNiItems_NI() {
-    let ArrayList = Packages.java.util.ArrayList
-    
-    let configs = getAllConfig_NI(getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Items")))
-    // [itemID]
-    NeigeItemsData.itemIDList = new ArrayList()
-    configs.forEach(function(config) {
-        config.getKeys(false).forEach(function(itemID) {
-            NeigeItemsData.itemIDList.add(itemID)
-        })
-    })
-    pageAmount = Math.ceil(NeigeItemsData.itemIDList.length/config_NI.listItemAmount)
+    pageAmount = Math.ceil(neigeItemManager.getItemIds().length/config_NI.listItemAmount)
 }
 
 /**
