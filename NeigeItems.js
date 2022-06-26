@@ -1775,7 +1775,7 @@ function onMythicMobDeath_NI(event) {
                         } case "chestplate": {
                             entityEquipment.setChestplate(itemStack)
                             continue
-                        } case "leggins": {
+                        } case "leggings": {
                             entityEquipment.setLeggings(itemStack)
                             continue
                         } case "boots": {
