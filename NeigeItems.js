@@ -2034,7 +2034,7 @@ function saveNiItem_NI(itemStack, itemKey, path, cover) {
             // 如果物品有ItemMeta
             if (itemStack.hasItemMeta()) {
                 // 获取ItemMeta
-                let itemMeta = itemStack.getItemMeta()
+                var itemMeta = itemStack.getItemMeta()
                 // 获取物品NBT
                 let itemNBT = toHashMapNBT_NI(NMSKt.getItemTag(itemStack))
                 // 获取显示信息
