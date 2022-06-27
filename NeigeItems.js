@@ -23,8 +23,6 @@ function onEnable_NI() {
     }
     // 加载类文件
     loadClass_NI()
-    // 加载NI物品列表
-    getNiItems_NI()
     // 加载物品变量监听器
     if (Tool.isPluginEnabled("ProtocolLib")) {
         ItemLoreReplacer_NI()
@@ -345,7 +343,7 @@ function commandRegister_NI() {
                     case "list":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
-                            if (args.length == 1 || incrementingArray_NI(pageAmount).indexOf(args[1]) != -1) {
+                            if (args.length == 1 || incrementingArray_NI(neigeItemManager.getPageAmount()).indexOf(args[1]) != -1) {
                                 // 获取当前页码
                                 let page = 0
                                 if (args.length > 1) page = parseInt(args[1]) - 1
@@ -407,11 +405,11 @@ function commandRegister_NI() {
                                 }
                                 let nextRaw = new TellrawJson()
                                 nextRaw.append(listNext)
-                                if (page != pageAmount-1) {
+                                if (page != neigeItemManager.getPageAmount() - 1) {
                                     nextRaw.hoverText(listNext + ": " + (page+2))
                                     nextRaw.runCommand("/ni list " + (page+2))
                                 }
-                                let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, pageAmount)
+                                let listSuffixMessage = listSuffix.replace(/{current}/g, page+1).replace(/{total}/g, neigeItemManager.getPageAmount())
                                 if (sender instanceof Player) {
                                     listSuffixMessage = listSuffixMessage.replace(/{prev}/g, "!@#$%{prev}!@#$%").replace(/{next}/g, "!@#$%{next}!@#$%")
                                     listSuffixMessage = listSuffixMessage.split("!@#$%")
@@ -802,14 +800,9 @@ function commandRegister_NI() {
                                 // 获取保存路径
                                 let path
                                 args.length > 2 ? path = args[2] : path = args[1] + ".yml"
-                                let saveResult
+                                let saveResult = neigeItemManager.saveItem(itemStack, args[1], path, false)
                                 // 保存物品
-                                if (saveResult = saveNiItem_NI(itemStack, args[1], path, false)) {
-                                    // 重载物品列表
-                                    neigeItemManager = new NeigeItemManager()
-                                    neigeItemManager.loadItemConfigs()
-                                    neigeItemManager.loadItems()
-                                    getNiItems_NI()
+                                if (saveResult == 1) {
                                     // 替换提示信息中的占位符
                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
                                     successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
@@ -841,13 +834,8 @@ function commandRegister_NI() {
                                 let path
                                 args.length > 2 ? path = args[2] : path = args[1] + ".yml"
                                 // 保存物品
-                                let saveResult = saveNiItem_NI(itemStack, args[1], path, true)
+                                let saveResult = neigeItemManager.saveItem(itemStack, args[1], path, true)
                                 if (saveResult != 2) {
-                                    // 重载物品列表
-                                    neigeItemManager = new NeigeItemManager()
-                                    neigeItemManager.loadItemConfigs()
-                                    neigeItemManager.loadItems()
-                                    getNiItems_NI()
                                     // 替换提示信息中的占位符
                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
                                     successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[1])
@@ -889,14 +877,9 @@ function commandRegister_NI() {
                                                 // 获取保存路径
                                                 let path
                                                 args.length > 3 ? path = args[3] : path = MMItemsPath
-                                                let saveResult
+                                                let saveResult = neigeItemManager.saveItem(itemStack, args[2], path, false)
                                                 // 保存物品
-                                                if (saveResult = saveNiItem_NI(itemStack, args[2], path, false)) {
-                                                    // 重载物品列表
-                                                    neigeItemManager = new NeigeItemManager()
-                                                    neigeItemManager.loadItemConfigs()
-                                                    neigeItemManager.loadItems()
-                                                    getNiItems_NI()
+                                                if (saveResult == 1) {
                                                     // 替换提示信息中的占位符
                                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
                                                     successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
@@ -937,14 +920,9 @@ function commandRegister_NI() {
                                                 // 获取保存路径
                                                 let path
                                                 args.length > 3 ? path = args[3] : path = MMItemsPath
-                                                let saveResult = saveNiItem_NI(itemStack, args[2], path, true)
+                                                let saveResult = neigeItemManager.saveItem(itemStack, args[2], path, true)
                                                 // 保存物品
                                                 if (saveResult != 2) {
-                                                    // 重载物品列表
-                                                    neigeItemManager = new NeigeItemManager()
-                                                    neigeItemManager.loadItemConfigs()
-                                                    neigeItemManager.loadItems()
-                                                    getNiItems_NI()
                                                     // 替换提示信息中的占位符
                                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
                                                     successSaveInfoMessage = successSaveInfoMessage.replace(/{itemID}/g, args[2])
@@ -979,7 +957,7 @@ function commandRegister_NI() {
                                             let itemStack = BukkitScheduler.callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
                                                 return itemManager.getItemStack(mmId)
                                             }).get()
-                                            let saveResult = saveNiItem_NI(itemStack, mmId, path, false)
+                                            let saveResult = neigeItemManager.saveItem(itemStack, mmId, path, false)
                                             // 保存物品
                                             if (saveResult == 0) {
                                                 // 替换提示信息中的占位符
@@ -991,11 +969,6 @@ function commandRegister_NI() {
                                                 sender.sendMessage(airItem)
                                             }
                                         }
-                                        // 重载物品列表
-                                        neigeItemManager = new NeigeItemManager()
-                                        neigeItemManager.loadItemConfigs()
-                                        neigeItemManager.loadItems()
-                                        getNiItems_NI()
                                         // 替换提示信息中的占位符
                                         let mMImportSuccessInfoMessage = mMImportSuccessInfo.replace(/{path}/g, path)
                                         // 保存成功提示
@@ -1169,10 +1142,7 @@ function commandRegister_NI() {
                             getActions_NI()
                             // 重载NI物品管理器
                             neigeItemManager = new NeigeItemManager()
-                            neigeItemManager.loadItemConfigs()
                             neigeItemManager.loadItems()
-                            // 加载NI物品列表
-                            getNiItems_NI()
                             // 重载MM物品列表
                             if (Tool.isPluginEnabled("MythicMobs")) {
                                 loadMMItem_NI()
@@ -1205,7 +1175,7 @@ function commandRegister_NI() {
                 case 2:
                     switch(args[0].toLowerCase()) {
                         case "list":
-                            return incrementingArray_NI(pageAmount)
+                            return incrementingArray_NI(neigeItemManager.getPageAmount())
                         case "get":
                             return neigeItemManager.getItemIds()
                         case "give":
@@ -1309,10 +1279,12 @@ function loadClass_NI() {
     const bukkitServer = Bukkit.getServer()
     
     NeigeItem = function(file, id, notLoad) {
+        // 加载基本配置
         this.id = id
         this.file = file
         this.config = YamlConfiguration.loadConfiguration(this.file)
         this.originalConfigSection = this.config.getConfigurationSection(id)
+        // 进行配置继承及全局节点加载
         if (notLoad != true) this.load()
     }
 
@@ -1561,11 +1533,7 @@ function loadClass_NI() {
         // 加载全部物品
         this.items = new ConcurrentHashMap()
         this.itemIds = new ArrayList()
-    }
-    
-    NeigeItemManager.prototype.load = function() {
         this.loadItemConfigs()
-        this.loadItems()
     }
 
     NeigeItemManager.prototype.loadItemConfigs = function() {
@@ -1597,6 +1565,106 @@ function loadClass_NI() {
         this.items.forEach(function(itemId, NeigeItem) {
             NeigeItem.load()
         })
+    }
+
+    /**
+     * 将物品以对应ID保存至对应路径
+     * @param itemStack ItemStack 物品
+     * @param itemKey String 物品ID
+     * @param path String 保存路径
+     * @param cover Boolean 是否覆盖
+     * @return 0: 已存在对应ID物品, 1: 成功保存, 2: 物品为空
+     */
+    NeigeItemManager.prototype.saveItem = function (itemStack, id, path, cover) {
+        path = path || id + ".yml"
+    
+        // 检测是否为空气
+        if (itemStack != null && itemStack.getType() != Material.AIR) {
+            // 获取路径文件
+            const dir = getDir_NI(scriptName_NI + java.io.File.separator + "Items")
+            const file = getFile_NI(dir, path)
+            const config = YamlConfiguration.loadConfiguration(file)
+            // 检测节点是否存在
+            if ((neigeItemManager.getItemIds().indexOf(id) == -1) || cover) {
+                // 创建物品节点
+                config.createSection(id)
+                const configSection = config.getConfigurationSection(id)
+                // 设置物品材质
+                configSection.set("material", itemStack.getType().toString())
+                // 如果物品有ItemMeta
+                if (itemStack.hasItemMeta()) {
+                    // 获取ItemMeta
+                    var itemMeta = itemStack.getItemMeta()
+                    // 获取物品NBT
+                    let itemNBT = toHashMapNBT_NI(NMSKt.getItemTag(itemStack))
+                    // 获取显示信息
+                    let display = itemNBT.display
+                    itemNBT.remove("display")
+                    // 设置CustomModelData
+                    if (itemMeta.hasCustomModelData != undefined
+                        && itemMeta.hasCustomModelData()) {
+                        configSection.set("custommodeldata", itemMeta.getCustomModelData())
+                    }
+                    // 设置子ID/损伤值
+                    if (itemStack.getDurability() != 0) {
+                        configSection.set("damage", itemStack.getDurability())
+                    }
+                    // 设置物品名
+                    if (itemMeta.hasDisplayName()) {
+                        configSection.set("name", itemMeta.getDisplayName())
+                    }
+                    // 设置Lore
+                    if (itemMeta.hasLore()) {
+                        configSection.set("lore", itemMeta.getLore())
+                    }
+                    // 设置是否无法破坏
+                    if (itemMeta.isUnbreakable()) {
+                        configSection.set("unbreakable", itemMeta.isUnbreakable())
+                    }
+                    // 设置物品附魔
+                    if (itemMeta.hasEnchants()) {
+                        configSection.createSection("enchantments")
+                        const enchantSection = configSection.getConfigurationSection("enchantments")
+                        itemMeta.getEnchants().keySet().forEach(function(enchant) {
+                            if (enchant != null) {
+                                enchantSection.set(enchant.getName(), itemMeta.getEnchantLevel(enchant))
+                            }
+                        })
+                    }
+                    // 设置ItemFlags
+                    const flags = itemMeta.getItemFlags().toArray()
+                    if (flags.length) {
+                        for (let key in flags) {
+                            flags[key] = flags[key].toString()
+                        }
+                        configSection.set("hideflags", flags)
+                    }
+                    // 设置物品颜色
+                    if (display && display.containsKey("color")) {
+                        configSection.set("color", parseInt(display.color.slice(6)).toString(16).toUpperCase())
+                    }
+                    // 设置物品NBT
+                    if (!itemNBT.isEmpty()) {
+                        configSection.set("nbt", itemNBT)
+                    }
+                }
+                config.save(file)
+                // 物品保存好了, 信息加进ItemManager里
+                this.items[id] = new NeigeItem(file, id)
+                this.itemIds.add(id)
+                if (!cover) return 1
+            }
+            return 0
+        }
+        return 2
+    }
+
+    NeigeItemManager.prototype.getItemAmount = function() {
+        return this.itemIds.length
+    }
+
+    NeigeItemManager.prototype.getPageAmount = function() {
+        return Math.ceil(this.itemIds.length/config_NI.listItemAmount)
     }
     
     NeigeItemManager.prototype.getItem = function(id) {
@@ -1638,7 +1706,6 @@ function loadClass_NI() {
     }
 
     neigeItemManager = new NeigeItemManager()
-    neigeItemManager.loadItemConfigs()
     neigeItemManager.loadItems()
 }
 
@@ -2001,109 +2068,6 @@ function runAction_NI(player, action, itemNBT) {
     } else if (action instanceof MemorySection) {
 
     }
-}
-
-/**
- * 将物品以对应ID保存至对应路径
- * @param itemStack ItemStack 物品
- * @param itemKey String 物品ID
- * @param path String 保存路径
- * @param cover Boolean 是否覆盖
- * @return 0: 已存在对应ID物品, 1: 成功保存, 2: 物品为空
- */
-function saveNiItem_NI(itemStack, itemKey, path, cover) {
-    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
-    let YamlConfiguration = Packages.org.bukkit.configuration.file.YamlConfiguration
-    let Material = Packages.org.bukkit.Material
-
-    path = path || itemKey + ".yml"
-
-    // 检测是否为空气
-    if (itemStack != null && itemStack.getType() != Material.AIR) {
-        // 获取路径文件
-        let dir = getDir_NI(scriptName_NI + java.io.File.separator + "Items")
-        file = getFile_NI(dir, path)
-        let config = YamlConfiguration.loadConfiguration(file)
-        // 检测节点是否存在
-        if ((neigeItemManager.getItemIds().indexOf(itemKey) == -1) || cover) {
-            // 创建物品节点
-            config.createSection(itemKey)
-            let itemKeySection = config.getConfigurationSection(itemKey)
-            // 设置物品材质
-            itemKeySection.set("material", itemStack.getType().toString())
-            // 如果物品有ItemMeta
-            if (itemStack.hasItemMeta()) {
-                // 获取ItemMeta
-                var itemMeta = itemStack.getItemMeta()
-                // 获取物品NBT
-                let itemNBT = toHashMapNBT_NI(NMSKt.getItemTag(itemStack))
-                // 获取显示信息
-                let display = itemNBT.display
-                itemNBT.remove("display")
-                // 设置CustomModelData
-                if (itemMeta.hasCustomModelData != undefined
-                    && itemMeta.hasCustomModelData()) {
-                    itemKeySection.set("custommodeldata", itemMeta.getCustomModelData())
-                }
-                // 设置子ID/损伤值
-                if (itemStack.getDurability() != 0) {
-                    itemKeySection.set("damage", itemStack.getDurability())
-                }
-                // 设置物品名
-                if (itemMeta.hasDisplayName()) {
-                    itemKeySection.set("name", itemMeta.getDisplayName())
-                }
-                // 设置Lore
-                if (itemMeta.hasLore()) {
-                    itemKeySection.set("lore", itemMeta.getLore())
-                }
-                // 设置是否无法破坏
-                if (itemMeta.isUnbreakable()) {
-                    itemKeySection.set("unbreakable", itemMeta.isUnbreakable())
-                }
-                // 设置物品附魔
-                if (itemMeta.hasEnchants()) {
-                    itemKeySection.createSection("enchantments")
-                    let enchantSection = itemKeySection.getConfigurationSection("enchantments")
-                    itemMeta.getEnchants().keySet().forEach(function(enchant) {
-                        if (enchant != null) {
-                            enchantSection.set(enchant.getName(), itemMeta.getEnchantLevel(enchant))
-                        }
-                    })
-                }
-                // 设置ItemFlags
-                let flags = itemMeta.getItemFlags().toArray()
-                if (flags.length) {
-                    for (let key in flags) {
-                        flags[key] = flags[key].toString()
-                    }
-                    itemKeySection.set("hideflags", flags)
-                }
-                // 设置物品颜色
-                if (display && display.containsKey("color")) {
-                    itemKeySection.set("color", parseInt(display.color.slice(6)).toString(16).toUpperCase())
-                }
-                // 设置物品NBT
-                if (!itemNBT.isEmpty()) {
-                    itemKeySection.set("nbt", itemNBT)
-                }
-            }
-            config.save(file)
-            if (neigeItemManager.getItemIds().indexOf(itemKey) == -1) return 1
-            return 0
-        } else {
-            return 0
-        }
-    } else {
-        return 2
-    }
-}
-
-/**
- * 加载NI物品列表
- */
-function getNiItems_NI() {
-    pageAmount = Math.ceil(neigeItemManager.getItemIds().length/config_NI.listItemAmount)
 }
 
 /**
