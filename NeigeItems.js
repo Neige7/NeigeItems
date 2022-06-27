@@ -806,6 +806,9 @@ function commandRegister_NI() {
                                 // 保存物品
                                 if (saveResult = saveNiItem_NI(itemStack, args[1], path, false)) {
                                     // 重载物品列表
+                                    neigeItemManager = new NeigeItemManager()
+                                    neigeItemManager.loadItemConfigs()
+                                    neigeItemManager.loadItems()
                                     getNiItems_NI()
                                     // 替换提示信息中的占位符
                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
@@ -841,6 +844,9 @@ function commandRegister_NI() {
                                 let saveResult = saveNiItem_NI(itemStack, args[1], path, true)
                                 if (saveResult != 2) {
                                     // 重载物品列表
+                                    neigeItemManager = new NeigeItemManager()
+                                    neigeItemManager.loadItemConfigs()
+                                    neigeItemManager.loadItems()
                                     getNiItems_NI()
                                     // 替换提示信息中的占位符
                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
@@ -887,6 +893,9 @@ function commandRegister_NI() {
                                                 // 保存物品
                                                 if (saveResult = saveNiItem_NI(itemStack, args[2], path, false)) {
                                                     // 重载物品列表
+                                                    neigeItemManager = new NeigeItemManager()
+                                                    neigeItemManager.loadItemConfigs()
+                                                    neigeItemManager.loadItems()
                                                     getNiItems_NI()
                                                     // 替换提示信息中的占位符
                                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
@@ -932,6 +941,9 @@ function commandRegister_NI() {
                                                 // 保存物品
                                                 if (saveResult != 2) {
                                                     // 重载物品列表
+                                                    neigeItemManager = new NeigeItemManager()
+                                                    neigeItemManager.loadItemConfigs()
+                                                    neigeItemManager.loadItems()
                                                     getNiItems_NI()
                                                     // 替换提示信息中的占位符
                                                     let successSaveInfoMessage = successSaveInfo.replace(/{name}/g, getItemName_NI(itemStack))
@@ -980,6 +992,9 @@ function commandRegister_NI() {
                                             }
                                         }
                                         // 重载物品列表
+                                        neigeItemManager = new NeigeItemManager()
+                                        neigeItemManager.loadItemConfigs()
+                                        neigeItemManager.loadItems()
                                         getNiItems_NI()
                                         // 替换提示信息中的占位符
                                         let mMImportSuccessInfoMessage = mMImportSuccessInfo.replace(/{path}/g, path)
@@ -1153,7 +1168,9 @@ function commandRegister_NI() {
                             // 重载NI物品动作列表
                             getActions_NI()
                             // 重载NI物品管理器
-                            loadClass_NI()
+                            neigeItemManager = new NeigeItemManager()
+                            neigeItemManager.loadItemConfigs()
+                            neigeItemManager.loadItems()
                             // 加载NI物品列表
                             getNiItems_NI()
                             // 重载MM物品列表
@@ -1538,7 +1555,7 @@ function loadClass_NI() {
         return this.file
     }
 
-    const NeigeItemManager = function() {
+    NeigeItemManager = function() {
         // 加载全部物品文件
         this.files = getAllFile_NI(getDir_NI(scriptName_NI + java.io.File.separator + "Items"))
         // 加载全部物品
