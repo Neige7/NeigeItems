@@ -1736,13 +1736,15 @@ function onItemSpawn_NI(event) {
     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
         const item = event.getEntity()
         const itemStack = item.getItemStack()
-        const itemTag = NMSKt.getItemTag(itemStack)
-        
-        if (itemTag.containsKey("NeigeItems") && itemTag["NeigeItems"].containsKey("color")) {
-            const color = ChatColor[itemTag["NeigeItems"]["color"].asString()]
-            // 别问我为什么不检测color的合法性, 物品生成的时候已经检测过了
-            colorTeam_NI[color.toString()].addEntry(item.getUniqueId().toString())
-            item.setGlowing(true)
+        if (itemStack != null && !itemStack.getType().isAir()) {
+            const itemTag = NMSKt.getItemTag(itemStack)
+            
+            if (itemTag.containsKey("NeigeItems") && itemTag["NeigeItems"].containsKey("color")) {
+                const color = ChatColor[itemTag["NeigeItems"]["color"].asString()]
+                // 别问我为什么不检测color的合法性, 物品生成的时候已经检测过了
+                colorTeam_NI[color.toString()].addEntry(item.getUniqueId().toString())
+                item.setGlowing(true)
+            }
         }
     })
 }
