@@ -15,6 +15,8 @@ function onEnable_NI() {
     getGlobalSections_NI()
     // 加载NI物品动作列表
     getActions_NI()
+    // 加载用于物品闪光的Team
+    loadColorTeam_NI()
     // 加载MM物品列表
     if (Tool.isPluginEnabled("MythicMobs")) {
         loadMMItem_NI()
@@ -31,6 +33,11 @@ function onEnable_NI() {
     }
     // 注册指令
     commandRegister_NI()
+    // 加载物品闪光监听器
+    Tool.removeListener("onItemSpawn_NI")
+    Tool.addListener("onItemSpawn_NI", "org.bukkit.event.entity.ItemSpawnEvent", "LOWEST", false, function (event) {
+        onItemSpawn_NI(event)
+    })
     // 加载物品动作监听器
     Tool.removeListener("onPlayerInteract_NI")
     Tool.addListener("onPlayerInteract_NI", "org.bukkit.event.player.PlayerInteractEvent", "LOW", false, function(event) {
@@ -1492,6 +1499,14 @@ function loadClass_NI() {
                 itemTag.NeigeItems.charge = new ItemTagData(configSection.get("options.charge"))
                 itemTag.NeigeItems.maxCharge = new ItemTagData(configSection.get("options.charge"))
             }
+            // 设置掉落物闪光颜色
+            if (configSection.contains("options.color")) {
+                const colorString = configSection.getString("options.color").toUpperCase()
+                // 判断你这颜色保不保熟
+                if (ChatColor[colorString] != undefined) {
+                    itemTag.NeigeItems.color = new ItemTagData(colorString)
+                }
+            }
             // 设置物品NBT
             if (configSection.contains("nbt")) {
                 // 获取配置NBT
@@ -1710,7 +1725,29 @@ function loadClass_NI() {
 }
 
 /**
- * MM怪物死亡事件
+ * @param event ItemSpawnEvent 物品生成事件
+ */
+function onItemSpawn_NI(event) {
+    const Bukkit = Packages.org.bukkit.Bukkit
+    const BukkitScheduler = Bukkit.getScheduler()
+    const ChatColor = Packages.org.bukkit.ChatColor
+    const NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
+
+    BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
+        const item = event.getEntity()
+        const itemStack = item.getItemStack()
+        const itemTag = NMSKt.getItemTag(itemStack)
+        
+        if (itemTag.containsKey("NeigeItems") && itemTag["NeigeItems"].containsKey("color")) {
+            const color = ChatColor[itemTag["NeigeItems"]["color"].asString()]
+            // 别问我为什么不检测color的合法性, 物品生成的时候已经检测过了
+            colorTeam_NI[color.toString()].addEntry(item.getUniqueId().toString())
+            item.setGlowing(true)
+        }
+    })
+}
+
+/**
  * @param event MythicMobDeathEvent MM怪物死亡事件
  */
 function onMythicMobDeath_NI(event) {
@@ -1802,7 +1839,6 @@ function onMythicMobDeath_NI(event) {
 }
 
 /**
- * MM怪物出生事件
  * @param event MythicMobSpawnEvent MM怪物出生事件
  */
  function onMythicMobSpawn_NI(event) {
@@ -1893,7 +1929,6 @@ function onMythicMobDeath_NI(event) {
 }
 
 /**
- * 玩家交互方块事件
  * @param event PlayerInteractEvent 玩家交互方块事件
  */
 function onPlayerInteract_NI(event) {
@@ -3210,6 +3245,27 @@ function globalSectionParse_NI(Sections, section, sectionData, player, temp, ove
         sectionData[overrideSection || section] = result
     }
     return result
+}
+
+function loadColorTeam_NI() {
+    const Bukkit = Packages.org.bukkit.Bukkit
+    const ChatColor = Packages.org.bukkit.ChatColor
+    const colors = ChatColor.values()
+
+    colorTeam_NI = {}
+
+    for (let index = 0; index < colors.length; index++) {
+        const color = colors[index]
+
+        let team = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getTeam("NI-"+color)
+        if (team != null) {
+            team.unregister()
+        }
+        team = Bukkit.getServer().getScoreboardManager().getMainScoreboard().registerNewTeam("NI-"+color)
+        team.setColor(color)
+        team.setPrefix(color.toString())
+        colorTeam_NI[color.toString()] = team
+    }
 }
 
 /**
