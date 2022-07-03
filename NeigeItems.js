@@ -346,7 +346,7 @@ function commandRegister_NI() {
             // 仅限后台/OP执行
             if (!(sender instanceof Player) || sender.isOp()) {
                 switch(args[0].toLowerCase()) {
-                    // nim list (页码) > 查看所有NI物品
+                    // ni list (页码) > 查看所有NI物品
                     case "list":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -441,7 +441,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NI物品
+                    // ni get [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID获取NI物品
                     case "get":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 如果指令发送者不是玩家
@@ -517,7 +517,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NI物品
+                    // ni give [玩家ID] [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予NI物品
                     case "give":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -605,7 +605,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NI物品
+                    // ni giveAll [物品ID] (数量) (是否反复随机) (指向数据) > 根据ID给予所有人NI物品
                     case "giveall":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -693,7 +693,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] [是否反复随机] [物品解析对象] (指向数据) > 于指定位置掉落NI物品
+                    // ni drop [物品ID] [数量] [世界名] [X坐标] [Y坐标] [Z坐标] [是否反复随机] [物品解析对象] (指向数据) > 于指定位置掉落NI物品
                     case "drop":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -797,7 +797,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim save [物品ID] (保存路径) > 将手中物品以对应ID保存至对应路径
+                    // ni save [物品ID] (保存路径) > 将手中物品以对应ID保存至对应路径
                     case "save":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -830,7 +830,7 @@ function commandRegister_NI() {
                             }
                         })
                         return true
-                    // nim cover [物品ID] (保存路径) > 将手中物品以对应ID覆盖至对应路径
+                    // ni cover [物品ID] (保存路径) > 将手中物品以对应ID覆盖至对应路径
                     case "cover":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 检测指令长度
@@ -870,7 +870,7 @@ function commandRegister_NI() {
                             let MythicMobs = Tool.getPlugin("MythicMobs")
                             let itemManager = MythicMobs.getItemManager()
                             switch(args[1].toLowerCase()) {
-                                // nim mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NI物品
+                                // ni mm load [物品ID] (保存路径) > 将对应ID的MM物品保存为NI物品
                                 case "load":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 检测指令长度
@@ -914,7 +914,7 @@ function commandRegister_NI() {
                                         }
                                     })
                                     break
-                                // nim mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NI物品
+                                // ni mm cover [物品ID] (保存路径) > 将对应ID的MM物品覆盖为NI物品
                                 case "cover":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 检测指令长度
@@ -952,7 +952,7 @@ function commandRegister_NI() {
                                         }
                                     })
                                     break
-                                // nim mm loadAll (保存路径) > 将全部MM物品转化为NI物品
+                                // ni mm loadAll (保存路径) > 将全部MM物品转化为NI物品
                                 case "loadall":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 获取保存路径
@@ -982,7 +982,7 @@ function commandRegister_NI() {
                                         sender.sendMessage(mMImportSuccessInfoMessage)
                                     })
                                     break
-                                // nim mm get [物品ID] (数量) > 根据ID获取MM物品
+                                // ni mm get [物品ID] (数量) > 根据ID获取MM物品
                                 case "get":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 如果指令发送者不是玩家
@@ -1026,7 +1026,7 @@ function commandRegister_NI() {
                                         }
                                     })
                                     break
-                                // nim mm give [玩家ID] [物品ID] (数量) > 根据ID给予MM物品
+                                // ni mm give [玩家ID] [物品ID] (数量) > 根据ID给予MM物品
                                 case "give":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         if (args.length > 3) {
@@ -1076,7 +1076,7 @@ function commandRegister_NI() {
                                         }
                                     })
                                     break
-                                // nim mm giveAll [物品ID] (数量) > 根据ID给予所有人MM物品
+                                // ni mm giveAll [物品ID] (数量) > 根据ID给予所有人MM物品
                                 case "giveall":
                                     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                                         // 检测指令长度
@@ -1132,7 +1132,7 @@ function commandRegister_NI() {
                             sendMessages_NI(sender, helpMessages)
                         }
                         return true
-                    // nim reload > 重新加载NI物品
+                    // ni reload > 重新加载NI物品
                     case "reload":
                         BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
                             // 重载配置文件
@@ -1731,12 +1731,13 @@ function onItemSpawn_NI(event) {
     const Bukkit = Packages.org.bukkit.Bukkit
     const BukkitScheduler = Bukkit.getScheduler()
     const ChatColor = Packages.org.bukkit.ChatColor
+    const Material = Packages.org.bukkit.Material
     const NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
 
     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
         const item = event.getEntity()
         const itemStack = item.getItemStack()
-        if (itemStack != null && !itemStack.getType().isAir()) {
+        if (itemStack != null && itemStack.getType() != Material.AIR) {
             const itemTag = NMSKt.getItemTag(itemStack)
             
             if (itemTag.containsKey("NeigeItems") && itemTag["NeigeItems"].containsKey("color")) {
@@ -1757,6 +1758,7 @@ function onMythicMobDeath_NI(event) {
     const Bukkit = Packages.org.bukkit.Bukkit
     const BukkitScheduler = Bukkit.getScheduler()
     const Player = Packages.org.bukkit.entity.Player
+    const Material = Packages.org.bukkit.Material
     const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
     const NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
 
@@ -1776,7 +1778,7 @@ function onMythicMobDeath_NI(event) {
         for (let index = 0; index < equipments.length; index++) {
             const itemStack = equipments[index]
 
-            if (itemStack != null && !itemStack.getType().isAir()) {
+            if (itemStack != null && itemStack.getType() != Material.AIR) {
                 const itemTag = NMSKt.getItemTag(itemStack)
                 
                 if (itemTag.containsKey("NeigeItems")) {
@@ -3411,18 +3413,19 @@ function itemToTellrawJson_NI(itemStack, name) {
  * @return String
  */
 function getItemName_NI(itemStack) {
-    let ItemStack = Packages.org.bukkit.inventory.ItemStack
-    let Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
+    const ItemStack = Packages.org.bukkit.inventory.ItemStack
+    const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
 
-    if (!(itemStack instanceof ItemStack)) return null
-    let name = Tool.getItemName(itemStack)
-    if (name == "") {
-        let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
-        if (itemStack.getItemMeta() instanceof SkullMeta) {
-            name = itemStack.getItemMeta().getOwner() + "的头"
+    if (itemStack instanceof ItemStack) {
+        let name = Tool.getItemName(itemStack)
+        if (name == "") {
+            let SkullMeta = Packages.org.bukkit.inventory.meta.SkullMeta
+            if (itemStack.getItemMeta() instanceof SkullMeta) {
+                name = itemStack.getItemMeta().getOwner() + "的头"
+            }
         }
+        return name
     }
-    return name
 }
 
 /**
