@@ -374,7 +374,7 @@ function commandRegister_NI() {
                                     listItemMessage = listItemMessage.replace(/{ID}/g, neigeItemManager.getItemIds()[index])
                                     // 构建信息及物品
                                     if (sender instanceof Player) {
-                                        let itemStack = neigeItemManager.getItemStack(neigeItemManager.getItemIds()[index], sender, sender)
+                                        let itemStack = neigeItemManager.getItemStack(neigeItemManager.getItemIds()[index], sender, null, sender)
                                         listItemMessage = listItemMessage.split("{name}")
                                         let listItemRaw = new TellrawJson()
                                         for (let i = 0; i < listItemMessage.length; i++) {
@@ -389,7 +389,7 @@ function commandRegister_NI() {
                                         // 如果对于当前脚本而言, player是不可缺少的, 就直接获取配置里写的name
                                         // 如果配置里没有编写自定义名称, 就获取当前material的本地化名称
                                         try {
-                                            let itemStack = neigeItemManager.getItemStack(neigeItemManager.getItemIds()[index], sender, sender)
+                                            let itemStack = neigeItemManager.getItemStack(neigeItemManager.getItemIds()[index], null, null, sender)
                                             sender.sendMessage(listItemMessage.replace(/{name}/g, getItemName_NI(itemStack)))
                                         } catch (error) {
                                             let itemKeySection = neigeItemManager.getConfig(neigeItemManager.getItemIds()[index])
@@ -1757,85 +1757,180 @@ function onMythicMobDeath_NI(event) {
     const ArrayList = Packages.java.util.ArrayList
     const Bukkit = Packages.org.bukkit.Bukkit
     const BukkitScheduler = Bukkit.getScheduler()
-    const Player = Packages.org.bukkit.entity.Player
     const Material = Packages.org.bukkit.Material
+    const Player = Packages.org.bukkit.entity.Player
+    const Vector = Packages.org.bukkit.util.Vector
     const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
     const NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
 
     BukkitScheduler["runTaskAsynchronously(Plugin,Runnable)"](Tool.getPlugin("Pouvoir"), function() {
-        const entity = event.getEntity()
-        const player = event.getKiller()
-        const entityEquipment = entity.getEquipment()
-        const equipments = new ArrayList([
-            entityEquipment.getHelmet().clone(),
-            entityEquipment.getChestplate().clone(),
-            entityEquipment.getLeggings().clone(),
-            entityEquipment.getBoots().clone(),
-            entityEquipment.getItemInMainHand().clone(),
-            entityEquipment.getItemInOffHand().clone()
-        ])
+        // 获取MM怪物配置
+        const mythicMob = event.getMobType()
+        // 获取MM怪物ID
+        const mythicId = mythicMob.getInternalName()
+        // 获取对应MythicConfig
+        const mythicConfig = mythicMob.getConfig()
+        // 获取MM怪物的ConfigurationSection
+        const configSection = mythicConfig.getFileConfiguration().getConfigurationSection(mythicId)
 
-        for (let index = 0; index < equipments.length; index++) {
-            const itemStack = equipments[index]
-
-            if (itemStack != null && itemStack.getType() != Material.AIR) {
-                const itemTag = NMSKt.getItemTag(itemStack)
-                
-                if (itemTag.containsKey("NeigeItems")) {
-                    const neigeItems = itemTag["NeigeItems"]
-                    if (neigeItems.containsKey("dropChance")) {
-                        const dropChance = neigeItems["dropChance"].asFloat()
-                        if (Math.random() <= dropChance) {
-                            neigeItems.remove("dropChance")
-                            itemTag.saveTo(itemStack)
-                            dropItem_NI(itemStack, entity.getLocation())
+        // 如果怪物配置了NeigeItems相关信息
+        if (configSection.contains("NeigeItems")) {
+            // 获取被击杀的MM怪物
+            const entity = event.getEntity()
+            // 获取击杀者
+            const player = event.getKiller()
+            // 获取MM怪物身上的装备
+            const entityEquipment = entity.getEquipment()
+            // 一个个的全掏出来, 等会儿挨个康康
+            const equipments = new ArrayList([
+                entityEquipment.getHelmet().clone(),
+                entityEquipment.getChestplate().clone(),
+                entityEquipment.getLeggings().clone(),
+                entityEquipment.getBoots().clone(),
+                entityEquipment.getItemInMainHand().clone(),
+                entityEquipment.getItemInOffHand().clone()
+            ])
+            // 预定于掉落物列表
+            const dropItems = new ArrayList()
+            // 遍历怪物身上的装备, 看看哪个是生成时自带的需要掉落的NI装备
+            for (let index = 0; index < equipments.length; index++) {
+                const itemStack = equipments[index]
+    
+                if (itemStack != null && itemStack.getType() != Material.AIR) {
+                    const itemTag = NMSKt.getItemTag(itemStack)
+                    
+                    if (itemTag.containsKey("NeigeItems")) {
+                        const neigeItems = itemTag["NeigeItems"]
+                        if (neigeItems.containsKey("dropChance")) {
+                            // 可算是逮着你了, 直接获取掉落概率
+                            const dropChance = neigeItems["dropChance"].asFloat()
+                            if (Math.random() <= dropChance) {
+                                // 真要掉那得先把特殊NBT移除
+                                neigeItems.remove("dropChance")
+                                itemTag.saveTo(itemStack)
+                                // 丢进待掉落列表里
+                                dropItems.add(itemStack)
+                            }
                         }
                     }
                 }
             }
-        }
-    
-        // 判断是否是玩家击杀
-        if (player instanceof Player) {
-            const drops = event.getMobType().getConfig().getNestedConfig("NeigeItems").getStringList("Drops")
 
-            for (let index = 0; index < drops.length; index++) {
-                const args = drops[index].split(" ")
-
-                let data = null
-                if (args.length > 4) data = args.slice(4).join(" ")
-
-                // 概率判断
-                if (!neigeItemManager.hasItem(args[0])
-                    || (args.length > 2
-                        && !isNaN(parseFloat(args[2]))
-                        && Math.random() > parseFloat(args[2]))) {
-                    continue
-                }
-                // 数量判断
-                let amount = 1
-                if (args.length > 1) {
-                    if (args[1].contains("-")) {
-                        const index = args[1].indexOf("-")
-                        const min = parseInt(args[1].slice(0, index))
-                        const max = parseInt(args[1].slice(index+1))
-                        if (!isNaN(min) && !isNaN(max)) {
-                            amount = min + Math.round(Math.random()*(max-min))
+            // 获取NeigeItems相关配置项
+            const neigeItems = configSection.getConfigurationSection("NeigeItems")
+            // 判断是否是玩家击杀
+            if (player instanceof Player) {
+                // 如果配置了掉落相关信息
+                if (neigeItems.contains("Drops")) {
+                    // 获取掉落相关的配置项
+                    const drops = neigeItems.getStringList("Drops")
+        
+                    // 遍历相关配置
+                    for (let index = 0; index < drops.length; index++) {
+                        const args = drops[index].split(" ")
+        
+                        let data = null
+                        if (args.length > 4) data = args.slice(4).join(" ")
+        
+                        // 获取概率并进行概率随机
+                        if (!neigeItemManager.hasItem(args[0])
+                            || (args.length > 2
+                                && !isNaN(parseFloat(args[2]))
+                                && Math.random() > parseFloat(args[2]))) {
+                            continue
                         }
-                    } else {
-                        if (!isNaN(parseInt(args[1]))) {
-                            amount = parseInt(args[1])
+                        // 获取掉落数量
+                        let amount = 1
+                        if (args.length > 1) {
+                            if (args[1].contains("-")) {
+                                const index = args[1].indexOf("-")
+                                const min = parseInt(args[1].slice(0, index))
+                                const max = parseInt(args[1].slice(index+1))
+                                if (!isNaN(min) && !isNaN(max)) {
+                                    amount = min + Math.round(Math.random()*(max-min))
+                                }
+                            } else {
+                                if (!isNaN(parseInt(args[1]))) {
+                                    amount = parseInt(args[1])
+                                }
+                            }
+                        }
+                        // 看看需不需要每次都随机生成
+                        if (args.length > 2 && args[3] == "false") {
+                            // 真只随机一次啊?那嗯怼吧
+                            const itemStack = neigeItemManager.getItemStack(args[0], player, data)
+                            const maxStackSize = itemStack.getMaxStackSize()
+                            itemStack.setAmount(maxStackSize)
+                            for (var givenAmt = 0; (givenAmt + maxStackSize) <= amount; givenAmt += maxStackSize) dropItems.add(itemStack.clone())
+                            if (givenAmt < amount) {
+                                itemStack.setAmount(amount - givenAmt)
+                                dropItems.add(itemStack.clone())
+                            }
+                        } else {
+                            // 随机生成, 那疯狂造就完事儿了
+                            for (let index = 0; index < amount; index++) {
+                                const itemStack = neigeItemManager.getItemStack(args[0], player, data)
+                                dropItems.add(itemStack)
+                            }
                         }
                     }
                 }
-                if (args.length > 2 && args[3] == "false") {
-                    const itemStack = neigeItemManager.getItemStack(args[0], player, data)
-                    dropItems_NI(itemStack, amount, entity.getLocation())
+            }
+
+            // 如果配置了多彩掉落信息
+            if (neigeItems.contains("FancyDrop")) {
+                // 获取多彩掉落相关信息
+                const fancyDrop = neigeItems.getConfigurationSection("FancyDrop")
+                // 获取掉落偏移信息
+                const offset = fancyDrop.getConfigurationSection("offset")
+                // 获取横向偏移量
+                let offsetX = offset.getString("x")
+                if (offsetX.contains("-")) {
+                    const index = offsetX.indexOf("-")
+                    const min = parseFloat(offsetX.slice(0, index))
+                    const max = parseFloat(offsetX.slice(index+1))
+                    if (!isNaN(min) && !isNaN(max)) {
+                        offsetX = min + Math.random()*(max-min)
+                    }
                 } else {
-                    for (let index = 0; index < amount; index++) {
-                        const itemStack = neigeItemManager.getItemStack(args[0], player, data)
-                        dropItem_NI(itemStack, entity.getLocation())
+                    offsetX = parseFloat(offsetX)
+                }
+                // 获取纵向偏移量
+                let offsetY = offset.getString("y")
+                if (offsetY.contains("-")) {
+                    const index = offsetY.indexOf("-")
+                    const min = parseFloat(offsetY.slice(0, index))
+                    const max = parseFloat(offsetY.slice(index+1))
+                    if (!isNaN(min) && !isNaN(max)) {
+                        offsetY = min + Math.random()*(max-min)
                     }
+                } else {
+                    offsetY = parseFloat(offsetY)
+                }
+                // 获取发射角度类型
+                const angleType = fancyDrop.getString("angle.type")
+                // 获取怪物死亡位置
+                const location = entity.getLocation()
+                // 开始掉落
+                for (let index = 0; index < dropItems.length; index++) {
+                    const itemStack = dropItems[index]
+
+                    const item = Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                        return location.getWorld().dropItem(location, itemStack)
+                    }).get()
+                    const vector = new Vector(offsetX, offsetY, 0.0)
+                    if (angleType == "random") {
+                        vector.rotateAroundY(Math.PI * 2 * Math.random())
+                    } else if (angleType == "round") {
+                        vector.rotateAroundY(Math.PI * 2 * index/dropItems.length)
+                    }
+                    item.setVelocity(vector)
+                }
+            } else {
+                // 普通掉落
+                for (let index = 0; index < dropItems.length; index++) {
+                    const itemStack = dropItems[index]
+                    dropItem_NI(itemStack, entity.getLocation())
                 }
             }
         }
@@ -2611,7 +2706,7 @@ function getConfigSection_NI(configs) {
  * @param memorySection MemorySection
  * @return HashMap
  */
-function toHashMap_NI(memorySection){
+function toHashMap_NI(memorySection) {
     let HashMap = Packages.java.util.HashMap
     let Map = Packages.java.util.Map
     let MemorySection = Packages.org.bukkit.configuration.MemorySection
