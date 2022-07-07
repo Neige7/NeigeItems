@@ -1827,7 +1827,7 @@ function onMythicMobDeath_NI(event) {
         
                     // 遍历相关配置
                     for (let index = 0; index < drops.length; index++) {
-                        const args = getSection_NI(null, drops[index]).split(" ")
+                        const args = getSection_NI(null, drops[index], null, player).split(" ")
         
                         let data = null
                         if (args.length > 4) data = args.slice(4).join(" ")
@@ -1884,7 +1884,7 @@ function onMythicMobDeath_NI(event) {
                 // 获取掉落偏移信息
                 const offset = fancyDrop.getConfigurationSection("offset")
                 // 获取横向偏移量
-                let offsetX = getSection_NI(null, offset.getString("x"))
+                let offsetX = getSection_NI(null, offset.getString("x"), null, player)
                 if (offsetX.contains("-")) {
                     const index = offsetX.indexOf("-")
                     const min = parseFloat(offsetX.slice(0, index))
@@ -1896,7 +1896,7 @@ function onMythicMobDeath_NI(event) {
                     offsetX = parseFloat(offsetX)
                 }
                 // 获取纵向偏移量
-                let offsetY = getSection_NI(null, offset.getString("y"))
+                let offsetY = getSection_NI(null, offset.getString("y"), null, player)
                 if (offsetY.contains("-")) {
                     const index = offsetY.indexOf("-")
                     const min = parseFloat(offsetY.slice(0, index))
@@ -1908,7 +1908,7 @@ function onMythicMobDeath_NI(event) {
                     offsetY = parseFloat(offsetY)
                 }
                 // 获取发射角度类型
-                const angleType = getSection_NI(null, fancyDrop.getString("angle.type"))
+                const angleType = getSection_NI(null, fancyDrop.getString("angle.type"), null, player)
                 // 获取怪物死亡位置
                 const location = entity.getLocation()
                 // 开始掉落
