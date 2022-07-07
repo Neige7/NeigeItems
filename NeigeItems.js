@@ -1920,9 +1920,17 @@ function onMythicMobDeath_NI(event) {
                     }).get()
                     const vector = new Vector(offsetX, offsetY, 0.0)
                     if (angleType == "random") {
-                        vector.rotateAroundY(Math.PI * 2 * Math.random())
+                        const angleCos = Math.cos(Math.PI * 2 * Math.random())
+                        const angleSin = Math.sin(Math.PI * 2 * Math.random())
+                        const x = angleCos * vector.getX() + angleSin * vector.getZ()
+                        const z = -angleSin * vector.getX() + angleCos * vector.getZ()
+                        vector.setX(x).setZ(z)
                     } else if (angleType == "round") {
-                        vector.rotateAroundY(Math.PI * 2 * index/dropItems.length)
+                        const angleCos = Math.cos(Math.PI * 2 * index/dropItems.length)
+                        const angleSin = Math.sin(Math.PI * 2 * index/dropItems.length)
+                        const x = angleCos * vector.getX() + angleSin * vector.getZ()
+                        const z = -angleSin * vector.getX() + angleCos * vector.getZ()
+                        vector.setX(x).setZ(z)
                     }
                     item.setVelocity(vector)
                 }
