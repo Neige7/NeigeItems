@@ -1827,7 +1827,7 @@ function onMythicMobDeath_NI(event) {
         
                     // 遍历相关配置
                     for (let index = 0; index < drops.length; index++) {
-                        const args = drops[index].split(" ")
+                        const args = getSection_NI(null, drops[index]).split(" ")
         
                         let data = null
                         if (args.length > 4) data = args.slice(4).join(" ")
@@ -1884,7 +1884,7 @@ function onMythicMobDeath_NI(event) {
                 // 获取掉落偏移信息
                 const offset = fancyDrop.getConfigurationSection("offset")
                 // 获取横向偏移量
-                let offsetX = offset.getString("x")
+                let offsetX = getSection_NI(null, offset.getString("x"))
                 if (offsetX.contains("-")) {
                     const index = offsetX.indexOf("-")
                     const min = parseFloat(offsetX.slice(0, index))
@@ -1896,7 +1896,7 @@ function onMythicMobDeath_NI(event) {
                     offsetX = parseFloat(offsetX)
                 }
                 // 获取纵向偏移量
-                let offsetY = offset.getString("y")
+                let offsetY = getSection_NI(null, offset.getString("y"))
                 if (offsetY.contains("-")) {
                     const index = offsetY.indexOf("-")
                     const min = parseFloat(offsetY.slice(0, index))
@@ -1908,7 +1908,7 @@ function onMythicMobDeath_NI(event) {
                     offsetY = parseFloat(offsetY)
                 }
                 // 获取发射角度类型
-                const angleType = fancyDrop.getString("angle.type")
+                const angleType = getSection_NI(null, fancyDrop.getString("angle.type"))
                 // 获取怪物死亡位置
                 const location = entity.getLocation()
                 // 开始掉落
@@ -1965,7 +1965,7 @@ function onMythicMobDeath_NI(event) {
 
         // 获取死亡后相应NI物品掉落几率
         for (let i = 0; i < dropEquipment.length; i++) {
-            const value = dropEquipment[i]
+            const value = getSection_NI(null, dropEquipment[i])
             let id = value.toLowerCase()
             let chance = 1
             const index = value.indexOf(" ")
@@ -1977,7 +1977,7 @@ function onMythicMobDeath_NI(event) {
         }
 
         for (let i = 0; i < equipment.length; i++) {
-            const value = equipment[i]
+            const value = getSection_NI(null, equipment[i])
             if (value.indexOf(": ") != -1) {
                 let index = value.indexOf(": ")
                 const slot = value.slice(0, index).toLowerCase()
@@ -2745,12 +2745,13 @@ function toHashMap_NI(memorySection) {
 }
 
 /**
- * 解析一次文本内节点
+ * 对文本进行节点解析
  * @param Sections ConfigurationSection 物品配置
  * @param string String 待解析文本
  * @param sectionData {} 节点解析值缓存
  * @param player Player 待解析玩家
  * @param itemNBT ItemTag 物品NBT, 可留空, 用于解析物品动作变量
+ * @return String
  */
 function getSection_NI(Sections, string, sectionData, player, itemNBT) {
     let ArrayList = Packages.java.util.ArrayList
@@ -2809,16 +2810,17 @@ function getSection_NI(Sections, string, sectionData, player, itemNBT) {
 }
 
 /**
- * 解析当前层级节点
+ * 即时声明节点解析 & 配置声明节点调用
  * @param Sections ConfigurationSection 物品配置
  * @param string String 待解析文本
  * @param sectionData {} 节点解析值缓存
  * @param player Player 待解析玩家
+ * @return String 解析值
  */
 function parseSection_NI(Sections, string, sectionData, player) {
-    let Color = Packages.java.awt.Color
-    let ChatColor = Packages.net.md_5.bungee.api.ChatColor
-    let Player = Packages.org.bukkit.entity.Player
+    const Color = Packages.java.awt.Color
+    const ChatColor = Packages.net.md_5.bungee.api.ChatColor
+    const Player = Packages.org.bukkit.entity.Player
 
     let name = string
     let index = string.indexOf("::")
@@ -2848,7 +2850,7 @@ function parseSection_NI(Sections, string, sectionData, player) {
             if (!isNaN(result)) {
                 return result
             }
-            return "未知数字节点参数"
+            return "<" + string + ">"
         } case "calculation": {
             // 如果配置了公式
             if (args.length > 0) {
@@ -3184,7 +3186,7 @@ function dataParse_NI(string, sectionData) {
 }
 
 /**
- * 解析当前节点
+ * 全局节点预解析
  * @param Sections ConfigurationSection 节点配置部分
  * @param section String 节点名
  * @param sectionData {} 节点解析值缓存
