@@ -296,6 +296,7 @@ function commandRegister_NI() {
     let Material = Packages.org.bukkit.Material
     let Player = Packages.org.bukkit.entity.Player
     let BukkitAdapterClass = Packages.com.skillw.pouvoir.taboolib.platform.BukkitAdapter
+    let NMSKt = Packages.com.skillw.pouvoir.taboolib.module.nms.NMSKt
     let TellrawJson = Packages.com.skillw.pouvoir.taboolib.module.chat.TellrawJson
     let TLibBukkitAdapter = new BukkitAdapterClass()
     let Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
@@ -726,9 +727,43 @@ function commandRegister_NI() {
                                                     if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
                                                         // 如果仅需一样的物品
                                                         if (args.length > 7 && (args[7] == "false" || args[7] == "0")) {
-                                                            let itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
+                                                            const itemStack = neigeItemManager.getItemStack(args[1], player, data, sender)
+                                                            // 获取物品掉落技能
+                                                            let dropSkill
+                                                            let mythicAPIHelper
+                                                            const itemTag = NMSKt.getItemTag(itemStack)
+                                                            if (itemTag.containsKey("NeigeItems")) {
+                                                                const neigeItems = itemTag["NeigeItems"]
+                                                                if (neigeItems.containsKey("dropSkill")) {
+                                                                    if (Tool.isPluginEnabled("MythicMobs")) {
+                                                                        dropSkill = neigeItems["dropSkill"].asString()
+                                                                        mythicAPIHelper = Tool.getPlugin("MythicMobs").getAPIHelper()
+                                                                    }
+                                                                }
+                                                            }
                                                             // 掉落物品
-                                                            dropItems_NI(itemStack, itemAmt, world, x, y, z)
+                                                            const location = new Location(world, x, y, z)
+                                                            const maxStackSize = itemStack.getMaxStackSize()
+                                                            itemStack.setAmount(maxStackSize)
+                                                            for (var givenAmt = 0; (givenAmt + maxStackSize) <= amount; givenAmt += maxStackSize) {
+                                                                const item = Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                                    return location.getWorld().dropItem(location, itemStack.clone())
+                                                                }).get()
+
+                                                                if (dropSkill != undefined) {
+                                                                    mythicAPIHelper.castSkill(item, dropSkill)
+                                                                }
+                                                            }
+                                                            if (givenAmt < amount) {
+                                                                itemStack.setAmount(amount - givenAmt)
+                                                                const item = Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                                    return location.getWorld().dropItem(location, itemStack)
+                                                                }).get()
+
+                                                                if (dropSkill != undefined) {
+                                                                    mythicAPIHelper.castSkill(item, dropSkill)
+                                                                }
+                                                            }
                                                             // 替换提示信息中的占位符
                                                             let dropSuccessInfoMessage = dropSuccessInfo.replace(/{world}/g, args[3])
                                                             dropSuccessInfoMessage = dropSuccessInfoMessage.replace(/{x}/g, args[4])
@@ -754,7 +789,21 @@ function commandRegister_NI() {
                                                                     amtMap[itemName] ++
                                                                 }
                                                                 // 掉落物品
-                                                                dropItem_NI(itemStack, new Location(world, x, y, z))
+                                                                const location = new Location(world, x, y, z)
+                                                                const item = Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                                                                    return location.getWorld().dropItem(location, itemStack)
+                                                                }).get()
+
+                                                                const itemTag = NMSKt.getItemTag(itemStack)
+                                                                if (itemTag.containsKey("NeigeItems")) {
+                                                                    const neigeItems = itemTag["NeigeItems"]
+                                                                    if (neigeItems.containsKey("dropSkill")) {
+                                                                        const dropSkill = neigeItems["dropSkill"].asString()
+                                                                        if (Tool.isPluginEnabled("MythicMobs")) {
+                                                                            Tool.getPlugin("MythicMobs").getAPIHelper().castSkill(item, dropSkill)
+                                                                        }
+                                                                    }
+                                                                }
                                                             }
                                                             for (let key in amtMap) {
                                                                 // 替换提示信息中的占位符
@@ -1489,12 +1538,13 @@ function loadClass_NI() {
                 try { itemMeta.setColor(Color.fromRGB(color)) } catch (e) {}
             }
             itemStack.setItemMeta(itemMeta)
-            // 获取物品NBT
+            // 设置物品NBT
             let itemTag = NMSKt.getItemTag(itemStack)
             itemTag.NeigeItems = new ItemTag()
             itemTag.NeigeItems.id = new ItemTagData(this.id)
             itemTag.NeigeItems.data = new ItemTagData(JSON.stringify(sectionData))
             itemTag.NeigeItems.hashCode = new ItemTagData(this.hashCode)
+            // 设置物品使用次数
             if (configSection.contains("options.charge")) {
                 itemTag.NeigeItems.charge = new ItemTagData(configSection.get("options.charge"))
                 itemTag.NeigeItems.maxCharge = new ItemTagData(configSection.get("options.charge"))
@@ -1506,6 +1556,9 @@ function loadClass_NI() {
                 if (ChatColor[colorString] != undefined) {
                     itemTag.NeigeItems.color = new ItemTagData(colorString)
                 }
+            }
+            if (configSection.contains("options.dropskill")) {
+                itemTag.NeigeItems.dropSkill = new ItemTagData(configSection.get("options.dropskill"))
             }
             // 设置物品NBT
             if (configSection.contains("nbt")) {
@@ -1933,12 +1986,38 @@ function onMythicMobDeath_NI(event) {
                         vector.setX(x).setZ(z)
                     }
                     item.setVelocity(vector)
+
+                    const itemTag = NMSKt.getItemTag(itemStack)
+                    if (itemTag.containsKey("NeigeItems")) {
+                        const neigeItems = itemTag["NeigeItems"]
+                        if (neigeItems.containsKey("dropSkill")) {
+                            const dropSkill = neigeItems["dropSkill"].asString()
+                            if (Tool.isPluginEnabled("MythicMobs")) {
+                                Tool.getPlugin("MythicMobs").getAPIHelper().castSkill(item, dropSkill)
+                            }
+                        }
+                    }
                 }
             } else {
                 // 普通掉落
                 for (let index = 0; index < dropItems.length; index++) {
                     const itemStack = dropItems[index]
-                    dropItem_NI(itemStack, entity.getLocation())
+                    const location = entity.getLocation()
+
+                    const item = Bukkit.getScheduler().callSyncMethod(Tool.getPlugin("Pouvoir"), function() {
+                        return location.getWorld().dropItem(location, itemStack)
+                    }).get()
+
+                    const itemTag = NMSKt.getItemTag(itemStack)
+                    if (itemTag.containsKey("NeigeItems")) {
+                        const neigeItems = itemTag["NeigeItems"]
+                        if (neigeItems.containsKey("dropSkill")) {
+                            const dropSkill = neigeItems["dropSkill"].asString()
+                            if (Tool.isPluginEnabled("MythicMobs")) {
+                                Tool.getPlugin("MythicMobs").getAPIHelper().castSkill(item, dropSkill)
+                            }
+                        }
+                    }
                 }
             }
         }
