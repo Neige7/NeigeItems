@@ -1,5 +1,5 @@
-//XXXX@Awake(enable)
-//XXXX@Awake(reload)
+//@Awake(enable)
+//@Awake(reload)
 function onEnable_NI() {
     const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
 
