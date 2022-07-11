@@ -1,5 +1,5 @@
-//@Awake(enable)
-//@Awake(reload)
+//XXXX@Awake(enable)
+//XXXX@Awake(reload)
 function onEnable_NI() {
     const Tool = Packages.com.skillw.pouvoir.api.script.ScriptTool
 
@@ -670,7 +670,7 @@ function commandRegister_NI() {
                                                     // 获取成功提示
                                                     if (givenInfoMessage) player.sendMessage(givenInfoMessage)
                                                     // 替换提示信息中的占位符
-                                                    let successInfoMessage = successInfo.replace(/{player}/g, args[1])
+                                                    let successInfoMessage = successInfo.replace(/{player}/g, player.getDisplayName())
                                                     successInfoMessage = successInfoMessage.replace(/{amount}/g, amtMap[key])
                                                     successInfoMessage = successInfoMessage.replace(/{name}/g, key)
                                                     // 给予成功提示
@@ -2464,12 +2464,16 @@ function getGlobalSections_NI() {
         // 获取当前全局节点配置文件
         const config = configs[index]
         let list = new ArrayList()
-        // 获取当前文件内所有全局节点
-        let configSections = getConfigSection_NI(config)
-        // 记录节点ID
-        configSections.forEach(function(section) {
-            list.add(section.getName())
-            NeigeItemsData.globalSectionIDList.add(section.getName())
+        // // 获取当前文件内所有全局节点
+        // let configSections = getConfigSection_NI(config)
+        // // 记录节点ID
+        // configSections.forEach(function(section) {
+        //     list.add(section.getName())
+        //     NeigeItemsData.globalSectionIDList.add(section.getName())
+        // })
+        config.getKeys(false).forEach(function(key) {
+            list.add(key)
+            NeigeItemsData.globalSectionIDList.add(config.get(key))
         })
         NeigeItemsData.globalSections.add(new ArrayList(Arrays.asList([config, list])))
         NeigeItemsData.globalSectionFileNames.add(files[index].getName())
